@@ -1,7 +1,7 @@
 /* Campus X AI - Consolidated Application Bundle */
 
 
-/* --- File: mock-data.js (mock-data.js) --- */
+/* --- File: mock-data.js --- */
 /* ==========================================================
    Campus X AI - Realistic Mock Data Store
    College: Tapi Diploma Engineering College, Surat
@@ -279,7 +279,7 @@ window.CAMPUS_DATA = CAMPUS_DATA;
 
 
 
-/* --- File: security.js (security.js) --- */
+/* --- File: security.js --- */
 /* ==========================================================
    Campus X AI - Client-Side Security Utilities & API Client
    Tapi Diploma Engineering College, Surat
@@ -490,7 +490,7 @@ window.SecurityUtils = SecurityUtils;
 window.ApiClient = ApiClient;
 
 
-/* --- File: state.js (state.js) --- */
+/* --- File: state.js --- */
 /* ==========================================================
    Campus X AI - Central State & Reactive Event Manager
    Hardened RBAC, Secure Session Tracking & Audit Integration
@@ -757,7 +757,7 @@ class CampusState {
 window.appState = new CampusState();
 
 
-/* --- File: navigation.js (navigation.js) --- */
+/* --- File: navigation.js --- */
 /* ==========================================================
    Campus X AI - Navigation & State Management
    Step 2: Component & Layout Handlers
@@ -872,7 +872,7 @@ class NavigationController {
 }
 
 
-/* --- File: motion.js (motion.js) --- */
+/* --- File: motion.js --- */
 /* ==========================================================
    Campus X AI - Premium Motion System
    Linear / Raycast / Arc / Vercel Motion Standard
@@ -1080,7 +1080,7 @@ window.CampusMotion = {
 };
 
 
-/* --- File: auth-view.js (auth-view.js) --- */
+/* --- File: auth-view.js --- */
 /* ==========================================================
    Campus X AI - Pre-Login & Authentication View
    Security Hardened: Generic Errors, Client Validation UX,
@@ -1655,7 +1655,7 @@ class AuthView {
 }
 
 
-/* --- File: student-view.js (student-view.js) --- */
+/* --- File: student-view.js --- */
 /* ==========================================================
    Campus X AI - Student Workspace View
    Dedicated Student Sidebar & Student Dashboard
@@ -1940,7 +1940,7 @@ class StudentView {
 }
 
 
-/* --- File: faculty-view.js (faculty-view.js) --- */
+/* --- File: faculty-view.js --- */
 /* ==========================================================
    Campus X AI - Faculty Workspace View
    Dedicated Faculty Sidebar, Dashboard & Interactive Attendance
@@ -2277,7 +2277,7 @@ class FacultyView {
 }
 
 
-/* --- File: admin-view.js (admin-view.js) --- */
+/* --- File: admin-view.js --- */
 /* ==========================================================
    Campus X AI - Administrator Workspace View
    Centralized Operational Dashboard & Support Dispatch
@@ -2501,7 +2501,7 @@ class AdminView {
 }
 
 
-/* --- File: stationery-view.js (stationery-view.js) --- */
+/* --- File: stationery-view.js --- */
 /* ==========================================================
    Campus X AI - Stationery Module & Operator Workspace
    Sections 16, 17, 18, 19, 20, 21, 22, 33
@@ -3053,7 +3053,7 @@ class StationeryView {
 }
 
 
-/* --- File: academics-view.js (academics-view.js) --- */
+/* --- File: academics-view.js --- */
 /* ==========================================================
    Campus X AI - Academics, Timetable & AI Risk View
    Sections 36-38, 46: Timetable, Attendance Breakdown & AI Risk UI
@@ -3214,7 +3214,7 @@ class AcademicsView {
 }
 
 
-/* --- File: ai-chat-view.js (ai-chat-view.js) --- */
+/* --- File: ai-chat-view.js --- */
 /* ==========================================================
    Campus X AI - Conversational Assistant View ("Ask Campus X.")
    Section 44: Clean conversational shortcut, no sci-fi orbs/robots
@@ -3349,7 +3349,7 @@ class AiChatView {
 }
 
 
-/* --- File: complaints-view.js (complaints-view.js) --- */
+/* --- File: complaints-view.js --- */
 /* ==========================================================
    Campus X AI - Complaints & Grievance Module View
    Section 40: "Need something fixed?", Ticket Tracking & Admin Resolution
@@ -3507,7 +3507,7 @@ class ComplaintsView {
 }
 
 
-/* --- File: lost-found-view.js (lost-found-view.js) --- */
+/* --- File: lost-found-view.js --- */
 /* ==========================================================
    Campus X AI - Lost & Found Module View
    Sections 23, 24, 25, 26, 34
@@ -3881,7 +3881,7 @@ class LostFoundView {
 
 
 
-/* --- File: app.js (app.js) --- */
+/* --- File: app.js --- */
 /* ==========================================================
    Campus X AI - Master Application Orchestrator
    Role Dispatcher, Modal Engine, Navigation & Responsive Router
