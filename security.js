@@ -79,11 +79,38 @@ class SecurityUtils {
 
 class ApiClient {
   static getApiBase() {
-    // Connect to current origin or default port 3000
-    if (window.location.origin && window.location.origin.startsWith('http')) {
-      return window.location.origin;
+    // Explicit override support (e.g. if pointing to a remote backend on Render/Railway)
+    if (typeof window !== 'undefined') {
+      if (window.CAMPUSX_API_URL) return window.CAMPUSX_API_URL;
+      try {
+        const saved = localStorage.getItem('campusx_api_base');
+        if (saved) return saved;
+      } catch (e) {}
+
+      // GitHub Pages or static web hosts do not have the Express API running on the same origin
+      const hostname = window.location.hostname || '';
+      if (hostname.endsWith('github.io') || window.location.protocol === 'file:') {
+        return null;
+      }
+
+      // Connect to current origin or default port 3000
+      if (window.location.origin && window.location.origin.startsWith('http')) {
+        return window.location.origin;
+      }
     }
     return 'http://localhost:3000';
+  }
+
+  static isStaticDeployment() {
+    const apiBase = ApiClient.getApiBase();
+    if (!apiBase) return true;
+    if (typeof window !== 'undefined' && window.location) {
+      const hostname = window.location.hostname || '';
+      if (hostname.endsWith('github.io') || window.location.protocol === 'file:') {
+        return true;
+      }
+    }
+    return false;
   }
 
   static getToken() {
@@ -107,7 +134,14 @@ class ApiClient {
   }
 
   static async request(endpoint, options = {}) {
-    const url = `${ApiClient.getApiBase()}${endpoint}`;
+    const apiBase = ApiClient.getApiBase();
+    if (!apiBase) {
+      const err = new Error('Static host environment: Backend server is not running on this host.');
+      err.isStaticHost = true;
+      throw err;
+    }
+
+    const url = `${apiBase}${endpoint}`;
     const headers = {
       'Content-Type': 'application/json',
       ...(options.headers || {})
@@ -133,7 +167,9 @@ class ApiClient {
           if (window.appState && window.appState.showToast) {
             window.appState.showToast(msg, 'warning');
           }
-          throw new Error(msg);
+          const rateErr = new Error(msg);
+          rateErr.statusCode = 429;
+          throw rateErr;
         }
 
         // Handle Forbidden (403)
@@ -142,15 +178,29 @@ class ApiClient {
           if (window.appState && window.appState.showToast) {
             window.appState.showToast(msg, 'error');
           }
-          throw new Error(msg);
+          const forbiddenErr = new Error(msg);
+          forbiddenErr.statusCode = 403;
+          throw forbiddenErr;
         }
 
         // Generic error message for 401 Unauthorized
         if (response.status === 401) {
-          throw new Error(data.error || 'Incorrect email or password.');
+          const authErr = new Error(data.error || 'Incorrect email or password.');
+          authErr.statusCode = 401;
+          throw authErr;
         }
 
-        throw new Error(data.error || `Request failed with status ${response.status}`);
+        // Handle 405 (Method Not Allowed - static host like GitHub Pages) or 404
+        if (response.status === 405 || response.status === 404) {
+          const staticErr = new Error(data.error || `Static host returned status ${response.status}`);
+          staticErr.statusCode = response.status;
+          staticErr.isStaticHost = true;
+          throw staticErr;
+        }
+
+        const err = new Error(data.error || `Request failed with status ${response.status}`);
+        err.statusCode = response.status;
+        throw err;
       }
 
       return data;
@@ -190,7 +240,9 @@ class ApiClient {
 
   static async logout() {
     try {
-      await ApiClient.request('/api/auth/logout', { method: 'POST' });
+      if (ApiClient.getApiBase()) {
+        await ApiClient.request('/api/auth/logout', { method: 'POST' });
+      }
     } catch (e) {
       // Ignore network errors on logout
     } finally {

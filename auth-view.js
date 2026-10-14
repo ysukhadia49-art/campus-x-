@@ -459,7 +459,7 @@ class AuthView {
 
     try {
       let registeredUser = null;
-      if (window.ApiClient) {
+      if (window.ApiClient && window.ApiClient.getApiBase()) {
         try {
           const resp = await window.ApiClient.register({
             name,
@@ -476,17 +476,17 @@ class AuthView {
           }
         } catch (apiErr) {
           // If server returned structured error (e.g. duplicate account), display it
-          if (apiErr.message && !apiErr.message.includes('Failed to fetch')) {
+          if (apiErr.statusCode === 400 || (apiErr.message && !apiErr.isStaticHost && !apiErr.message.includes('Failed to fetch') && !apiErr.message.includes('405'))) {
             throw apiErr;
           }
         }
       }
 
-      // Offline fallback registration if server is offline
+      // Offline / Static fallback registration if server is offline or static host
       if (!registeredUser) {
         const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
         registeredUser = {
-          id: collegeId || "246470316116",
+          id: collegeId || ("246470316" + Math.floor(100 + Math.random() * 900)),
           email: email.toLowerCase(),
           name,
           role: "STUDENT",
@@ -497,6 +497,12 @@ class AuthView {
           academicRisk: { level: "Low Risk", score: "92/100" }
         };
         CAMPUS_DATA.accounts[registeredUser.email] = registeredUser;
+        try {
+          const customPasswords = JSON.parse(localStorage.getItem('campusx_custom_passwords') || '{}');
+          customPasswords[registeredUser.email] = password;
+          localStorage.setItem('campusx_custom_passwords', JSON.stringify(customPasswords));
+        } catch (e) {}
+
         appState.setCurrentUser(registeredUser, 'offline-token-' + Date.now());
       } else {
         appState.setCurrentUser(registeredUser);
@@ -539,13 +545,13 @@ class AuthView {
 
         try {
           let msg = 'If an account exists with this email, password reset instructions have been sent.';
-          if (window.ApiClient) {
+          if (window.ApiClient && window.ApiClient.getApiBase()) {
             const resp = await window.ApiClient.forgotPassword(email);
             if (resp && resp.message) msg = resp.message;
           }
           appState.showToast(msg, 'success');
         } catch (err) {
-          appState.showToast(err.message || 'If an account exists with this email, password reset instructions have been sent.', 'info');
+          appState.showToast('If an account exists with this email, password reset instructions have been sent.', 'info');
         }
       }
     });
