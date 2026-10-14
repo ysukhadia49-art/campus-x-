@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus X - Official Brand Identity & Logo System</title>
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    body {
+      background: #F7F7F5;
+      font-family: var(--font-sans);
+      color: #172033;
+      padding: 3rem 1.5rem;
+      margin: 0;
+    }
+    .brand-container {
+      max-width: 1040px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+    .brand-header {
+      border-bottom: 1px solid #E5E7EB;
+      padding-bottom: 1.5rem;
+    }
+    .brand-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #172033;
+      margin: 0 0 0.5rem 0;
+    }
+    .brand-subtitle {
+      color: #52677A;
+      font-size: 1.05rem;
+      margin: 0;
+    }
+    .brand-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 1.5rem;
+    }
+    .logo-card {
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      border-radius: 12px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 240px;
+      position: relative;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .logo-card.dark {
+      background: #243447;
+      border-color: #314A63;
+      color: #FFFFFF;
+    }
+    .card-label {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #7B8794;
+    }
+    .logo-card.dark .card-label {
+      color: #BAC7D5;
+    }
+    .scale-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .scale-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: #7B8794;
+    }
+    .color-swatches {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+    .color-card {
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      border-radius: 10px;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .color-circle {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="brand-container">
+    <div class="brand-header">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h1 class="brand-title">Campus X Brand Identity</h1>
+          <p class="brand-subtitle">Modern collegiate-tech logo system for Tapi Diploma Engineering College.</p>
+        </div>
+        <a href="index.html" class="btn btn-primary" style="text-decoration: none; padding: 0.6rem 1.25rem; font-size: 0.88rem; font-weight: 600; border-radius: 8px; background: #243447; color: #fff;">Open App Dashboard &rarr;</a>
+      </div>
+    </div>
+
+    <!-- 1. PRIMARY LOGO VERSIONS -->
+    <div>
+      <h2 style="font-size: 1.35rem; margin-bottom: 1rem;">1. Logo Lockups & Formats</h2>
+      <div class="brand-grid">
+        
+        <!-- Horizontal Logo (Light BG) -->
+        <div class="logo-card">
+          <span class="card-label">1. Horizontal Lockup (Light)</span>
+          <img src="img/campus-x-logo-horizontal.svg" alt="Campus X Horizontal Logo" style="max-width: 280px; width: 100%;">
+        </div>
+
+        <!-- Stacked Logo (Light BG) -->
+        <div class="logo-card">
+          <span class="card-label">2. Stacked Logo (Light)</span>
+          <img src="img/campus-x-logo-stacked.svg" alt="Campus X Stacked Logo" style="max-width: 200px; width: 100%;">
+        </div>
+
+        <!-- Icon Only (Dark Navy Squircle) -->
+        <div class="logo-card dark">
+          <span class="card-label">3. Light Version (Dark Navy BG)</span>
+          <div style="width: 80px; height: 80px;">
+            <img src="img/campus-x-icon-light.svg" alt="Campus X Emblem Light" style="width: 100%; height: 100%;">
+          </div>
+          <div style="font-size: 1.4rem; font-weight: 800; margin-top: 0.75rem; letter-spacing: -0.02em;">Campus X</div>
+          <div style="font-size: 0.8rem; color: #BAC7D5;">Student Space</div>
+        </div>
+
+        <!-- Monochrome Version -->
+        <div class="logo-card">
+          <span class="card-label">4. Monochrome Version</span>
+          <div style="width: 72px; height: 72px;">
+            <img src="img/campus-x-logo-monochrome.svg" alt="Campus X Monochrome" style="width: 100%; height: 100%;">
+          </div>
+          <div style="font-size: 1.2rem; font-weight: 700; color: #111827; margin-top: 0.5rem;">CAMPUS X</div>
+        </div>
+
+        <!-- Android Launcher Icon -->
+        <div class="logo-card">
+          <span class="card-label">5. Android Launcher App Icon</span>
+          <div style="width: 88px; height: 88px; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 16px rgba(36, 52, 71, 0.2);">
+            <img src="img/campus-x-android-icon.svg" alt="Campus X Android Icon" style="width: 100%; height: 100%;">
+          </div>
+          <div style="font-size: 0.85rem; font-weight: 600; color: #172033; margin-top: 0.75rem;">Android Launcher Icon</div>
+        </div>
+
+        <!-- AI Generated Visual Reference -->
+        <div class="logo-card">
+          <span class="card-label">6. Brand Asset Master</span>
+          <img src="img/campus-x-app-icon.jpg" alt="Master App Icon" style="width: 96px; height: 96px; border-radius: 22px; box-shadow: 0 8px 16px rgba(0,0,0,0.12);">
+          <div style="font-size: 0.85rem; font-weight: 600; color: #172033; margin-top: 0.75rem;">Production Asset</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 2. SCALABILITY TEST -->
+    <div>
+      <h2 style="font-size: 1.35rem; margin-bottom: 1rem;">2. Android Icon Scalability Test</h2>
+      <div class="logo-card" style="padding: 2.5rem 1rem;">
+        <span class="card-label">Tested at Standard Android Density Buckets (xxxhdpi to mdpi)</span>
+        <div class="scale-row">
+          <div class="scale-item">
+            <img src="img/campus-x-android-icon.svg" style="width: 144px; height: 144px; border-radius: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <span>144px (xxhdpi)</span>
+          </div>
+          <div class="scale-item">
+            <img src="img/campus-x-android-icon.svg" style="width: 96px; height: 96px; border-radius: 21px; box-shadow: 0 3px 8px rgba(0,0,0,0.08);">
+            <span>96px (xhdpi)</span>
+          </div>
+          <div class="scale-item">
+            <img src="img/campus-x-android-icon.svg" style="width: 72px; height: 72px; border-radius: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
+            <span>72px (hdpi)</span>
+          </div>
+          <div class="scale-item">
+            <img src="img/campus-x-android-icon.svg" style="width: 48px; height: 48px; border-radius: 11px; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
+            <span>48px (mdpi)</span>
+          </div>
+          <div class="scale-item">
+            <img src="img/campus-x-android-icon.svg" style="width: 32px; height: 32px; border-radius: 7px;">
+            <span>32px (Favicon)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. COLOR PALETTE -->
+    <div>
+      <h2 style="font-size: 1.35rem; margin-bottom: 1rem;">3. Brand Color Direction</h2>
+      <div class="color-swatches">
+        <div class="color-card">
+          <div class="color-circle" style="background: #243447;"></div>
+          <div>
+            <div style="font-weight: 700; font-size: 0.85rem;">Deep Navy</div>
+            <div style="font-size: 0.75rem; color: #7B8794; font-family: monospace;">#243447</div>
+          </div>
+        </div>
+
+        <div class="color-card">
+          <div class="color-circle" style="background: #3E6E9E;"></div>
+          <div>
+            <div style="font-weight: 700; font-size: 0.85rem;">Accent Blue</div>
+            <div style="font-size: 0.75rem; color: #7B8794; font-family: monospace;">#3E6E9E</div>
+          </div>
+        </div>
+
+        <div class="color-card">
+          <div class="color-circle" style="background: #FFFFFF; border: 1px solid #E5E7EB;"></div>
+          <div>
+            <div style="font-weight: 700; font-size: 0.85rem;">Clean White</div>
+            <div style="font-size: 0.75rem; color: #7B8794; font-family: monospace;">#FFFFFF</div>
+          </div>
+        </div>
+
+        <div class="color-card">
+          <div class="color-circle" style="background: #F7F7F5;"></div>
+          <div>
+            <div style="font-weight: 700; font-size: 0.85rem;">Canvas Off-White</div>
+            <div style="font-size: 0.75rem; color: #7B8794; font-family: monospace;">#F7F7F5</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

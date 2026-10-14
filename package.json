@@ -1,0 +1,23 @@
+{
+  "name": "campus-x-ai",
+  "version": "1.0.0",
+  "description": "Campus X AI - Centralized Campus Intelligence & Academic Portal",
+  "main": "index.html",
+  "scripts": {
+    "start": "node server.js",
+    "build": "node prepare-www.js",
+    "test:security": "node test-security.js"
+  },
+  "author": "Tapi Diploma Engineering College",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^7.6.9",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/cli": "^7.6.9",
+    "@capacitor/core": "^7.6.9",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3"
+  }
+}

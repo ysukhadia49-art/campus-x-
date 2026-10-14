@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus X AI - Everything campus, in one place.</title>
+  <meta name="description" content="Campus X AI: High-fidelity, production-quality college campus management platform for Tapi Diploma Engineering College. Role-based experience for Students, Faculty, Administrators, and Stationery Operators.">
+
+  <!-- Premium Campus Editorial Theme Stylesheets with Cache-Busting -->
+  <link rel="stylesheet" href="variables.css?v=5">
+  <link rel="stylesheet" href="base.css?v=5">
+  <link rel="stylesheet" href="auth.css?v=5">
+  <link rel="stylesheet" href="components.css?v=5">
+  <link rel="stylesheet" href="layout.css?v=5">
+
+  <script>
+    // Error diagnostic banner in case of any runtime issue
+    window.onerror = function(msg, url, line, col, error) {
+      console.error("Campus X Error:", msg, url, line);
+      const root = document.getElementById('appRoot');
+      if (root && (!root.innerHTML || root.innerHTML.trim() === '')) {
+        root.innerHTML = '<div style="padding: 2rem; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; margin: 2rem; font-family: sans-serif; color: #991B1B;"><h3>Application Error</h3><p>' + msg + '</p><p style="font-size: 12px; color: #7F1D1D;">' + url + ' (Line ' + line + ')</p><button onclick="location.reload(true)" style="padding: 6px 12px; background: #DC2626; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;">Reload</button></div>';
+      }
+    };
+  </script>
+</head>
+<body>
+
+  <!-- Dedicated Campus X Startup Splash Screen (Sections 1 - 5) -->
+  <div id="splashScreen" class="splash-screen">
+    <div class="splash-container">
+      <div class="splash-logo-box">
+        <div class="splash-logo-symbol">
+          <svg viewBox="0 0 120 120" width="32" height="32" fill="none" style="display: block;">
+            <polygon points="60,14 102,34 60,54 18,34" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"/>
+            <polygon points="60,26 90,40 60,54 30,40" fill="#BAC7D5" opacity="0.95"/>
+            <path d="M26,38 L24,58 M22,58 L26,58 L25,68 L23,68 Z" fill="#BAC7D5" stroke="#BAC7D5" stroke-width="2" stroke-linecap="round"/>
+            <path d="M35,58 L54,77 L30,104 L44,104 L60,85 L76,104 L90,104 L66,77 L85,58 L71,58 L60,70 L49,58 Z" fill="#FFFFFF"/>
+            <circle cx="60" cy="40" r="3.5" fill="#243447"/>
+            <circle cx="30" cy="104" r="3.5" fill="#BAC7D5"/>
+            <circle cx="90" cy="104" r="3.5" fill="#BAC7D5"/>
+          </svg>
+        </div>
+        <div class="splash-logo-text">Campus X</div>
+      </div>
+      <div class="splash-tagline">Everything campus, in one place.</div>
+      <div class="splash-sub-tagline">Smart Campus. Smarter Future.</div>
+      
+      <div class="splash-loader">
+        <span class="splash-dot"></span>
+        <span class="splash-dot"></span>
+        <span class="splash-dot"></span>
+      </div>
+
+      <div id="splashStatusText" class="splash-status-text">Preparing your campus...</div>
+    </div>
+  </div>
+
+  <!-- Dynamic Application Mount Point -->
+  <div id="appRoot"></div>
+
+  <!-- Global Toast Notification Queue Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Consolidated Application Bundle (Single request, zero cache mismatch) -->
+  <script src="campusx.bundle.js?v=5"></script>
+
+</body>
+</html>

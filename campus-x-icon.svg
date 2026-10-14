@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%" fill="none">
+  <!-- Campus X Emblem: Collegiate Mortarboard / Campus Roof merged with dynamic Modern 'X' -->
+  <defs>
+    <linearGradient id="cxGradNavy" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1A2838"/>
+      <stop offset="100%" stop-color="#243447"/>
+    </linearGradient>
+    <linearGradient id="cxGradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F82B5"/>
+      <stop offset="100%" stop-color="#3E6E9E"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Mortarboard Diamond / Campus Apex -->
+  <polygon points="60,14 102,34 60,54 18,34" fill="#243447" stroke="#243447" stroke-width="2" stroke-linejoin="round"/>
+  
+  <!-- Subtle Architectural Layer / Under-Peak -->
+  <polygon points="60,26 90,40 60,54 30,40" fill="#3E6E9E" opacity="0.9"/>
+  
+  <!-- Academic Tassel Accent -->
+  <path d="M26,38 L24,58 M22,58 L26,58 L25,68 L23,68 Z" fill="#3E6E9E" stroke="#3E6E9E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Lower Architecture & Dynamic 'X' Form -->
+  <!-- Left-to-Right diagonal leg -->
+  <path d="M35,58 L54,77 L30,104 L44,104 L60,85 L76,104 L90,104 L66,77 L85,58 L71,58 L60,70 L49,58 Z" fill="#243447"/>
+
+  <!-- Tech Node Dot Accents -->
+  <circle cx="60" cy="40" r="3.5" fill="#FFFFFF"/>
+  <circle cx="30" cy="104" r="3.5" fill="#3E6E9E"/>
+  <circle cx="90" cy="104" r="3.5" fill="#3E6E9E"/>
+</svg>

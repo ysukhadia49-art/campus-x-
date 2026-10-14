@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%" fill="none">
+  <!-- Campus X Emblem: Pure Monochrome -->
+  <polygon points="60,14 102,34 60,54 18,34" fill="#111827"/>
+  <path d="M26,38 L24,58 M22,58 L26,58 L25,68 L23,68 Z" fill="#111827" stroke="#111827" stroke-width="2"/>
+  <path d="M35,58 L54,77 L30,104 L44,104 L60,85 L76,104 L90,104 L66,77 L85,58 L71,58 L60,70 L49,58 Z" fill="#111827"/>
+  <circle cx="60" cy="40" r="3.5" fill="#FFFFFF"/>
+</svg>
