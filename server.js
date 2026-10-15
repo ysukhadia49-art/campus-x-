@@ -1024,6 +1024,19 @@ app.use((req, res, next) => {
   next();
 });
 
+// Explicit asset delivery for bundle and scripts
+app.get('/campusx.bundle.js', (req, res) => {
+  const p1 = path.join(ROOT_DIR, 'campusx.bundle.js');
+  const p2 = path.join(__dirname, 'campusx.bundle.js');
+  const target = fs.existsSync(p1) ? p1 : (fs.existsSync(p2) ? p2 : null);
+  if (target) {
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    return res.send(fs.readFileSync(target, 'utf8'));
+  }
+  return res.status(404).send('Bundle not found');
+});
+
 // Serve only safe public assets with nosniff headers and denied dotfiles
 app.use(express.static(ROOT_DIR, {
   index: 'index.html',
@@ -1038,7 +1051,14 @@ app.use((req, res) => {
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ error: 'Endpoint not found.' });
   }
-  res.sendFile(path.join(ROOT_DIR, 'index.html'));
+  const p1 = path.join(ROOT_DIR, 'index.html');
+  const p2 = path.join(__dirname, 'index.html');
+  const target = fs.existsSync(p1) ? p1 : (fs.existsSync(p2) ? p2 : null);
+  if (target) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.send(fs.readFileSync(target, 'utf8'));
+  }
+  return res.status(404).send('Not Found');
 });
 
 // Global Error Handler (Prevents backend stack trace leakage)
