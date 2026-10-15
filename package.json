@@ -4,7 +4,7 @@
   "description": "Campus X AI - Centralized Campus Intelligence & Academic Portal",
   "main": "index.html",
   "scripts": {
-    "start": "node server/server.js",
+    "start": "node server.js",
     "build": "node prepare-www.js",
     "test:security": "node test-security.js"
   },
