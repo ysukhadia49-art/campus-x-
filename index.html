@@ -6,15 +6,18 @@
   <title>Campus X AI - Everything campus, in one place.</title>
   <meta name="description" content="Campus X AI: High-fidelity, production-quality college campus management platform for Tapi Diploma Engineering College. Role-based experience for Students, Faculty, Administrators, and Stationery Operators.">
 
-  <!-- Premium Campus Editorial Theme Stylesheets with Cache-Busting -->
-  <link rel="stylesheet" href="variables.css?v=5">
-  <link rel="stylesheet" href="base.css?v=5">
-  <link rel="stylesheet" href="auth.css?v=5">
-  <link rel="stylesheet" href="components.css?v=5">
-  <link rel="stylesheet" href="layout.css?v=5">
+  <!-- Direct Flat Stylesheets (No Subfolders) -->
+  <link rel="stylesheet" href="variables.css?v=6">
+  <link rel="stylesheet" href="base.css?v=6">
+  <link rel="stylesheet" href="auth.css?v=6">
+  <link rel="stylesheet" href="components.css?v=6">
+  <link rel="stylesheet" href="layout.css?v=6">
+
+  <!-- Supabase Cloud Client SDK (Direct connection on GitHub Pages / Static Hosting) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
-    // Error diagnostic banner in case of any runtime issue
+    // Error diagnostic banner
     window.onerror = function(msg, url, line, col, error) {
       console.error("Campus X Error:", msg, url, line);
       const root = document.getElementById('appRoot');
@@ -26,7 +29,7 @@
 </head>
 <body>
 
-  <!-- Dedicated Campus X Startup Splash Screen (Sections 1 - 5) -->
+  <!-- Startup Splash Screen -->
   <div id="splashScreen" class="splash-screen">
     <div class="splash-container">
       <div class="splash-logo-box">
@@ -62,8 +65,8 @@
   <!-- Global Toast Notification Queue Container -->
   <div id="toastContainer" class="toast-container"></div>
 
-  <!-- Consolidated Application Bundle (Single request, zero cache mismatch) -->
-  <script src="campusx.bundle.js?v=5"></script>
+  <!-- Consolidated Application Bundle (Single flat file, zero subfolders) -->
+  <script src="campusx.bundle.js?v=6"></script>
 
 </body>
 </html>

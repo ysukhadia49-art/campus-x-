@@ -314,6 +314,20 @@ class CampusState {
         method: 'POST',
         body: JSON.stringify(complaint)
       }).catch(err => console.warn('Complaint API sync:', err.message));
+    } else if (window.supabaseClient) {
+      window.supabaseClient.from('complaints').insert([{
+        id: complaint.id,
+        title: complaint.subject,
+        category: complaint.category || 'General',
+        location: complaint.location,
+        priority: complaint.priority || 'MEDIUM',
+        description: complaint.description || '',
+        status: complaint.status || 'SUBMITTED',
+        student_id: complaint.reportedById || '246470316113',
+        student_name: complaint.reportedBy || 'Student'
+      }]).then(({ error }) => {
+        if (error) console.warn('Supabase complaint insert:', error.message);
+      });
     }
 
     this.showToast(`Complaint #${complaint.id} submitted successfully. Tracking started.`, "success");
@@ -338,6 +352,21 @@ class CampusState {
         method: 'POST',
         body: JSON.stringify(item)
       }).catch(err => console.warn('Lost & Found API sync:', err.message));
+    } else if (window.supabaseClient) {
+      window.supabaseClient.from('lost_found').insert([{
+        id: item.id,
+        title: item.item,
+        type: item.type.toLowerCase(),
+        category: item.category || 'General',
+        location: item.location,
+        date: item.date || 'Today',
+        contact: item.contact || 'Campus Desk',
+        description: item.desc || '',
+        status: item.status || 'Active',
+        reporter_name: item.reportedBy || 'Student'
+      }]).then(({ error }) => {
+        if (error) console.warn('Supabase lost-found insert:', error.message);
+      });
     }
 
     this.showToast(`Report for "${item.item}" logged in Lost & Found directory.`, "success");
@@ -345,21 +374,74 @@ class CampusState {
   }
 
   async fetchRemoteData() {
-    if (!window.ApiClient || ApiClient.isStaticDeployment()) return;
-    try {
-      const cRes = await ApiClient.request('/api/complaints');
-      if (cRes && Array.isArray(cRes.complaints)) {
-        CAMPUS_DATA.complaints = cRes.complaints;
+    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+      try {
+        const cRes = await ApiClient.request('/api/complaints');
+        if (cRes && Array.isArray(cRes.complaints)) {
+          CAMPUS_DATA.complaints = cRes.complaints;
+        }
+        const lfRes = await ApiClient.request('/api/lost-found');
+        if (lfRes && Array.isArray(lfRes.items)) {
+          CAMPUS_DATA.lostAndFound = lfRes.items;
+        }
+        this.notify('DATA_SYNCED');
+        return;
+      } catch (e) {
+        // Fall back to direct Supabase browser client
       }
-      const lfRes = await ApiClient.request('/api/lost-found');
-      if (lfRes && Array.isArray(lfRes.items)) {
-        CAMPUS_DATA.lostAndFound = lfRes.items;
+    }
+
+    // Direct Supabase client for GitHub Pages static deployments
+    if (window.supabaseClient) {
+      try {
+        const { data: cData, error: cErr } = await window.supabaseClient.from('complaints').select('*').order('created_at', { ascending: false });
+        if (!cErr && Array.isArray(cData)) {
+          CAMPUS_DATA.complaints = cData.map(c => ({
+            id: c.id,
+            category: c.category,
+            subject: c.title,
+            location: c.location,
+            priority: c.priority || 'MEDIUM',
+            description: c.description,
+            status: c.status || 'SUBMITTED',
+            reportedBy: c.student_name || 'Student',
+            reportedById: c.student_id || '246470316113',
+            date: c.created_at ? new Date(c.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Today',
+            assignedTo: 'Campus Maintenance Dispatch'
+          }));
+        }
+
+        const { data: lfData, error: lfErr } = await window.supabaseClient.from('lost_found').select('*').order('created_at', { ascending: false });
+        if (!lfErr && Array.isArray(lfData)) {
+          CAMPUS_DATA.lostAndFound = lfData.map(lf => ({
+            id: lf.id,
+            item: lf.title,
+            type: lf.type === 'found' || lf.type === 'FOUND' ? 'FOUND' : 'LOST',
+            category: lf.category,
+            reportedBy: lf.reporter_name || 'Anonymous',
+            location: lf.location,
+            date: lf.date,
+            time: '11:00 AM',
+            status: lf.status || (lf.type === 'found' ? 'FOUND' : 'LOST'),
+            desc: lf.description,
+            contact: lf.contact
+          }));
+        }
+        this.notify('DATA_SYNCED');
+      } catch (err) {
+        console.warn('Direct Supabase fetch:', err.message);
       }
-      this.notify('DATA_SYNCED');
-    } catch (e) {
-      // Silently fall back to cached local storage
     }
   }
+}
+
+// Browser direct Supabase connection for GitHub Pages / static hosting
+if (typeof window !== 'undefined' && window.supabase && !window.supabaseClient) {
+  try {
+    const SB_URL = 'https://dvjzchuevpkbvmklxnqw.supabase.co';
+    const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2anpjaHVldnBrYnZta2x4bnF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIwNDcxNzAsImV4cCI6MjEwNzYyMzE3MH0.bodZ6hbqAYa5KxyCAP9xbF6dNbPGjVeCE7jzSPTCqqI';
+    window.supabaseClient = window.supabase.createClient(SB_URL, SB_ANON);
+  } catch (e) {}
 }
 
 window.appState = new CampusState();
