@@ -110,13 +110,14 @@ class StudentView {
 
   static renderDashboard(container) {
     const isRush = appState.stationeryRush;
+    const studentName = appState.currentUser ? appState.currentUser.name.split(' ')[0] : 'Student';
 
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
 
         <!-- MOBILE-SPECIFIC COMPACT SUMMARY (Section 5) - HIDDEN ON DESKTOP -->
         <div class="mobile-dashboard-summary">
-          <div class="mobile-summary-header">Good morning, Parshv.</div>
+          <div class="mobile-summary-header">Good morning, ${studentName}.</div>
           <div class="mobile-summary-grid">
             <div class="mobile-summary-card">
               <div class="mobile-summary-label">Next Class</div>
@@ -239,16 +240,24 @@ class StudentView {
             </div>
           </div>
 
-          <!-- 3 THINGS NEED YOUR ATTENTION -->
+          <!-- CAMPUS ATTENTION FEED -->
           <div class="card-editorial flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between" style="margin-bottom: 1.25rem;">
-                <h3 style="font-size: 1.15rem; font-weight: 700;">3 things need your attention.</h3>
+                <h3 style="font-size: 1.15rem; font-weight: 700;">
+                  ${CAMPUS_DATA.attentionItems.length > 0 ? `${CAMPUS_DATA.attentionItems.length} items need your attention` : 'Campus Action Items'}
+                </h3>
                 <a href="javascript:void(0)" onclick="appState.setView('notices')" style="font-size: 0.8rem; font-weight: 600;">View All &rarr;</a>
               </div>
 
               <div class="attention-list">
-                ${CAMPUS_DATA.attentionItems.map(att => `
+                ${CAMPUS_DATA.attentionItems.length === 0 ? `
+                  <div style="padding: 1.75rem 1rem; text-align: center; color: var(--text-muted);">
+                    <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin: 0 auto 0.5rem; display: block; color: var(--color-success);"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">You're all caught up!</div>
+                    <div style="font-size: 0.8rem; margin-top: 0.2rem;">No pending alerts or urgent action items for your account.</div>
+                  </div>
+                ` : CAMPUS_DATA.attentionItems.map(att => `
                   <div class="attention-item">
                     <div class="attention-icon-wrap" style="background: ${att.bg}; color: ${att.color};">
                       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>

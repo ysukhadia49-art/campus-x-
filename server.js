@@ -12,6 +12,43 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 const fs = require('fs');
 
+// Load environment variables from .env if present
+try {
+  const envPath = path.join(__dirname, '../.env');
+  if (fs.existsSync(envPath)) {
+    const lines = fs.readFileSync(envPath, 'utf8').split(/\r?\n/);
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const idx = trimmed.indexOf('=');
+      if (idx !== -1) {
+        const key = trimmed.slice(0, idx).trim();
+        let val = trimmed.slice(idx + 1).trim();
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1);
+        }
+        if (!process.env[key]) {
+          process.env[key] = val;
+        }
+      }
+    }
+  }
+} catch (e) {}
+
+// Supabase Cloud Database Client
+let supabase = null;
+try {
+  const { createClient } = require('@supabase/supabase-js');
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (SUPABASE_URL && SUPABASE_KEY) {
+    supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log('[SUPABASE] Connected to Supabase Cloud Database at', SUPABASE_URL);
+  }
+} catch (err) {
+  console.warn('[SUPABASE WARNING] Failed to initialize Supabase client:', err.message);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -249,12 +286,123 @@ const DB = {
     }
   },
 
+  complaints: [],
+  lostAndFound: [],
+
   // High-entropy password reset tokens: token -> { email, expiresAt, used }
   resetTokens: new Map(),
 
   // Active invalid tokens (logged out)
   revokedTokens: new Set()
 };
+
+const DB_FILE = path.join(__dirname, 'campusx_db.json');
+
+function saveDatabaseToFile() {
+  try {
+    const payload = {
+      accounts: DB.accounts,
+      complaints: DB.complaints || [],
+      lostAndFound: DB.lostAndFound || []
+    };
+    fs.writeFileSync(DB_FILE, JSON.stringify(payload, null, 2), 'utf8');
+  } catch (err) {
+    console.warn('[DB WARNING] Failed to persist database to file:', err.message);
+  }
+}
+
+function loadDatabaseFromFile() {
+  try {
+    if (fs.existsSync(DB_FILE)) {
+      const raw = fs.readFileSync(DB_FILE, 'utf8');
+      const data = JSON.parse(raw);
+      if (data.accounts) {
+        Object.assign(DB.accounts, data.accounts);
+      }
+      if (Array.isArray(data.complaints)) {
+        DB.complaints = data.complaints;
+      }
+      if (Array.isArray(data.lostAndFound)) {
+        DB.lostAndFound = data.lostAndFound;
+      }
+    }
+  } catch (err) {
+    console.warn('[DB WARNING] Could not read existing database file:', err.message);
+  }
+}
+
+// Initial hydration from persistent store
+loadDatabaseFromFile();
+
+// Synchronize and hydrate from Supabase cloud database
+async function syncFromSupabase() {
+  if (!supabase) return;
+  try {
+    const { data: users, error: uErr } = await supabase.from('users').select('*');
+    if (!uErr && Array.isArray(users)) {
+      users.forEach(u => {
+        const cleanEmail = u.email.toLowerCase();
+        const existing = DB.accounts[cleanEmail];
+        DB.accounts[cleanEmail] = {
+          id: u.id,
+          email: cleanEmail,
+          passwordHash: (u.password_hash && u.password_hash.startsWith('$2b$')) 
+            ? u.password_hash 
+            : (existing ? existing.passwordHash : DEFAULT_BCRYPT_HASH),
+          name: u.name,
+          role: u.role,
+          roleTitle: u.role === 'STUDENT' ? `Student (${u.department || 'IT'})` : (u.role === 'FACULTY' ? 'Senior Lecturer & Academic Mentor' : (u.role === 'ADMIN' ? 'Campus Operations Controller' : 'Central Stationery Manager')),
+          department: u.department || 'Information Technology',
+          semester: 'Semester 5',
+          phone: u.phone || '+91 98000 00000',
+          avatarInitials: u.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+          academicRisk: { level: 'Low Risk', score: '94/100' }
+        };
+      });
+      console.log(`[SUPABASE] Synchronized ${users.length} accounts from Supabase users table.`);
+    }
+
+    const { data: complaints, error: cErr } = await supabase.from('complaints').select('*').order('created_at', { ascending: false });
+    if (!cErr && Array.isArray(complaints)) {
+      DB.complaints = complaints.map(c => ({
+        id: c.id,
+        category: c.category,
+        subject: c.title,
+        location: c.location,
+        priority: c.priority || 'MEDIUM',
+        description: c.description,
+        status: c.status || 'SUBMITTED',
+        reportedBy: c.student_name || 'Student',
+        reportedById: c.student_id || '246470316113',
+        date: c.created_at ? new Date(c.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Today',
+        assignedTo: 'Campus Maintenance Dispatch'
+      }));
+      console.log(`[SUPABASE] Synchronized ${complaints.length} complaints from Supabase.`);
+    }
+
+    const { data: lostFound, error: lfErr } = await supabase.from('lost_found').select('*').order('created_at', { ascending: false });
+    if (!lfErr && Array.isArray(lostFound)) {
+      DB.lostAndFound = lostFound.map(lf => ({
+        id: lf.id,
+        item: lf.title,
+        type: lf.type === 'found' || lf.type === 'FOUND' ? 'FOUND' : 'LOST',
+        category: lf.category,
+        reportedBy: lf.reporter_name || 'Anonymous',
+        location: lf.location,
+        date: lf.date,
+        time: '11:00 AM',
+        status: lf.status || (lf.type === 'found' ? 'FOUND' : 'LOST'),
+        desc: lf.description,
+        contact: lf.contact
+      }));
+      console.log(`[SUPABASE] Synchronized ${lostFound.length} lost-found records from Supabase.`);
+    }
+  } catch (err) {
+    console.warn('[SUPABASE SYNC WARNING]', err.message);
+  }
+}
+
+syncFromSupabase();
 
 // Safe account serializer (strips passwordHash)
 function serializeUser(account) {
@@ -465,6 +613,22 @@ app.post('/api/auth/register', registrationRateLimiter.middleware(), (req, res) 
   };
 
   DB.accounts[cleanEmail] = newAccount;
+  saveDatabaseToFile();
+
+  if (supabase) {
+    supabase.from('users').upsert({
+      id: newAccount.id,
+      email: newAccount.email,
+      name: newAccount.name,
+      role: newAccount.role,
+      department: newAccount.department,
+      phone: newAccount.phone,
+      password_hash: newAccount.passwordHash
+    }).then(({ error }) => {
+      if (error) console.warn('[SUPABASE USER INSERT ERROR]', error.message);
+      else console.log('[SUPABASE] Stored registered user in Supabase:', newAccount.email);
+    });
+  }
 
   SecurityLogger.log('ACCOUNT_CREATED', {
     userId: newAccount.id,
@@ -544,6 +708,7 @@ app.post('/api/auth/reset-password', (req, res) => {
   user.passwordHash = bcrypt.hashSync(newPassword, 10);
   record.used = true;
   DB.resetTokens.delete(token);
+  saveDatabaseToFile();
 
   SecurityLogger.log('PASSWORD_RESET_SUCCESS', { email: record.email, ip: req.ip });
 
@@ -570,13 +735,14 @@ app.post('/api/auth/logout', authenticateToken, (req, res) => {
 
 // Administrator Endpoint: Restricted strictly to ADMIN
 app.get('/api/admin/overview', authenticateToken, requireRole(['ADMIN']), (req, res) => {
+  const pendingComplaints = (DB.complaints || []).filter(c => c.status !== 'RESOLVED').length;
   return res.json({
     status: 'success',
     metrics: {
       activeStudents: 1248,
       facultyOnDuty: 86,
       classesToday: 42,
-      pendingComplaints: 4,
+      pendingComplaints,
       lowStockItems: 2
     },
     authorizedUser: req.user.name
@@ -596,6 +762,21 @@ app.post('/api/faculty/attendance', authenticateToken, requireRole(['FACULTY', '
     subject,
     studentCount: Array.isArray(records) ? records.length : 0
   });
+
+  if (supabase && Array.isArray(records) && records.length > 0) {
+    const today = new Date().toISOString().slice(0, 10);
+    const rows = records.map(r => ({
+      subject,
+      date: today,
+      student_id: r.studentId || r.id || '246470316113',
+      status: r.status || (r.present === false ? 'Absent' : 'Present'),
+      marked_by: req.user.name || req.user.id
+    }));
+    supabase.from('attendance').insert(rows).then(({ error }) => {
+      if (error) console.warn('[SUPABASE ATTENDANCE INSERT ERROR]', error.message);
+      else console.log('[SUPABASE] Stored attendance rows in Supabase:', rows.length);
+    });
+  }
 
   return res.json({
     status: 'success',
@@ -641,11 +822,193 @@ app.get('/api/student/:studentId/record', authenticateToken, (req, res) => {
 
   return res.json({
     studentId,
-    name: req.user.id === studentId ? req.user.name : "Parshva Shah",
+    name: req.user.id === studentId ? req.user.name : "Student",
     department: "Information Technology",
     attendance: "89.2%",
     riskLevel: "Low Risk"
   });
+});
+
+// Complaints API Endpoints
+app.get('/api/complaints', authenticateToken, async (req, res) => {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('complaints').select('*').order('created_at', { ascending: false });
+      if (!error && Array.isArray(data)) {
+        DB.complaints = data.map(c => ({
+          id: c.id,
+          category: c.category,
+          subject: c.title,
+          location: c.location,
+          priority: c.priority || 'MEDIUM',
+          description: c.description,
+          status: c.status || 'SUBMITTED',
+          reportedBy: c.student_name || 'Student',
+          reportedById: c.student_id || '246470316113',
+          date: c.created_at ? new Date(c.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Today',
+          assignedTo: 'Campus Maintenance Dispatch'
+        }));
+      }
+    } catch (e) {
+      console.warn('[SUPABASE COMPLAINTS GET ERROR]', e.message);
+    }
+  }
+  return res.json({ complaints: DB.complaints || [] });
+});
+
+app.post('/api/complaints', authenticateToken, async (req, res) => {
+  const { category, subject, location, description } = req.body || {};
+  if (!subject || !location) {
+    return res.status(400).json({ error: 'Subject and location are required.' });
+  }
+  const complaint = {
+    id: `CMP-${Date.now().toString().slice(-4)}`,
+    category: category || 'General',
+    subject: String(subject).slice(0, 120),
+    location: String(location).slice(0, 80),
+    description: String(description || '').slice(0, 500),
+    reportedBy: req.user.name,
+    reportedById: req.user.id,
+    date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+    status: 'SUBMITTED',
+    priority: 'MEDIUM',
+    assignedTo: 'Campus Maintenance Dispatch'
+  };
+  if (!DB.complaints) DB.complaints = [];
+  DB.complaints.unshift(complaint);
+  saveDatabaseToFile();
+
+  if (supabase) {
+    supabase.from('complaints').insert([{
+      id: complaint.id,
+      title: complaint.subject,
+      category: complaint.category,
+      location: complaint.location,
+      priority: complaint.priority,
+      description: complaint.description,
+      status: complaint.status,
+      student_id: complaint.reportedById,
+      student_name: complaint.reportedBy
+    }]).then(({ error }) => {
+      if (error) console.warn('[SUPABASE COMPLAINT INSERT ERROR]', error.message);
+      else console.log('[SUPABASE] Stored complaint in Supabase:', complaint.id);
+    });
+  }
+
+  return res.status(201).json({ status: 'success', complaint });
+});
+
+app.patch('/api/complaints/:id', authenticateToken, requireRole(['ADMIN', 'FACULTY']), async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body || {};
+  if (!DB.complaints) DB.complaints = [];
+  const ticket = DB.complaints.find(c => c.id === id);
+  if (!ticket) {
+    return res.status(404).json({ error: 'Complaint not found.' });
+  }
+  if (status) ticket.status = status;
+  saveDatabaseToFile();
+
+  if (supabase && status) {
+    supabase.from('complaints').update({ status }).eq('id', id).then(({ error }) => {
+      if (error) console.warn('[SUPABASE COMPLAINT UPDATE ERROR]', error.message);
+      else console.log('[SUPABASE] Updated complaint status in Supabase:', id, status);
+    });
+  }
+
+  return res.json({ status: 'success', complaint: ticket });
+});
+
+// Lost & Found API Endpoints
+app.get('/api/lost-found', authenticateToken, async (req, res) => {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('lost_found').select('*').order('created_at', { ascending: false });
+      if (!error && Array.isArray(data)) {
+        DB.lostAndFound = data.map(lf => ({
+          id: lf.id,
+          item: lf.title,
+          type: lf.type === 'found' || lf.type === 'FOUND' ? 'FOUND' : 'LOST',
+          category: lf.category,
+          reportedBy: lf.reporter_name || 'Anonymous',
+          location: lf.location,
+          date: lf.date,
+          time: '11:00 AM',
+          status: lf.status || (lf.type === 'found' ? 'FOUND' : 'LOST'),
+          desc: lf.description,
+          contact: lf.contact
+        }));
+      }
+    } catch (e) {
+      console.warn('[SUPABASE LOST-FOUND GET ERROR]', e.message);
+    }
+  }
+  return res.json({ items: DB.lostAndFound || [] });
+});
+
+app.post('/api/lost-found', authenticateToken, async (req, res) => {
+  const { item, type, category, location, date, time, desc, contact } = req.body || {};
+  if (!item || !location) {
+    return res.status(400).json({ error: 'Item name and location are required.' });
+  }
+  const newItem = {
+    id: `LF-${Date.now().toString().slice(-4)}`,
+    item: String(item).slice(0, 100),
+    type: type === 'FOUND' ? 'FOUND' : 'LOST',
+    category: category || 'Personal Belongings',
+    reportedBy: req.user.name,
+    reportedById: req.user.id,
+    location: String(location).slice(0, 80),
+    date: date || 'Today',
+    time: time || '11:00 AM',
+    status: type === 'FOUND' ? 'FOUND' : 'LOST',
+    desc: String(desc || '').slice(0, 400),
+    contact: String(contact || '').slice(0, 50)
+  };
+  if (!DB.lostAndFound) DB.lostAndFound = [];
+  DB.lostAndFound.unshift(newItem);
+  saveDatabaseToFile();
+
+  if (supabase) {
+    supabase.from('lost_found').insert([{
+      id: newItem.id,
+      title: newItem.item,
+      type: newItem.type.toLowerCase(),
+      category: newItem.category,
+      location: newItem.location,
+      date: newItem.date,
+      contact: newItem.contact,
+      description: newItem.desc,
+      status: newItem.status,
+      reporter_name: newItem.reportedBy
+    }]).then(({ error }) => {
+      if (error) console.warn('[SUPABASE LOST-FOUND INSERT ERROR]', error.message);
+      else console.log('[SUPABASE] Stored lost-found item in Supabase:', newItem.id);
+    });
+  }
+
+  return res.status(201).json({ status: 'success', item: newItem });
+});
+
+app.patch('/api/lost-found/:id', authenticateToken, requireRole(['ADMIN', 'FACULTY']), async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body || {};
+  if (!DB.lostAndFound) DB.lostAndFound = [];
+  const item = DB.lostAndFound.find(i => i.id === id);
+  if (!item) {
+    return res.status(404).json({ error: 'Item not found.' });
+  }
+  if (status) item.status = status;
+  saveDatabaseToFile();
+
+  if (supabase && status) {
+    supabase.from('lost_found').update({ status }).eq('id', id).then(({ error }) => {
+      if (error) console.warn('[SUPABASE LOST-FOUND UPDATE ERROR]', error.message);
+      else console.log('[SUPABASE] Updated lost-found status in Supabase:', id, status);
+    });
+  }
+
+  return res.json({ status: 'success', item });
 });
 
 // ==========================================================

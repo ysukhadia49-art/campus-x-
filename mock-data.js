@@ -88,48 +88,32 @@ const CAMPUS_DATA = {
     { time: "03:30 PM", class: "Class 2453 - IT", subject: "Project Mentorship", room: "Seminar Hall 1", attendanceDone: false }
   ],
 
-  // Attention Items ("3 things need your attention.")
-  attentionItems: [
-    {
-      id: "att-1",
-      title: "Mid-term Exam Schedule Released",
-      desc: "Check your GTU mid-semester exam dates and seating allocations now.",
-      time: "2h ago",
-      icon: "file-text",
-      color: "#A94A4A",
-      bg: "#FDF2F2"
-    },
-    {
-      id: "att-2",
-      title: "Library Book Due",
-      desc: "\"Data Structures and Algorithms in C\" is due in 3 days.",
-      time: "5h ago",
-      icon: "book",
-      color: "#3F7D5A",
-      bg: "#EEF4EC"
-    },
-    {
-      id: "att-3",
-      title: "Hostel Maintenance Notice",
-      desc: "Water supply maintenance scheduled tomorrow (10 AM – 1 PM in Block B).",
-      time: "1d ago",
-      icon: "wrench",
-      color: "#A87932",
-      bg: "#F5EEE7"
-    }
-  ],
+  // Attention Items (Dynamic, loaded from storage if present)
+  attentionItems: (() => {
+    try {
+      const stored = localStorage.getItem('campusx_attention');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return [];
+  })(),
 
   // Stationery Inventory Store
-  stationeryInventory: [
-    { id: "STN-101", name: "Blue Ball Pen (Reynolds 0.45)", category: "Writing", price: 10, stock: 126, minStock: 50, unit: "pcs", status: "AVAILABLE", predictedDemand: 475 },
-    { id: "STN-102", name: "Data Science A4 Spiral Lab Journal", category: "Notebooks", price: 65, stock: 14, minStock: 25, unit: "books", status: "LOW_STOCK", predictedDemand: 120 },
-    { id: "STN-103", name: "Engineering Drawing Sheet (Imperial A2)", category: "Sheets", price: 15, stock: 0, minStock: 40, unit: "sheets", status: "OUT_OF_STOCK", predictedDemand: 250 },
-    { id: "STN-104", name: "Casio Scientific Calculator fx-991EX", category: "Calculators", price: 1250, stock: 8, minStock: 5, unit: "units", status: "AVAILABLE", predictedDemand: 15 },
-    { id: "STN-105", name: "Whiteboard Dry-Erase Markers (Pack of 4)", category: "Writing", price: 140, stock: 6, minStock: 15, unit: "packs", status: "LOW_STOCK", predictedDemand: 60 },
-    { id: "STN-106", name: "Microcontroller Solderless Breadboard Kit", category: "Electronics Lab", price: 180, stock: 42, minStock: 20, unit: "kits", status: "AVAILABLE", predictedDemand: 45 },
-    { id: "STN-107", name: "Chemistry & IT White Lab Coat (Size 38)", category: "Apparel", price: 380, stock: 19, minStock: 10, unit: "pcs", status: "AVAILABLE", predictedDemand: 30 },
-    { id: "STN-108", name: "Graph Paper Pad (100 Sheets mm grid)", category: "Sheets", price: 45, stock: 2, minStock: 20, unit: "pads", status: "LOW_STOCK", predictedDemand: 80 }
-  ],
+  stationeryInventory: (() => {
+    try {
+      const stored = localStorage.getItem('campusx_inventory');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return [
+      { id: "STN-101", name: "Blue Ball Pen (Reynolds 0.45)", category: "Writing", price: 10, stock: 126, minStock: 50, unit: "pcs", status: "AVAILABLE", predictedDemand: 475 },
+      { id: "STN-102", name: "Data Science A4 Spiral Lab Journal", category: "Notebooks", price: 65, stock: 14, minStock: 25, unit: "books", status: "LOW_STOCK", predictedDemand: 120 },
+      { id: "STN-103", name: "Engineering Drawing Sheet (Imperial A2)", category: "Sheets", price: 15, stock: 0, minStock: 40, unit: "sheets", status: "OUT_OF_STOCK", predictedDemand: 250 },
+      { id: "STN-104", name: "Casio Scientific Calculator fx-991EX", category: "Calculators", price: 1250, stock: 8, minStock: 5, unit: "units", status: "AVAILABLE", predictedDemand: 15 },
+      { id: "STN-105", name: "Whiteboard Dry-Erase Markers (Pack of 4)", category: "Writing", price: 140, stock: 6, minStock: 15, unit: "packs", status: "LOW_STOCK", predictedDemand: 60 },
+      { id: "STN-106", name: "Microcontroller Solderless Breadboard Kit", category: "Electronics Lab", price: 180, stock: 42, minStock: 20, unit: "kits", status: "AVAILABLE", predictedDemand: 45 },
+      { id: "STN-107", name: "Chemistry & IT White Lab Coat (Size 38)", category: "Apparel", price: 380, stock: 19, minStock: 10, unit: "pcs", status: "AVAILABLE", predictedDemand: 30 },
+      { id: "STN-108", name: "Graph Paper Pad (100 Sheets mm grid)", category: "Sheets", price: 45, stock: 2, minStock: 20, unit: "pads", status: "LOW_STOCK", predictedDemand: 80 }
+    ];
+  })(),
 
   // Student Attendance Roster for Faculty Marking
   studentRoster: [
@@ -145,99 +129,23 @@ const CAMPUS_DATA = {
     { rollNo: "10", enrollment: "246470316125", name: "Rohan Trivedi", present: true, attendancePct: "88%" }
   ],
 
-  // Lost & Found Items
-  lostAndFound: [
-    {
-      id: "LF-301",
-      item: "Black Leather Bi-fold Wallet",
-      type: "LOST",
-      category: "Personal Accessories",
-      reportedBy: "Parshva Shah (246470316113)",
-      location: "Near Central Library Corridor",
-      date: "10 Sep 2026",
-      time: "02:15 PM",
-      status: "POTENTIAL_MATCH",
-      desc: "Contains GTU college ID and library membership card.",
-      matchId: "LF-304"
-    },
-    {
-      id: "LF-302",
-      item: "Casio Scientific Calculator fx-991CW",
-      type: "FOUND",
-      category: "Electronics",
-      reportedBy: "Campus Cleaning Staff",
-      location: "Room 204 Desk 14",
-      date: "11 Sep 2026",
-      time: "09:30 AM",
-      status: "CLAIM_PENDING",
-      desc: "Black scientific calculator with silver keypad borders."
-    },
-    {
-      id: "LF-303",
-      item: "Blue Stainless Steel Water Bottle (Milton)",
-      type: "LOST",
-      category: "Personal Belongings",
-      reportedBy: "Kavya Patel (246470316110)",
-      location: "Sports Ground Pavilion",
-      date: "09 Sep 2026",
-      time: "04:45 PM",
-      status: "LOST",
-      desc: "750ml blue insulated bottle with Tapi stickers."
-    },
-    {
-      id: "LF-304",
-      item: "Black Men's Leather Wallet",
-      type: "FOUND",
-      category: "Personal Accessories",
-      reportedBy: "Library Attendant (Mr. Dave)",
-      location: "Reading Hall Table 3",
-      date: "10 Sep 2026",
-      time: "03:00 PM",
-      status: "POTENTIAL_MATCH",
-      desc: "Handed over to library enquiry counter. Contains GTU student card.",
-      matchId: "LF-301"
-    }
-  ],
+  // Lost & Found Directory (Dynamic, persisted in local storage)
+  lostAndFound: (() => {
+    try {
+      const stored = localStorage.getItem('campusx_lost_found');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return [];
+  })(),
 
-  // Complaints / Maintenance Tickets
-  complaints: [
-    {
-      id: "CMP-401",
-      category: "IT Infrastructure",
-      subject: "Lab 3 Overhead Projector Flickering",
-      description: "HDMI feed repeatedly disconnects during afternoon AIPD lab sessions.",
-      location: "IT Lab 3, 2nd Floor, Main Building",
-      reportedBy: "Prof. S. R. Patel",
-      date: "Today, 10:15 AM",
-      status: "ASSIGNED",
-      assignedTo: "Hardware Maintenance Team (Mr. Rakesh)",
-      priority: "HIGH"
-    },
-    {
-      id: "CMP-402",
-      category: "Campus Facilities",
-      subject: "Water tap leakage near Block B Washroom",
-      description: "Continuous dripping water causing slippery floor near staircase.",
-      location: "Hostel Block B Ground Floor",
-      reportedBy: "Parshva Shah",
-      date: "Yesterday",
-      status: "IN_REVIEW",
-      assignedTo: "Plumbing Department",
-      priority: "MEDIUM"
-    },
-    {
-      id: "CMP-403",
-      category: "Network & Wi-Fi",
-      subject: "Wi-Fi Access Point unreachable in Reading Room",
-      description: "SSID 'Tapi_Student_5G' shows authentication errors since morning.",
-      location: "Central Library 1st Floor",
-      reportedBy: "Student Council",
-      date: "09 Sep 2026",
-      status: "RESOLVED",
-      assignedTo: "Network Operations Centre",
-      priority: "LOW"
-    }
-  ],
+  // Complaints / Maintenance Tickets (Dynamic, persisted in local storage)
+  complaints: (() => {
+    try {
+      const stored = localStorage.getItem('campusx_complaints');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return [];
+  })(),
 
   // Campus Notices
   notices: [
@@ -270,6 +178,12 @@ const CAMPUS_DATA = {
     }
   ]
 };
+
+// Hydrate any registered institutional accounts from persistent local storage
+try {
+  const customUsers = JSON.parse(localStorage.getItem('campusx_custom_users') || '{}');
+  Object.assign(CAMPUS_DATA.accounts, customUsers);
+} catch (e) {}
 
 window.CAMPUS_DATA = CAMPUS_DATA;
 

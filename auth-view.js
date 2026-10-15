@@ -61,31 +61,6 @@ class AuthView {
               </button>
             </div>
 
-            <div class="demo-accounts-box">
-              <div class="demo-title">
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"></path></svg>
-                Instant 1-Click Evaluation Personas:
-              </div>
-              <div class="demo-pills-grid">
-                <button class="demo-pill-btn" onclick="AuthView.quickDemoLogin('student@tapi.edu')">
-                  <span class="demo-pill-name">Parshva Shah</span>
-                  <span class="demo-pill-role">Student Workspace</span>
-                </button>
-                <button class="demo-pill-btn" onclick="AuthView.quickDemoLogin('faculty@tapi.edu')">
-                  <span class="demo-pill-name">Prof. S. R. Patel</span>
-                  <span class="demo-pill-role">Faculty Workspace</span>
-                </button>
-                <button class="demo-pill-btn" onclick="AuthView.quickDemoLogin('admin@tapi.edu')">
-                  <span class="demo-pill-name">Dr. A. K. Joshi</span>
-                  <span class="demo-pill-role">Admin Workspace</span>
-                </button>
-                <button class="demo-pill-btn" onclick="AuthView.quickDemoLogin('stationery@tapi.edu')">
-                  <span class="demo-pill-name">Ramesh Bhai</span>
-                  <span class="demo-pill-role">Stationery Operator</span>
-                </button>
-              </div>
-            </div>
-
           </div>
         </div>
       </div>
@@ -151,7 +126,6 @@ class AuthView {
                   placeholder="e.g. student@tapi.edu or 246470316113" 
                   required 
                   autocomplete="username"
-                  value="student@tapi.edu"
                   oninput="AuthView.clearLoginErrors()">
               </div>
 
@@ -168,7 +142,6 @@ class AuthView {
                     placeholder="••••••••" 
                     required 
                     autocomplete="current-password"
-                    value="password123"
                     oninput="AuthView.clearLoginErrors()">
                   <button 
                     type="button" 
@@ -188,29 +161,6 @@ class AuthView {
 
             <div style="margin-top: 1.25rem; text-align: center; font-size: 0.84rem; color: var(--text-secondary);">
               Need an institutional account? <a href="javascript:void(0)" onclick="appState.setView('register')">Register here</a>
-            </div>
-
-            <!-- 1-Click Evaluation Switcher -->
-            <div class="demo-accounts-box">
-              <div class="demo-title">Quick Demo Sign-In (Verified Credential Pipeline):</div>
-              <div class="demo-pills-grid">
-                <button class="demo-pill-btn" onclick="AuthView.quickDemoLogin('student@tapi.edu')">
-                  <span class="demo-pill-name">Parshva Shah</span>
-                  <span class="demo-pill-role">Student Account</span>
-                </button>
-                <button class="demo-pill-btn" onclick="AuthView.quickDemoLogin('faculty@tapi.edu')">
-                  <span class="demo-pill-name">Prof. S. R. Patel</span>
-                  <span class="demo-pill-role">Faculty Account</span>
-                </button>
-                <button class="demo-pill-btn" onclick="AuthView.quickDemoLogin('admin@tapi.edu')">
-                  <span class="demo-pill-name">Dr. A. K. Joshi</span>
-                  <span class="demo-pill-role">Admin Account</span>
-                </button>
-                <button class="demo-pill-btn" onclick="AuthView.quickDemoLogin('stationery@tapi.edu')">
-                  <span class="demo-pill-name">Ramesh Bhai</span>
-                  <span class="demo-pill-role">Stationery Operator</span>
-                </button>
-              </div>
             </div>
 
           </div>
@@ -404,21 +354,6 @@ class AuthView {
     }
   }
 
-  static async quickDemoLogin(email) {
-    // Populate form fields
-    const emailEl = document.getElementById('loginEmail');
-    const passEl = document.getElementById('loginPassword');
-    if (emailEl) emailEl.value = email;
-    if (passEl) passEl.value = 'password123';
-
-    // Authenticate through the secure verification pipeline
-    try {
-      const user = await appState.authenticateUser(email, 'password123');
-      AuthView.triggerRoleRecognition(user);
-    } catch (err) {
-      appState.showToast(err.message || 'Authentication error', 'error');
-    }
-  }
 
   static async handleRegisterSubmit(e) {
     e.preventDefault();
@@ -501,6 +436,10 @@ class AuthView {
           const customPasswords = JSON.parse(localStorage.getItem('campusx_custom_passwords') || '{}');
           customPasswords[registeredUser.email] = password;
           localStorage.setItem('campusx_custom_passwords', JSON.stringify(customPasswords));
+
+          const customUsers = JSON.parse(localStorage.getItem('campusx_custom_users') || '{}');
+          customUsers[registeredUser.email] = registeredUser;
+          localStorage.setItem('campusx_custom_users', JSON.stringify(customUsers));
         } catch (e) {}
 
         appState.setCurrentUser(registeredUser, 'offline-token-' + Date.now());
@@ -529,7 +468,7 @@ class AuthView {
         <div id="forgotPwFeedback" style="display: none; padding: 0.75rem; border-radius: 6px; font-size: 0.84rem; margin-bottom: 1rem;"></div>
         <div class="form-group">
           <label class="form-label" for="forgotEmailInput">Registered Email</label>
-          <input type="email" id="forgotEmailInput" class="form-input" placeholder="e.g. student@tapi.edu" required value="student@tapi.edu">
+          <input type="email" id="forgotEmailInput" class="form-input" placeholder="e.g. name@tapi.edu" required>
         </div>
       `,
       confirmText: "Send Reset Link",

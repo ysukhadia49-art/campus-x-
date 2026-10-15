@@ -4,7 +4,7 @@
   "description": "Campus X AI - Centralized Campus Intelligence & Academic Portal",
   "main": "index.html",
   "scripts": {
-    "start": "node server.js",
+    "start": "node server/server.js",
     "build": "node prepare-www.js",
     "test:security": "node test-security.js"
   },
@@ -15,6 +15,7 @@
     "@capacitor/app": "^7.0.0",
     "@capacitor/cli": "^7.6.9",
     "@capacitor/core": "^7.6.9",
+    "@supabase/supabase-js": "^2.117.3",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "express": "^5.2.1",

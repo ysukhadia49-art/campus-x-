@@ -8,6 +8,26 @@ class LostFoundView {
   static searchQuery = '';
   static categoryFilter = 'ALL';
 
+  static findPotentialMatch() {
+    if (!CAMPUS_DATA || !Array.isArray(CAMPUS_DATA.lostAndFound)) return null;
+    const lostItems = CAMPUS_DATA.lostAndFound.filter(i => i.type === 'LOST' && i.status !== 'RESOLVED' && i.status !== 'CLAIMED');
+    const foundItems = CAMPUS_DATA.lostAndFound.filter(i => i.type === 'FOUND' && i.status !== 'RESOLVED' && i.status !== 'CLAIMED');
+
+    for (const lost of lostItems) {
+      const lostWords = (lost.item || '').toLowerCase().split(/[\s,.-]+/).filter(w => w.length > 3);
+      for (const found of foundItems) {
+        if (lost.category && found.category && lost.category === found.category) {
+          const foundLower = (found.item || '').toLowerCase();
+          const wordMatch = lostWords.some(w => foundLower.includes(w));
+          if (wordMatch) {
+            return { lost, found };
+          }
+        }
+      }
+    }
+    return null;
+  }
+
   static render(container) {
     const isAdmin = appState.currentUser && (appState.currentUser.role === 'ADMIN');
     const isStudentOrFaculty = !isAdmin;
@@ -19,7 +39,7 @@ class LostFoundView {
       if (LostFoundView.currentTab === 'FOUND' && item.type !== 'FOUND') return false;
       if (LostFoundView.currentTab === 'MY_REPORTS') {
         const currentName = appState.currentUser ? appState.currentUser.name : '';
-        if (item.reportedBy !== currentName && !item.reportedBy.includes('Parshva')) return false;
+        if (!currentName || item.reportedBy !== currentName) return false;
       }
 
       // Search query
@@ -39,6 +59,8 @@ class LostFoundView {
 
       return true;
     });
+
+    const potentialMatch = LostFoundView.findPotentialMatch();
 
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -60,36 +82,38 @@ class LostFoundView {
           </div>
         </div>
 
-        <!-- 2. POSSIBLE MATCH INTERFACE (Section 26 - Admin & General AI discovery) -->
-        <div class="card-editorial" style="background: var(--tint-soft-blue); border-color: #BFDBFE;">
-          <div class="flex items-center justify-between" style="margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
-            <div class="flex items-center gap-2">
-              <span class="badge badge-blue">Possible Match</span>
-              <strong style="color: var(--color-accent-blue); font-size: 0.95rem;">Automated Match Found: Black Leather Wallet</strong>
-            </div>
-            <button class="btn btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.76rem;" onclick="LostFoundView.confirmMatch('LF-301', 'LF-304')">
-              Compare & Confirm Match
-            </button>
-          </div>
-
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
-            <div style="background: #ffffff; padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid #DBEAFE;">
-              <span style="font-size: 0.7rem; font-weight: 700; color: #DC2626; text-transform: uppercase;">Lost Report (#LF-301)</span>
-              <div style="font-weight: 700; font-size: 0.9rem; margin-top: 0.2rem;">Black Leather Bi-fold Wallet</div>
-              <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">
-                Near Central Library • Reported by Parshva Shah • 10:15 AM
+        <!-- 2. DYNAMIC MATCH INTERFACE (Shows only when an active match exists) -->
+        ${potentialMatch ? `
+          <div class="card-editorial" style="background: var(--tint-soft-blue); border-color: #BFDBFE;">
+            <div class="flex items-center justify-between" style="margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+              <div class="flex items-center gap-2">
+                <span class="badge badge-blue">Possible Match</span>
+                <strong style="color: var(--color-accent-blue); font-size: 0.95rem;">Automated Match Found: ${window.SecurityUtils ? window.SecurityUtils.escapeHtml(potentialMatch.lost.item) : potentialMatch.lost.item}</strong>
               </div>
+              <button class="btn btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.76rem;" onclick="LostFoundView.confirmMatch('${potentialMatch.lost.id}', '${potentialMatch.found.id}')">
+                Compare & Confirm Match
+              </button>
             </div>
 
-            <div style="background: #ffffff; padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid #DBEAFE;">
-              <span style="font-size: 0.7rem; font-weight: 700; color: var(--color-success); text-transform: uppercase;">Found Report (#LF-304)</span>
-              <div style="font-weight: 700; font-size: 0.9rem; margin-top: 0.2rem;">Black Men's Leather Wallet</div>
-              <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">
-                Reading Hall Table 3 • Deposited at Library Desk • 10:45 AM
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
+              <div style="background: #ffffff; padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid #DBEAFE;">
+                <span style="font-size: 0.7rem; font-weight: 700; color: #DC2626; text-transform: uppercase;">Lost Report (#${potentialMatch.lost.id})</span>
+                <div style="font-weight: 700; font-size: 0.9rem; margin-top: 0.2rem;">${window.SecurityUtils ? window.SecurityUtils.escapeHtml(potentialMatch.lost.item) : potentialMatch.lost.item}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">
+                  ${potentialMatch.lost.location} • Reported by ${potentialMatch.lost.reportedBy} • ${potentialMatch.lost.time || potentialMatch.lost.date}
+                </div>
+              </div>
+
+              <div style="background: #ffffff; padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid #DBEAFE;">
+                <span style="font-size: 0.7rem; font-weight: 700; color: var(--color-success); text-transform: uppercase;">Found Report (#${potentialMatch.found.id})</span>
+                <div style="font-weight: 700; font-size: 0.9rem; margin-top: 0.2rem;">${window.SecurityUtils ? window.SecurityUtils.escapeHtml(potentialMatch.found.item) : potentialMatch.found.item}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">
+                  ${potentialMatch.found.location} • Reported by ${potentialMatch.found.reportedBy} • ${potentialMatch.found.time || potentialMatch.found.date}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        ` : ''}
 
         <!-- 3. SEARCH & CATEGORY FILTER BAR (Section 23) -->
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
@@ -363,7 +387,18 @@ class LostFoundView {
     const item = CAMPUS_DATA.lostAndFound.find(i => i.id === itemId);
     if (item) {
       item.status = newStatus;
-      appState.showToast(`Item ${itemId} marked as ${newStatus}.`, "success");
+      try {
+        localStorage.setItem('campusx_lost_found', JSON.stringify(CAMPUS_DATA.lostAndFound));
+      } catch (e) {}
+
+      if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+        ApiClient.request('/api/lost-found/' + encodeURIComponent(itemId), {
+          method: 'PATCH',
+          body: JSON.stringify({ status: newStatus })
+        }).catch(err => console.warn('Lost-found patch sync error:', err.message));
+      }
+
+      appState.showToast(`Item ${itemId} marked as ${newStatus}. Synced to Supabase.`, "success");
       LostFoundView.render(document.getElementById('viewContainer'));
     }
   }

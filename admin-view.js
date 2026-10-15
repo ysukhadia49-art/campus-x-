@@ -99,6 +99,9 @@ class AdminView {
   static renderDashboard(container) {
     const isRush = appState.stationeryRush;
 
+    const pendingComplaints = CAMPUS_DATA.complaints.filter(c => c.status !== 'RESOLVED');
+    const lowStockItems = CAMPUS_DATA.stationeryInventory.filter(i => i.stock <= i.minStock);
+
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
 
@@ -108,7 +111,7 @@ class AdminView {
             Tapi Central Admin Hub
           </span>
           <h2 style="font-size: 2.2rem; font-weight: 800; color: var(--text-primary); margin: 0.25rem 0;">Campus overview</h2>
-          <p style="font-size: 0.95rem; color: var(--text-secondary);">Everything important, at a glance.</p>
+          <p style="font-size: 0.95rem; color: var(--text-secondary);">Real-time operations, facilities status, and support tracking.</p>
         </div>
 
         <!-- 6 KEY METRICS (Section 23) -->
@@ -133,19 +136,27 @@ class AdminView {
 
           <div class="card-editorial" style="padding: 1.25rem;">
             <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Pending Complaints</span>
-            <div style="font-size: 1.75rem; font-weight: 800; color: var(--color-warning); margin-top: 0.2rem;">4</div>
-            <div style="font-size: 0.75rem; color: var(--color-warning); font-weight: 600;">Avg dispatch: 1.4 hrs</div>
+            <div style="font-size: 1.75rem; font-weight: 800; color: ${pendingComplaints.length > 0 ? 'var(--color-warning)' : 'var(--color-success)'}; margin-top: 0.2rem;">
+              ${pendingComplaints.length}
+            </div>
+            <div style="font-size: 0.75rem; color: ${pendingComplaints.length > 0 ? 'var(--color-warning)' : 'var(--color-success)'}; font-weight: 600;">
+              ${pendingComplaints.length > 0 ? `${pendingComplaints.length} tickets require dispatch` : 'All tickets resolved'}
+            </div>
           </div>
 
           <div class="card-editorial" style="padding: 1.25rem;">
             <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Low Stock Items</span>
-            <div style="font-size: 1.75rem; font-weight: 800; color: var(--color-error); margin-top: 0.2rem;">2</div>
-            <div style="font-size: 0.75rem; color: var(--color-error); font-weight: 600;">Central Stationery Store</div>
+            <div style="font-size: 1.75rem; font-weight: 800; color: ${lowStockItems.length > 0 ? 'var(--color-error)' : 'var(--color-success)'}; margin-top: 0.2rem;">
+              ${lowStockItems.length}
+            </div>
+            <div style="font-size: 0.75rem; color: ${lowStockItems.length > 0 ? 'var(--color-error)' : 'var(--color-success)'}; font-weight: 600;">
+              ${lowStockItems.length > 0 ? 'Requires store replenishment' : 'Store adequately stocked'}
+            </div>
           </div>
 
           <div class="card-editorial" style="padding: 1.25rem;">
             <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Campus Infrastructure</span>
-            <div style="font-size: 1.75rem; font-weight: 800; color: var(--color-success); margin-top: 0.2rem;">98.5%</div>
+            <div style="font-size: 1.75rem; font-weight: 800; color: var(--color-success); margin-top: 0.2rem;">99.4%</div>
             <div style="font-size: 0.75rem; color: var(--color-success); font-weight: 600;">All facilities active</div>
           </div>
         </div>
@@ -161,18 +172,28 @@ class AdminView {
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-              ${CAMPUS_DATA.complaints.map(t => `
+              ${CAMPUS_DATA.complaints.length === 0 ? `
+                <div style="padding: 2rem 1rem; text-align: center; color: var(--text-muted);">
+                  <div style="width: 40px; height: 40px; margin: 0 auto 0.5rem; border-radius: 50%; background: var(--bg-surface-subtle); display: flex; align-items: center; justify-content: center; color: var(--color-success);">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  </div>
+                  <div style="font-weight: 700; color: var(--text-primary); font-size: 0.92rem;">All Grievances Resolved</div>
+                  <div style="font-size: 0.8rem; margin-top: 0.2rem;">No pending campus maintenance or infrastructure complaints.</div>
+                </div>
+              ` : CAMPUS_DATA.complaints.map(t => {
+                const esc = window.SecurityUtils ? window.SecurityUtils.escapeHtml : (s => s);
+                return `
                 <div style="padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); background: var(--bg-surface-subtle);">
                   <div class="flex items-center justify-between" style="margin-bottom: 0.25rem;">
-                    <span style="font-family: monospace; font-size: 0.75rem; color: var(--color-accent-blue); font-weight: 700;">${t.id}</span>
-                    <span class="badge ${t.status === 'RESOLVED' ? 'badge-available' : 'badge-low-stock'}">${t.status}</span>
+                    <span style="font-family: monospace; font-size: 0.75rem; color: var(--color-accent-blue); font-weight: 700;">${esc(t.id)}</span>
+                    <span class="badge ${t.status === 'RESOLVED' ? 'badge-available' : 'badge-low-stock'}">${esc(t.status)}</span>
                   </div>
-                  <div style="font-weight: 700; font-size: 0.88rem;">${t.subject}</div>
+                  <div style="font-weight: 700; font-size: 0.88rem;">${esc(t.subject)}</div>
                   <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 0.15rem;">
-                    ${t.location} • Assigned: ${t.assignedTo}
+                    ${esc(t.location)} • Assigned: ${esc(t.assignedTo || 'Dispatch Team')}
                   </div>
                 </div>
-              `).join('')}
+              `;}).join('')}
             </div>
           </div>
 
@@ -181,34 +202,39 @@ class AdminView {
             <div>
               <div class="flex items-center justify-between" style="margin-bottom: 1.25rem;">
                 <h3 style="font-size: 1.15rem; font-weight: 700;">Inventory Threshold Alerts</h3>
-                <span class="badge badge-low-stock">Central Store</span>
+                <span class="badge ${lowStockItems.length > 0 ? 'badge-low-stock' : 'badge-available'}">
+                  ${lowStockItems.length > 0 ? `${lowStockItems.length} Low Stock` : 'All Stocked'}
+                </span>
               </div>
 
               <div style="display: flex; flex-direction: column; gap: 0.85rem;">
-                <div style="padding: 0.75rem; background: #FDF2F2; border: 1px solid #FECACA; border-radius: var(--radius-md);">
-                  <div class="flex justify-between items-center">
-                    <strong style="color: #991B1B; font-size: 0.88rem;">Engineering Drawing Sheet A2</strong>
-                    <span class="badge badge-out-of-stock">0 Remaining</span>
+                ${lowStockItems.length === 0 ? `
+                  <div style="padding: 2rem 1rem; text-align: center; color: var(--text-muted);">
+                    <div style="width: 40px; height: 40px; margin: 0 auto 0.5rem; border-radius: 50%; background: var(--bg-surface-subtle); display: flex; align-items: center; justify-content: center; color: var(--color-success);">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    </div>
+                    <div style="font-weight: 700; color: var(--text-primary); font-size: 0.92rem;">Inventory Levels Nominal</div>
+                    <div style="font-size: 0.8rem; margin-top: 0.2rem;">All stationery items are stocked above their reorder thresholds.</div>
                   </div>
-                  <div style="font-size: 0.76rem; color: #7F1D1D; margin-top: 0.25rem;">
-                    Minimum threshold: 40 units. AI predicted monthly demand: 250 sheets.
+                ` : lowStockItems.map(item => {
+                  const esc = window.SecurityUtils ? window.SecurityUtils.escapeHtml : (s => s);
+                  const isOut = item.stock === 0;
+                  return `
+                  <div style="padding: 0.75rem; background: ${isOut ? '#FDF2F2' : 'var(--tint-soft-beige)'}; border: 1px solid ${isOut ? '#FECACA' : '#FED7AA'}; border-radius: var(--radius-md);">
+                    <div class="flex justify-between items-center">
+                      <strong style="color: ${isOut ? '#991B1B' : '#9A3412'}; font-size: 0.88rem;">${esc(item.name)}</strong>
+                      <span class="badge ${isOut ? 'badge-out-of-stock' : 'badge-low-stock'}">${item.stock} ${esc(item.unit || 'units')} Remaining</span>
+                    </div>
+                    <div style="font-size: 0.76rem; color: ${isOut ? '#7F1D1D' : '#7C2D12'}; margin-top: 0.25rem;">
+                      Category: ${esc(item.category)} • Minimum threshold: ${item.minStock} ${esc(item.unit || 'units')}.
+                    </div>
                   </div>
-                </div>
-
-                <div style="padding: 0.75rem; background: var(--tint-soft-beige); border: 1px solid #FED7AA; border-radius: var(--radius-md);">
-                  <div class="flex justify-between items-center">
-                    <strong style="color: #9A3412; font-size: 0.88rem;">Data Science A4 Spiral Lab Journal</strong>
-                    <span class="badge badge-low-stock">14 Remaining</span>
-                  </div>
-                  <div style="font-size: 0.76rem; color: #7C2D12; margin-top: 0.25rem;">
-                    Minimum threshold: 25 units. Semester 5 lab evaluations begin next week.
-                  </div>
-                </div>
+                `;}).join('')}
               </div>
             </div>
 
             <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.78rem; color: var(--text-muted);">Operator: Ramesh Bhai Patel</span>
+              <span style="font-size: 0.78rem; color: var(--text-muted);">Central Store Manager</span>
               <button class="btn btn-secondary" onclick="appState.setView('stationery')">Inspect Inventory ERP</button>
             </div>
           </div>

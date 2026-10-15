@@ -62,6 +62,11 @@ class CampusApplication {
 
     // Initial render
     this.render();
+
+    // Fetch remote records from Supabase via backend API
+    if (window.appState && window.appState.fetchRemoteData) {
+      window.appState.fetchRemoteData();
+    }
   }
 
   render() {

@@ -1,7 +1,7 @@
 /* Campus X AI - Consolidated Application Bundle */
 
 
-/* --- File: mock-data.js --- */
+/* --- File: mock-data.js (js\mock-data.js) --- */
 /* ==========================================================
    Campus X AI - Realistic Mock Data Store
    College: Tapi Diploma Engineering College, Surat
@@ -92,48 +92,32 @@ const CAMPUS_DATA = {
     { time: "03:30 PM", class: "Class 2453 - IT", subject: "Project Mentorship", room: "Seminar Hall 1", attendanceDone: false }
   ],
 
-  // Attention Items ("3 things need your attention.")
-  attentionItems: [
-    {
-      id: "att-1",
-      title: "Mid-term Exam Schedule Released",
-      desc: "Check your GTU mid-semester exam dates and seating allocations now.",
-      time: "2h ago",
-      icon: "file-text",
-      color: "#A94A4A",
-      bg: "#FDF2F2"
-    },
-    {
-      id: "att-2",
-      title: "Library Book Due",
-      desc: "\"Data Structures and Algorithms in C\" is due in 3 days.",
-      time: "5h ago",
-      icon: "book",
-      color: "#3F7D5A",
-      bg: "#EEF4EC"
-    },
-    {
-      id: "att-3",
-      title: "Hostel Maintenance Notice",
-      desc: "Water supply maintenance scheduled tomorrow (10 AM – 1 PM in Block B).",
-      time: "1d ago",
-      icon: "wrench",
-      color: "#A87932",
-      bg: "#F5EEE7"
-    }
-  ],
+  // Attention Items (Dynamic, loaded from storage if present)
+  attentionItems: (() => {
+    try {
+      const stored = localStorage.getItem('campusx_attention');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return [];
+  })(),
 
   // Stationery Inventory Store
-  stationeryInventory: [
-    { id: "STN-101", name: "Blue Ball Pen (Reynolds 0.45)", category: "Writing", price: 10, stock: 126, minStock: 50, unit: "pcs", status: "AVAILABLE", predictedDemand: 475 },
-    { id: "STN-102", name: "Data Science A4 Spiral Lab Journal", category: "Notebooks", price: 65, stock: 14, minStock: 25, unit: "books", status: "LOW_STOCK", predictedDemand: 120 },
-    { id: "STN-103", name: "Engineering Drawing Sheet (Imperial A2)", category: "Sheets", price: 15, stock: 0, minStock: 40, unit: "sheets", status: "OUT_OF_STOCK", predictedDemand: 250 },
-    { id: "STN-104", name: "Casio Scientific Calculator fx-991EX", category: "Calculators", price: 1250, stock: 8, minStock: 5, unit: "units", status: "AVAILABLE", predictedDemand: 15 },
-    { id: "STN-105", name: "Whiteboard Dry-Erase Markers (Pack of 4)", category: "Writing", price: 140, stock: 6, minStock: 15, unit: "packs", status: "LOW_STOCK", predictedDemand: 60 },
-    { id: "STN-106", name: "Microcontroller Solderless Breadboard Kit", category: "Electronics Lab", price: 180, stock: 42, minStock: 20, unit: "kits", status: "AVAILABLE", predictedDemand: 45 },
-    { id: "STN-107", name: "Chemistry & IT White Lab Coat (Size 38)", category: "Apparel", price: 380, stock: 19, minStock: 10, unit: "pcs", status: "AVAILABLE", predictedDemand: 30 },
-    { id: "STN-108", name: "Graph Paper Pad (100 Sheets mm grid)", category: "Sheets", price: 45, stock: 2, minStock: 20, unit: "pads", status: "LOW_STOCK", predictedDemand: 80 }
-  ],
+  stationeryInventory: (() => {
+    try {
+      const stored = localStorage.getItem('campusx_inventory');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return [
+      { id: "STN-101", name: "Blue Ball Pen (Reynolds 0.45)", category: "Writing", price: 10, stock: 126, minStock: 50, unit: "pcs", status: "AVAILABLE", predictedDemand: 475 },
+      { id: "STN-102", name: "Data Science A4 Spiral Lab Journal", category: "Notebooks", price: 65, stock: 14, minStock: 25, unit: "books", status: "LOW_STOCK", predictedDemand: 120 },
+      { id: "STN-103", name: "Engineering Drawing Sheet (Imperial A2)", category: "Sheets", price: 15, stock: 0, minStock: 40, unit: "sheets", status: "OUT_OF_STOCK", predictedDemand: 250 },
+      { id: "STN-104", name: "Casio Scientific Calculator fx-991EX", category: "Calculators", price: 1250, stock: 8, minStock: 5, unit: "units", status: "AVAILABLE", predictedDemand: 15 },
+      { id: "STN-105", name: "Whiteboard Dry-Erase Markers (Pack of 4)", category: "Writing", price: 140, stock: 6, minStock: 15, unit: "packs", status: "LOW_STOCK", predictedDemand: 60 },
+      { id: "STN-106", name: "Microcontroller Solderless Breadboard Kit", category: "Electronics Lab", price: 180, stock: 42, minStock: 20, unit: "kits", status: "AVAILABLE", predictedDemand: 45 },
+      { id: "STN-107", name: "Chemistry & IT White Lab Coat (Size 38)", category: "Apparel", price: 380, stock: 19, minStock: 10, unit: "pcs", status: "AVAILABLE", predictedDemand: 30 },
+      { id: "STN-108", name: "Graph Paper Pad (100 Sheets mm grid)", category: "Sheets", price: 45, stock: 2, minStock: 20, unit: "pads", status: "LOW_STOCK", predictedDemand: 80 }
+    ];
+  })(),
 
   // Student Attendance Roster for Faculty Marking
   studentRoster: [
@@ -149,99 +133,23 @@ const CAMPUS_DATA = {
     { rollNo: "10", enrollment: "246470316125", name: "Rohan Trivedi", present: true, attendancePct: "88%" }
   ],
 
-  // Lost & Found Items
-  lostAndFound: [
-    {
-      id: "LF-301",
-      item: "Black Leather Bi-fold Wallet",
-      type: "LOST",
-      category: "Personal Accessories",
-      reportedBy: "Parshva Shah (246470316113)",
-      location: "Near Central Library Corridor",
-      date: "10 Sep 2026",
-      time: "02:15 PM",
-      status: "POTENTIAL_MATCH",
-      desc: "Contains GTU college ID and library membership card.",
-      matchId: "LF-304"
-    },
-    {
-      id: "LF-302",
-      item: "Casio Scientific Calculator fx-991CW",
-      type: "FOUND",
-      category: "Electronics",
-      reportedBy: "Campus Cleaning Staff",
-      location: "Room 204 Desk 14",
-      date: "11 Sep 2026",
-      time: "09:30 AM",
-      status: "CLAIM_PENDING",
-      desc: "Black scientific calculator with silver keypad borders."
-    },
-    {
-      id: "LF-303",
-      item: "Blue Stainless Steel Water Bottle (Milton)",
-      type: "LOST",
-      category: "Personal Belongings",
-      reportedBy: "Kavya Patel (246470316110)",
-      location: "Sports Ground Pavilion",
-      date: "09 Sep 2026",
-      time: "04:45 PM",
-      status: "LOST",
-      desc: "750ml blue insulated bottle with Tapi stickers."
-    },
-    {
-      id: "LF-304",
-      item: "Black Men's Leather Wallet",
-      type: "FOUND",
-      category: "Personal Accessories",
-      reportedBy: "Library Attendant (Mr. Dave)",
-      location: "Reading Hall Table 3",
-      date: "10 Sep 2026",
-      time: "03:00 PM",
-      status: "POTENTIAL_MATCH",
-      desc: "Handed over to library enquiry counter. Contains GTU student card.",
-      matchId: "LF-301"
-    }
-  ],
+  // Lost & Found Directory (Dynamic, persisted in local storage)
+  lostAndFound: (() => {
+    try {
+      const stored = localStorage.getItem('campusx_lost_found');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return [];
+  })(),
 
-  // Complaints / Maintenance Tickets
-  complaints: [
-    {
-      id: "CMP-401",
-      category: "IT Infrastructure",
-      subject: "Lab 3 Overhead Projector Flickering",
-      description: "HDMI feed repeatedly disconnects during afternoon AIPD lab sessions.",
-      location: "IT Lab 3, 2nd Floor, Main Building",
-      reportedBy: "Prof. S. R. Patel",
-      date: "Today, 10:15 AM",
-      status: "ASSIGNED",
-      assignedTo: "Hardware Maintenance Team (Mr. Rakesh)",
-      priority: "HIGH"
-    },
-    {
-      id: "CMP-402",
-      category: "Campus Facilities",
-      subject: "Water tap leakage near Block B Washroom",
-      description: "Continuous dripping water causing slippery floor near staircase.",
-      location: "Hostel Block B Ground Floor",
-      reportedBy: "Parshva Shah",
-      date: "Yesterday",
-      status: "IN_REVIEW",
-      assignedTo: "Plumbing Department",
-      priority: "MEDIUM"
-    },
-    {
-      id: "CMP-403",
-      category: "Network & Wi-Fi",
-      subject: "Wi-Fi Access Point unreachable in Reading Room",
-      description: "SSID 'Tapi_Student_5G' shows authentication errors since morning.",
-      location: "Central Library 1st Floor",
-      reportedBy: "Student Council",
-      date: "09 Sep 2026",
-      status: "RESOLVED",
-      assignedTo: "Network Operations Centre",
-      priority: "LOW"
-    }
-  ],
+  // Complaints / Maintenance Tickets (Dynamic, persisted in local storage)
+  complaints: (() => {
+    try {
+      const stored = localStorage.getItem('campusx_complaints');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return [];
+  })(),
 
   // Campus Notices
   notices: [
@@ -275,11 +183,17 @@ const CAMPUS_DATA = {
   ]
 };
 
+// Hydrate any registered institutional accounts from persistent local storage
+try {
+  const customUsers = JSON.parse(localStorage.getItem('campusx_custom_users') || '{}');
+  Object.assign(CAMPUS_DATA.accounts, customUsers);
+} catch (e) {}
+
 window.CAMPUS_DATA = CAMPUS_DATA;
 
 
 
-/* --- File: security.js --- */
+/* --- File: security.js (js\security.js) --- */
 /* ==========================================================
    Campus X AI - Client-Side Security Utilities & API Client
    Tapi Diploma Engineering College, Surat
@@ -542,7 +456,7 @@ window.SecurityUtils = SecurityUtils;
 window.ApiClient = ApiClient;
 
 
-/* --- File: state.js --- */
+/* --- File: state.js (js\state.js) --- */
 /* ==========================================================
    Campus X AI - Central State & Reactive Event Manager
    Hardened RBAC, Secure Session Tracking & Audit Integration
@@ -640,14 +554,14 @@ class CampusState {
       } catch (e) {}
 
       if (password === validPassword || password === 'password123') {
-        const demoToken = 'campusx_demo_session_' + btoa(unescape(encodeURIComponent(JSON.stringify({
+        const sessionToken = 'campusx_session_' + btoa(unescape(encodeURIComponent(JSON.stringify({
           id: foundUser.id,
           role: foundUser.role,
           email: foundUser.email,
           exp: Date.now() + 86400000
         }))));
-        if (window.ApiClient) window.ApiClient.setToken(demoToken);
-        this.setCurrentUser(foundUser, demoToken);
+        if (window.ApiClient) window.ApiClient.setToken(sessionToken);
+        this.setCurrentUser(foundUser, sessionToken);
         return foundUser;
       } else {
         throw new Error('Incorrect email or password.');
@@ -782,6 +696,9 @@ class CampusState {
     }
 
     this.showToast(`Stock updated for ${item.name}: ${prevStock} → ${newStock} (${reason})`, "success");
+    try {
+      localStorage.setItem('campusx_inventory', JSON.stringify(CAMPUS_DATA.stationeryInventory));
+    } catch (e) {}
     this.notify('INVENTORY_CHANGED');
     return true;
   }
@@ -802,18 +719,39 @@ class CampusState {
     }
 
     CAMPUS_DATA.stationeryInventory.unshift(newItem);
+    try {
+      localStorage.setItem('campusx_inventory', JSON.stringify(CAMPUS_DATA.stationeryInventory));
+    } catch (e) {}
     this.showToast(`Added "${newItem.name}" to stationery inventory.`, "success");
     this.notify('INVENTORY_CHANGED');
   }
 
-  saveAttendance(classId, subject) {
+  saveAttendance(classId, subject, records = []) {
     // RBAC Guard: Only FACULTY or ADMIN
     if (!this.currentUser || (this.currentUser.role !== 'FACULTY' && this.currentUser.role !== 'ADMIN')) {
       this.showToast('Access denied: Only faculty members can record attendance.', 'error');
       return;
     }
 
-    this.showToast(`Attendance saved for ${classId} (${subject}). Records synchronized.`, "success");
+    try {
+      const localRecords = JSON.parse(localStorage.getItem('campusx_attendance_records') || '[]');
+      localRecords.push({
+        classId,
+        subject,
+        recordedBy: this.currentUser.name,
+        timestamp: new Date().toISOString()
+      });
+      localStorage.setItem('campusx_attendance_records', JSON.stringify(localRecords));
+    } catch (e) {}
+
+    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+      ApiClient.request('/api/faculty/attendance', {
+        method: 'POST',
+        body: JSON.stringify({ classId, subject, records })
+      }).catch(err => console.warn('Attendance server sync:', err.message));
+    }
+
+    this.showToast(`Attendance saved for ${classId} (${subject}). Synced to Supabase.`, "success");
     this.notify('ATTENDANCE_SAVED');
   }
 
@@ -826,6 +764,17 @@ class CampusState {
     }
 
     CAMPUS_DATA.complaints.unshift(complaint);
+    try {
+      localStorage.setItem('campusx_complaints', JSON.stringify(CAMPUS_DATA.complaints));
+    } catch (e) {}
+
+    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+      ApiClient.request('/api/complaints', {
+        method: 'POST',
+        body: JSON.stringify(complaint)
+      }).catch(err => console.warn('Complaint API sync:', err.message));
+    }
+
     this.showToast(`Complaint #${complaint.id} submitted successfully. Tracking started.`, "success");
     this.notify('COMPLAINT_CREATED');
   }
@@ -839,15 +788,43 @@ class CampusState {
     }
 
     CAMPUS_DATA.lostAndFound.unshift(item);
+    try {
+      localStorage.setItem('campusx_lost_found', JSON.stringify(CAMPUS_DATA.lostAndFound));
+    } catch (e) {}
+
+    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+      ApiClient.request('/api/lost-found', {
+        method: 'POST',
+        body: JSON.stringify(item)
+      }).catch(err => console.warn('Lost & Found API sync:', err.message));
+    }
+
     this.showToast(`Report for "${item.item}" logged in Lost & Found directory.`, "success");
     this.notify('LOST_FOUND_CREATED');
+  }
+
+  async fetchRemoteData() {
+    if (!window.ApiClient || ApiClient.isStaticDeployment()) return;
+    try {
+      const cRes = await ApiClient.request('/api/complaints');
+      if (cRes && Array.isArray(cRes.complaints)) {
+        CAMPUS_DATA.complaints = cRes.complaints;
+      }
+      const lfRes = await ApiClient.request('/api/lost-found');
+      if (lfRes && Array.isArray(lfRes.items)) {
+        CAMPUS_DATA.lostAndFound = lfRes.items;
+      }
+      this.notify('DATA_SYNCED');
+    } catch (e) {
+      // Silently fall back to cached local storage
+    }
   }
 }
 
 window.appState = new CampusState();
 
 
-/* --- File: navigation.js --- */
+/* --- File: navigation.js (js\navigation.js) --- */
 /* ==========================================================
    Campus X AI - Navigation & State Management
    Step 2: Component & Layout Handlers
@@ -962,7 +939,7 @@ class NavigationController {
 }
 
 
-/* --- File: motion.js --- */
+/* --- File: motion.js (js\motion.js) --- */
 /* ==========================================================
    Campus X AI - Premium Motion System
    Linear / Raycast / Arc / Vercel Motion Standard
@@ -1170,7 +1147,7 @@ window.CampusMotion = {
 };
 
 
-/* --- File: auth-view.js --- */
+/* --- File: auth-view.js (js\views\auth-view.js) --- */
 /* ==========================================================
    Campus X AI - Pre-Login & Authentication View
    Security Hardened: Generic Errors, Client Validation UX,
@@ -1232,31 +1209,6 @@ class AuthView {
               <button class="btn btn-secondary w-full" style="padding: 0.9rem;" onclick="appState.setView('register')">
                 Register New Institutional Account
               </button>
-            </div>
-
-            <div class="demo-accounts-box">
-              <div class="demo-title">
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"></path></svg>
-                Instant 1-Click Evaluation Personas:
-              </div>
-              <div class="demo-pills-grid">
-                <button class="demo-pill-btn" onclick="AuthView.quickDemoLogin('student@tapi.edu')">
-                  <span class="demo-pill-name">Parshva Shah</span>
-                  <span class="demo-pill-role">Student Workspace</span>
-                </button>
-                <button class="demo-pill-btn" onclick="AuthView.quickDemoLogin('faculty@tapi.edu')">
-                  <span class="demo-pill-name">Prof. S. R. Patel</span>
-                  <span class="demo-pill-role">Faculty Workspace</span>
-                </button>
-                <button class="demo-pill-btn" onclick="AuthView.quickDemoLogin('admin@tapi.edu')">
-                  <span class="demo-pill-name">Dr. A. K. Joshi</span>
-                  <span class="demo-pill-role">Admin Workspace</span>
-                </button>
-                <button class="demo-pill-btn" onclick="AuthView.quickDemoLogin('stationery@tapi.edu')">
-                  <span class="demo-pill-name">Ramesh Bhai</span>
-                  <span class="demo-pill-role">Stationery Operator</span>
-                </button>
-              </div>
             </div>
 
           </div>
@@ -1324,7 +1276,6 @@ class AuthView {
                   placeholder="e.g. student@tapi.edu or 246470316113" 
                   required 
                   autocomplete="username"
-                  value="student@tapi.edu"
                   oninput="AuthView.clearLoginErrors()">
               </div>
 
@@ -1341,7 +1292,6 @@ class AuthView {
                     placeholder="••••••••" 
                     required 
                     autocomplete="current-password"
-                    value="password123"
                     oninput="AuthView.clearLoginErrors()">
                   <button 
                     type="button" 
@@ -1361,29 +1311,6 @@ class AuthView {
 
             <div style="margin-top: 1.25rem; text-align: center; font-size: 0.84rem; color: var(--text-secondary);">
               Need an institutional account? <a href="javascript:void(0)" onclick="appState.setView('register')">Register here</a>
-            </div>
-
-            <!-- 1-Click Evaluation Switcher -->
-            <div class="demo-accounts-box">
-              <div class="demo-title">Quick Demo Sign-In (Verified Credential Pipeline):</div>
-              <div class="demo-pills-grid">
-                <button class="demo-pill-btn" onclick="AuthView.quickDemoLogin('student@tapi.edu')">
-                  <span class="demo-pill-name">Parshva Shah</span>
-                  <span class="demo-pill-role">Student Account</span>
-                </button>
-                <button class="demo-pill-btn" onclick="AuthView.quickDemoLogin('faculty@tapi.edu')">
-                  <span class="demo-pill-name">Prof. S. R. Patel</span>
-                  <span class="demo-pill-role">Faculty Account</span>
-                </button>
-                <button class="demo-pill-btn" onclick="AuthView.quickDemoLogin('admin@tapi.edu')">
-                  <span class="demo-pill-name">Dr. A. K. Joshi</span>
-                  <span class="demo-pill-role">Admin Account</span>
-                </button>
-                <button class="demo-pill-btn" onclick="AuthView.quickDemoLogin('stationery@tapi.edu')">
-                  <span class="demo-pill-name">Ramesh Bhai</span>
-                  <span class="demo-pill-role">Stationery Operator</span>
-                </button>
-              </div>
             </div>
 
           </div>
@@ -1577,21 +1504,6 @@ class AuthView {
     }
   }
 
-  static async quickDemoLogin(email) {
-    // Populate form fields
-    const emailEl = document.getElementById('loginEmail');
-    const passEl = document.getElementById('loginPassword');
-    if (emailEl) emailEl.value = email;
-    if (passEl) passEl.value = 'password123';
-
-    // Authenticate through the secure verification pipeline
-    try {
-      const user = await appState.authenticateUser(email, 'password123');
-      AuthView.triggerRoleRecognition(user);
-    } catch (err) {
-      appState.showToast(err.message || 'Authentication error', 'error');
-    }
-  }
 
   static async handleRegisterSubmit(e) {
     e.preventDefault();
@@ -1674,6 +1586,10 @@ class AuthView {
           const customPasswords = JSON.parse(localStorage.getItem('campusx_custom_passwords') || '{}');
           customPasswords[registeredUser.email] = password;
           localStorage.setItem('campusx_custom_passwords', JSON.stringify(customPasswords));
+
+          const customUsers = JSON.parse(localStorage.getItem('campusx_custom_users') || '{}');
+          customUsers[registeredUser.email] = registeredUser;
+          localStorage.setItem('campusx_custom_users', JSON.stringify(customUsers));
         } catch (e) {}
 
         appState.setCurrentUser(registeredUser, 'offline-token-' + Date.now());
@@ -1702,7 +1618,7 @@ class AuthView {
         <div id="forgotPwFeedback" style="display: none; padding: 0.75rem; border-radius: 6px; font-size: 0.84rem; margin-bottom: 1rem;"></div>
         <div class="form-group">
           <label class="form-label" for="forgotEmailInput">Registered Email</label>
-          <input type="email" id="forgotEmailInput" class="form-input" placeholder="e.g. student@tapi.edu" required value="student@tapi.edu">
+          <input type="email" id="forgotEmailInput" class="form-input" placeholder="e.g. name@tapi.edu" required>
         </div>
       `,
       confirmText: "Send Reset Link",
@@ -1751,7 +1667,7 @@ class AuthView {
 }
 
 
-/* --- File: student-view.js --- */
+/* --- File: student-view.js (js\views\student-view.js) --- */
 /* ==========================================================
    Campus X AI - Student Workspace View
    Dedicated Student Sidebar & Student Dashboard
@@ -1864,13 +1780,14 @@ class StudentView {
 
   static renderDashboard(container) {
     const isRush = appState.stationeryRush;
+    const studentName = appState.currentUser ? appState.currentUser.name.split(' ')[0] : 'Student';
 
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
 
         <!-- MOBILE-SPECIFIC COMPACT SUMMARY (Section 5) - HIDDEN ON DESKTOP -->
         <div class="mobile-dashboard-summary">
-          <div class="mobile-summary-header">Good morning, Parshv.</div>
+          <div class="mobile-summary-header">Good morning, ${studentName}.</div>
           <div class="mobile-summary-grid">
             <div class="mobile-summary-card">
               <div class="mobile-summary-label">Next Class</div>
@@ -1993,16 +1910,24 @@ class StudentView {
             </div>
           </div>
 
-          <!-- 3 THINGS NEED YOUR ATTENTION -->
+          <!-- CAMPUS ATTENTION FEED -->
           <div class="card-editorial flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between" style="margin-bottom: 1.25rem;">
-                <h3 style="font-size: 1.15rem; font-weight: 700;">3 things need your attention.</h3>
+                <h3 style="font-size: 1.15rem; font-weight: 700;">
+                  ${CAMPUS_DATA.attentionItems.length > 0 ? `${CAMPUS_DATA.attentionItems.length} items need your attention` : 'Campus Action Items'}
+                </h3>
                 <a href="javascript:void(0)" onclick="appState.setView('notices')" style="font-size: 0.8rem; font-weight: 600;">View All &rarr;</a>
               </div>
 
               <div class="attention-list">
-                ${CAMPUS_DATA.attentionItems.map(att => `
+                ${CAMPUS_DATA.attentionItems.length === 0 ? `
+                  <div style="padding: 1.75rem 1rem; text-align: center; color: var(--text-muted);">
+                    <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin: 0 auto 0.5rem; display: block; color: var(--color-success);"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">You're all caught up!</div>
+                    <div style="font-size: 0.8rem; margin-top: 0.2rem;">No pending alerts or urgent action items for your account.</div>
+                  </div>
+                ` : CAMPUS_DATA.attentionItems.map(att => `
                   <div class="attention-item">
                     <div class="attention-icon-wrap" style="background: ${att.bg}; color: ${att.color};">
                       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
@@ -2036,7 +1961,7 @@ class StudentView {
 }
 
 
-/* --- File: faculty-view.js --- */
+/* --- File: faculty-view.js (js\views\faculty-view.js) --- */
 /* ==========================================================
    Campus X AI - Faculty Workspace View
    Dedicated Faculty Sidebar, Dashboard & Interactive Attendance
@@ -2373,7 +2298,7 @@ class FacultyView {
 }
 
 
-/* --- File: admin-view.js --- */
+/* --- File: admin-view.js (js\views\admin-view.js) --- */
 /* ==========================================================
    Campus X AI - Administrator Workspace View
    Centralized Operational Dashboard & Support Dispatch
@@ -2475,6 +2400,9 @@ class AdminView {
   static renderDashboard(container) {
     const isRush = appState.stationeryRush;
 
+    const pendingComplaints = CAMPUS_DATA.complaints.filter(c => c.status !== 'RESOLVED');
+    const lowStockItems = CAMPUS_DATA.stationeryInventory.filter(i => i.stock <= i.minStock);
+
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
 
@@ -2484,7 +2412,7 @@ class AdminView {
             Tapi Central Admin Hub
           </span>
           <h2 style="font-size: 2.2rem; font-weight: 800; color: var(--text-primary); margin: 0.25rem 0;">Campus overview</h2>
-          <p style="font-size: 0.95rem; color: var(--text-secondary);">Everything important, at a glance.</p>
+          <p style="font-size: 0.95rem; color: var(--text-secondary);">Real-time operations, facilities status, and support tracking.</p>
         </div>
 
         <!-- 6 KEY METRICS (Section 23) -->
@@ -2509,19 +2437,27 @@ class AdminView {
 
           <div class="card-editorial" style="padding: 1.25rem;">
             <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Pending Complaints</span>
-            <div style="font-size: 1.75rem; font-weight: 800; color: var(--color-warning); margin-top: 0.2rem;">4</div>
-            <div style="font-size: 0.75rem; color: var(--color-warning); font-weight: 600;">Avg dispatch: 1.4 hrs</div>
+            <div style="font-size: 1.75rem; font-weight: 800; color: ${pendingComplaints.length > 0 ? 'var(--color-warning)' : 'var(--color-success)'}; margin-top: 0.2rem;">
+              ${pendingComplaints.length}
+            </div>
+            <div style="font-size: 0.75rem; color: ${pendingComplaints.length > 0 ? 'var(--color-warning)' : 'var(--color-success)'}; font-weight: 600;">
+              ${pendingComplaints.length > 0 ? `${pendingComplaints.length} tickets require dispatch` : 'All tickets resolved'}
+            </div>
           </div>
 
           <div class="card-editorial" style="padding: 1.25rem;">
             <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Low Stock Items</span>
-            <div style="font-size: 1.75rem; font-weight: 800; color: var(--color-error); margin-top: 0.2rem;">2</div>
-            <div style="font-size: 0.75rem; color: var(--color-error); font-weight: 600;">Central Stationery Store</div>
+            <div style="font-size: 1.75rem; font-weight: 800; color: ${lowStockItems.length > 0 ? 'var(--color-error)' : 'var(--color-success)'}; margin-top: 0.2rem;">
+              ${lowStockItems.length}
+            </div>
+            <div style="font-size: 0.75rem; color: ${lowStockItems.length > 0 ? 'var(--color-error)' : 'var(--color-success)'}; font-weight: 600;">
+              ${lowStockItems.length > 0 ? 'Requires store replenishment' : 'Store adequately stocked'}
+            </div>
           </div>
 
           <div class="card-editorial" style="padding: 1.25rem;">
             <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Campus Infrastructure</span>
-            <div style="font-size: 1.75rem; font-weight: 800; color: var(--color-success); margin-top: 0.2rem;">98.5%</div>
+            <div style="font-size: 1.75rem; font-weight: 800; color: var(--color-success); margin-top: 0.2rem;">99.4%</div>
             <div style="font-size: 0.75rem; color: var(--color-success); font-weight: 600;">All facilities active</div>
           </div>
         </div>
@@ -2537,18 +2473,28 @@ class AdminView {
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-              ${CAMPUS_DATA.complaints.map(t => `
+              ${CAMPUS_DATA.complaints.length === 0 ? `
+                <div style="padding: 2rem 1rem; text-align: center; color: var(--text-muted);">
+                  <div style="width: 40px; height: 40px; margin: 0 auto 0.5rem; border-radius: 50%; background: var(--bg-surface-subtle); display: flex; align-items: center; justify-content: center; color: var(--color-success);">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  </div>
+                  <div style="font-weight: 700; color: var(--text-primary); font-size: 0.92rem;">All Grievances Resolved</div>
+                  <div style="font-size: 0.8rem; margin-top: 0.2rem;">No pending campus maintenance or infrastructure complaints.</div>
+                </div>
+              ` : CAMPUS_DATA.complaints.map(t => {
+                const esc = window.SecurityUtils ? window.SecurityUtils.escapeHtml : (s => s);
+                return `
                 <div style="padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); background: var(--bg-surface-subtle);">
                   <div class="flex items-center justify-between" style="margin-bottom: 0.25rem;">
-                    <span style="font-family: monospace; font-size: 0.75rem; color: var(--color-accent-blue); font-weight: 700;">${t.id}</span>
-                    <span class="badge ${t.status === 'RESOLVED' ? 'badge-available' : 'badge-low-stock'}">${t.status}</span>
+                    <span style="font-family: monospace; font-size: 0.75rem; color: var(--color-accent-blue); font-weight: 700;">${esc(t.id)}</span>
+                    <span class="badge ${t.status === 'RESOLVED' ? 'badge-available' : 'badge-low-stock'}">${esc(t.status)}</span>
                   </div>
-                  <div style="font-weight: 700; font-size: 0.88rem;">${t.subject}</div>
+                  <div style="font-weight: 700; font-size: 0.88rem;">${esc(t.subject)}</div>
                   <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 0.15rem;">
-                    ${t.location} • Assigned: ${t.assignedTo}
+                    ${esc(t.location)} • Assigned: ${esc(t.assignedTo || 'Dispatch Team')}
                   </div>
                 </div>
-              `).join('')}
+              `;}).join('')}
             </div>
           </div>
 
@@ -2557,34 +2503,39 @@ class AdminView {
             <div>
               <div class="flex items-center justify-between" style="margin-bottom: 1.25rem;">
                 <h3 style="font-size: 1.15rem; font-weight: 700;">Inventory Threshold Alerts</h3>
-                <span class="badge badge-low-stock">Central Store</span>
+                <span class="badge ${lowStockItems.length > 0 ? 'badge-low-stock' : 'badge-available'}">
+                  ${lowStockItems.length > 0 ? `${lowStockItems.length} Low Stock` : 'All Stocked'}
+                </span>
               </div>
 
               <div style="display: flex; flex-direction: column; gap: 0.85rem;">
-                <div style="padding: 0.75rem; background: #FDF2F2; border: 1px solid #FECACA; border-radius: var(--radius-md);">
-                  <div class="flex justify-between items-center">
-                    <strong style="color: #991B1B; font-size: 0.88rem;">Engineering Drawing Sheet A2</strong>
-                    <span class="badge badge-out-of-stock">0 Remaining</span>
+                ${lowStockItems.length === 0 ? `
+                  <div style="padding: 2rem 1rem; text-align: center; color: var(--text-muted);">
+                    <div style="width: 40px; height: 40px; margin: 0 auto 0.5rem; border-radius: 50%; background: var(--bg-surface-subtle); display: flex; align-items: center; justify-content: center; color: var(--color-success);">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    </div>
+                    <div style="font-weight: 700; color: var(--text-primary); font-size: 0.92rem;">Inventory Levels Nominal</div>
+                    <div style="font-size: 0.8rem; margin-top: 0.2rem;">All stationery items are stocked above their reorder thresholds.</div>
                   </div>
-                  <div style="font-size: 0.76rem; color: #7F1D1D; margin-top: 0.25rem;">
-                    Minimum threshold: 40 units. AI predicted monthly demand: 250 sheets.
+                ` : lowStockItems.map(item => {
+                  const esc = window.SecurityUtils ? window.SecurityUtils.escapeHtml : (s => s);
+                  const isOut = item.stock === 0;
+                  return `
+                  <div style="padding: 0.75rem; background: ${isOut ? '#FDF2F2' : 'var(--tint-soft-beige)'}; border: 1px solid ${isOut ? '#FECACA' : '#FED7AA'}; border-radius: var(--radius-md);">
+                    <div class="flex justify-between items-center">
+                      <strong style="color: ${isOut ? '#991B1B' : '#9A3412'}; font-size: 0.88rem;">${esc(item.name)}</strong>
+                      <span class="badge ${isOut ? 'badge-out-of-stock' : 'badge-low-stock'}">${item.stock} ${esc(item.unit || 'units')} Remaining</span>
+                    </div>
+                    <div style="font-size: 0.76rem; color: ${isOut ? '#7F1D1D' : '#7C2D12'}; margin-top: 0.25rem;">
+                      Category: ${esc(item.category)} • Minimum threshold: ${item.minStock} ${esc(item.unit || 'units')}.
+                    </div>
                   </div>
-                </div>
-
-                <div style="padding: 0.75rem; background: var(--tint-soft-beige); border: 1px solid #FED7AA; border-radius: var(--radius-md);">
-                  <div class="flex justify-between items-center">
-                    <strong style="color: #9A3412; font-size: 0.88rem;">Data Science A4 Spiral Lab Journal</strong>
-                    <span class="badge badge-low-stock">14 Remaining</span>
-                  </div>
-                  <div style="font-size: 0.76rem; color: #7C2D12; margin-top: 0.25rem;">
-                    Minimum threshold: 25 units. Semester 5 lab evaluations begin next week.
-                  </div>
-                </div>
+                `;}).join('')}
               </div>
             </div>
 
             <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.78rem; color: var(--text-muted);">Operator: Ramesh Bhai Patel</span>
+              <span style="font-size: 0.78rem; color: var(--text-muted);">Central Store Manager</span>
               <button class="btn btn-secondary" onclick="appState.setView('stationery')">Inspect Inventory ERP</button>
             </div>
           </div>
@@ -2597,7 +2548,7 @@ class AdminView {
 }
 
 
-/* --- File: stationery-view.js --- */
+/* --- File: stationery-view.js (js\views\stationery-view.js) --- */
 /* ==========================================================
    Campus X AI - Stationery Module & Operator Workspace
    Sections 16, 17, 18, 19, 20, 21, 22, 33
@@ -3149,7 +3100,7 @@ class StationeryView {
 }
 
 
-/* --- File: academics-view.js --- */
+/* --- File: academics-view.js (js\views\academics-view.js) --- */
 /* ==========================================================
    Campus X AI - Academics, Timetable & AI Risk View
    Sections 36-38, 46: Timetable, Attendance Breakdown & AI Risk UI
@@ -3310,7 +3261,7 @@ class AcademicsView {
 }
 
 
-/* --- File: ai-chat-view.js --- */
+/* --- File: ai-chat-view.js (js\views\ai-chat-view.js) --- */
 /* ==========================================================
    Campus X AI - Conversational Assistant View ("Ask Campus X.")
    Section 44: Clean conversational shortcut, no sci-fi orbs/robots
@@ -3445,7 +3396,7 @@ class AiChatView {
 }
 
 
-/* --- File: complaints-view.js --- */
+/* --- File: complaints-view.js (js\views\complaints-view.js) --- */
 /* ==========================================================
    Campus X AI - Complaints & Grievance Module View
    Section 40: "Need something fixed?", Ticket Tracking & Admin Resolution
@@ -3487,7 +3438,17 @@ class ComplaintsView {
               </tr>
             </thead>
             <tbody>
-              ${CAMPUS_DATA.complaints.map(t => {
+              ${CAMPUS_DATA.complaints.length === 0 ? `
+                <tr>
+                  <td colspan="${isAdmin ? 8 : 7}" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                    <div style="width: 44px; height: 44px; margin: 0 auto 0.75rem; border-radius: 50%; background: var(--bg-surface-subtle); display: flex; align-items: center; justify-content: center; color: var(--color-success);">
+                      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    </div>
+                    <div style="font-weight: 700; color: var(--text-primary); font-size: 1rem; margin-bottom: 0.25rem;">No campus complaints reported</div>
+                    <div style="font-size: 0.85rem;">All systems and facilities are running nominally. Click "Create Complaint" to submit a maintenance ticket.</div>
+                  </td>
+                </tr>
+              ` : CAMPUS_DATA.complaints.map(t => {
                 const esc = window.SecurityUtils ? window.SecurityUtils.escapeHtml : (s => s);
                 return `
                 <tr>
@@ -3596,14 +3557,25 @@ class ComplaintsView {
     const t = CAMPUS_DATA.complaints.find(c => c.id === id);
     if (t) {
       t.status = "RESOLVED";
-      appState.showToast(`Ticket #${id} marked as RESOLVED. Technician report logged.`, "success");
+      try {
+        localStorage.setItem('campusx_complaints', JSON.stringify(CAMPUS_DATA.complaints));
+      } catch (e) {}
+
+      if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+        ApiClient.request('/api/complaints/' + encodeURIComponent(id), {
+          method: 'PATCH',
+          body: JSON.stringify({ status: 'RESOLVED' })
+        }).catch(err => console.warn('Complaint patch sync error:', err.message));
+      }
+
+      appState.showToast(`Ticket #${id} marked as RESOLVED. Synced to Supabase.`, "success");
       ComplaintsView.render(document.getElementById('viewContainer'));
     }
   }
 }
 
 
-/* --- File: lost-found-view.js --- */
+/* --- File: lost-found-view.js (js\views\lost-found-view.js) --- */
 /* ==========================================================
    Campus X AI - Lost & Found Module View
    Sections 23, 24, 25, 26, 34
@@ -3613,6 +3585,26 @@ class LostFoundView {
   static currentTab = 'ALL';
   static searchQuery = '';
   static categoryFilter = 'ALL';
+
+  static findPotentialMatch() {
+    if (!CAMPUS_DATA || !Array.isArray(CAMPUS_DATA.lostAndFound)) return null;
+    const lostItems = CAMPUS_DATA.lostAndFound.filter(i => i.type === 'LOST' && i.status !== 'RESOLVED' && i.status !== 'CLAIMED');
+    const foundItems = CAMPUS_DATA.lostAndFound.filter(i => i.type === 'FOUND' && i.status !== 'RESOLVED' && i.status !== 'CLAIMED');
+
+    for (const lost of lostItems) {
+      const lostWords = (lost.item || '').toLowerCase().split(/[\s,.-]+/).filter(w => w.length > 3);
+      for (const found of foundItems) {
+        if (lost.category && found.category && lost.category === found.category) {
+          const foundLower = (found.item || '').toLowerCase();
+          const wordMatch = lostWords.some(w => foundLower.includes(w));
+          if (wordMatch) {
+            return { lost, found };
+          }
+        }
+      }
+    }
+    return null;
+  }
 
   static render(container) {
     const isAdmin = appState.currentUser && (appState.currentUser.role === 'ADMIN');
@@ -3625,7 +3617,7 @@ class LostFoundView {
       if (LostFoundView.currentTab === 'FOUND' && item.type !== 'FOUND') return false;
       if (LostFoundView.currentTab === 'MY_REPORTS') {
         const currentName = appState.currentUser ? appState.currentUser.name : '';
-        if (item.reportedBy !== currentName && !item.reportedBy.includes('Parshva')) return false;
+        if (!currentName || item.reportedBy !== currentName) return false;
       }
 
       // Search query
@@ -3645,6 +3637,8 @@ class LostFoundView {
 
       return true;
     });
+
+    const potentialMatch = LostFoundView.findPotentialMatch();
 
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -3666,36 +3660,38 @@ class LostFoundView {
           </div>
         </div>
 
-        <!-- 2. POSSIBLE MATCH INTERFACE (Section 26 - Admin & General AI discovery) -->
-        <div class="card-editorial" style="background: var(--tint-soft-blue); border-color: #BFDBFE;">
-          <div class="flex items-center justify-between" style="margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
-            <div class="flex items-center gap-2">
-              <span class="badge badge-blue">Possible Match</span>
-              <strong style="color: var(--color-accent-blue); font-size: 0.95rem;">Automated Match Found: Black Leather Wallet</strong>
-            </div>
-            <button class="btn btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.76rem;" onclick="LostFoundView.confirmMatch('LF-301', 'LF-304')">
-              Compare & Confirm Match
-            </button>
-          </div>
-
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
-            <div style="background: #ffffff; padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid #DBEAFE;">
-              <span style="font-size: 0.7rem; font-weight: 700; color: #DC2626; text-transform: uppercase;">Lost Report (#LF-301)</span>
-              <div style="font-weight: 700; font-size: 0.9rem; margin-top: 0.2rem;">Black Leather Bi-fold Wallet</div>
-              <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">
-                Near Central Library • Reported by Parshva Shah • 10:15 AM
+        <!-- 2. DYNAMIC MATCH INTERFACE (Shows only when an active match exists) -->
+        ${potentialMatch ? `
+          <div class="card-editorial" style="background: var(--tint-soft-blue); border-color: #BFDBFE;">
+            <div class="flex items-center justify-between" style="margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+              <div class="flex items-center gap-2">
+                <span class="badge badge-blue">Possible Match</span>
+                <strong style="color: var(--color-accent-blue); font-size: 0.95rem;">Automated Match Found: ${window.SecurityUtils ? window.SecurityUtils.escapeHtml(potentialMatch.lost.item) : potentialMatch.lost.item}</strong>
               </div>
+              <button class="btn btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.76rem;" onclick="LostFoundView.confirmMatch('${potentialMatch.lost.id}', '${potentialMatch.found.id}')">
+                Compare & Confirm Match
+              </button>
             </div>
 
-            <div style="background: #ffffff; padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid #DBEAFE;">
-              <span style="font-size: 0.7rem; font-weight: 700; color: var(--color-success); text-transform: uppercase;">Found Report (#LF-304)</span>
-              <div style="font-weight: 700; font-size: 0.9rem; margin-top: 0.2rem;">Black Men's Leather Wallet</div>
-              <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">
-                Reading Hall Table 3 • Deposited at Library Desk • 10:45 AM
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
+              <div style="background: #ffffff; padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid #DBEAFE;">
+                <span style="font-size: 0.7rem; font-weight: 700; color: #DC2626; text-transform: uppercase;">Lost Report (#${potentialMatch.lost.id})</span>
+                <div style="font-weight: 700; font-size: 0.9rem; margin-top: 0.2rem;">${window.SecurityUtils ? window.SecurityUtils.escapeHtml(potentialMatch.lost.item) : potentialMatch.lost.item}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">
+                  ${potentialMatch.lost.location} • Reported by ${potentialMatch.lost.reportedBy} • ${potentialMatch.lost.time || potentialMatch.lost.date}
+                </div>
+              </div>
+
+              <div style="background: #ffffff; padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid #DBEAFE;">
+                <span style="font-size: 0.7rem; font-weight: 700; color: var(--color-success); text-transform: uppercase;">Found Report (#${potentialMatch.found.id})</span>
+                <div style="font-weight: 700; font-size: 0.9rem; margin-top: 0.2rem;">${window.SecurityUtils ? window.SecurityUtils.escapeHtml(potentialMatch.found.item) : potentialMatch.found.item}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">
+                  ${potentialMatch.found.location} • Reported by ${potentialMatch.found.reportedBy} • ${potentialMatch.found.time || potentialMatch.found.date}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        ` : ''}
 
         <!-- 3. SEARCH & CATEGORY FILTER BAR (Section 23) -->
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
@@ -3969,7 +3965,18 @@ class LostFoundView {
     const item = CAMPUS_DATA.lostAndFound.find(i => i.id === itemId);
     if (item) {
       item.status = newStatus;
-      appState.showToast(`Item ${itemId} marked as ${newStatus}.`, "success");
+      try {
+        localStorage.setItem('campusx_lost_found', JSON.stringify(CAMPUS_DATA.lostAndFound));
+      } catch (e) {}
+
+      if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+        ApiClient.request('/api/lost-found/' + encodeURIComponent(itemId), {
+          method: 'PATCH',
+          body: JSON.stringify({ status: newStatus })
+        }).catch(err => console.warn('Lost-found patch sync error:', err.message));
+      }
+
+      appState.showToast(`Item ${itemId} marked as ${newStatus}. Synced to Supabase.`, "success");
       LostFoundView.render(document.getElementById('viewContainer'));
     }
   }
@@ -3977,7 +3984,7 @@ class LostFoundView {
 
 
 
-/* --- File: app.js --- */
+/* --- File: app.js (js\app.js) --- */
 /* ==========================================================
    Campus X AI - Master Application Orchestrator
    Role Dispatcher, Modal Engine, Navigation & Responsive Router
@@ -4042,6 +4049,11 @@ class CampusApplication {
 
     // Initial render
     this.render();
+
+    // Fetch remote records from Supabase via backend API
+    if (window.appState && window.appState.fetchRemoteData) {
+      window.appState.fetchRemoteData();
+    }
   }
 
   render() {

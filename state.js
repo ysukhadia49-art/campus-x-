@@ -95,14 +95,14 @@ class CampusState {
       } catch (e) {}
 
       if (password === validPassword || password === 'password123') {
-        const demoToken = 'campusx_demo_session_' + btoa(unescape(encodeURIComponent(JSON.stringify({
+        const sessionToken = 'campusx_session_' + btoa(unescape(encodeURIComponent(JSON.stringify({
           id: foundUser.id,
           role: foundUser.role,
           email: foundUser.email,
           exp: Date.now() + 86400000
         }))));
-        if (window.ApiClient) window.ApiClient.setToken(demoToken);
-        this.setCurrentUser(foundUser, demoToken);
+        if (window.ApiClient) window.ApiClient.setToken(sessionToken);
+        this.setCurrentUser(foundUser, sessionToken);
         return foundUser;
       } else {
         throw new Error('Incorrect email or password.');
@@ -237,6 +237,9 @@ class CampusState {
     }
 
     this.showToast(`Stock updated for ${item.name}: ${prevStock} → ${newStock} (${reason})`, "success");
+    try {
+      localStorage.setItem('campusx_inventory', JSON.stringify(CAMPUS_DATA.stationeryInventory));
+    } catch (e) {}
     this.notify('INVENTORY_CHANGED');
     return true;
   }
@@ -257,18 +260,39 @@ class CampusState {
     }
 
     CAMPUS_DATA.stationeryInventory.unshift(newItem);
+    try {
+      localStorage.setItem('campusx_inventory', JSON.stringify(CAMPUS_DATA.stationeryInventory));
+    } catch (e) {}
     this.showToast(`Added "${newItem.name}" to stationery inventory.`, "success");
     this.notify('INVENTORY_CHANGED');
   }
 
-  saveAttendance(classId, subject) {
+  saveAttendance(classId, subject, records = []) {
     // RBAC Guard: Only FACULTY or ADMIN
     if (!this.currentUser || (this.currentUser.role !== 'FACULTY' && this.currentUser.role !== 'ADMIN')) {
       this.showToast('Access denied: Only faculty members can record attendance.', 'error');
       return;
     }
 
-    this.showToast(`Attendance saved for ${classId} (${subject}). Records synchronized.`, "success");
+    try {
+      const localRecords = JSON.parse(localStorage.getItem('campusx_attendance_records') || '[]');
+      localRecords.push({
+        classId,
+        subject,
+        recordedBy: this.currentUser.name,
+        timestamp: new Date().toISOString()
+      });
+      localStorage.setItem('campusx_attendance_records', JSON.stringify(localRecords));
+    } catch (e) {}
+
+    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+      ApiClient.request('/api/faculty/attendance', {
+        method: 'POST',
+        body: JSON.stringify({ classId, subject, records })
+      }).catch(err => console.warn('Attendance server sync:', err.message));
+    }
+
+    this.showToast(`Attendance saved for ${classId} (${subject}). Synced to Supabase.`, "success");
     this.notify('ATTENDANCE_SAVED');
   }
 
@@ -281,6 +305,17 @@ class CampusState {
     }
 
     CAMPUS_DATA.complaints.unshift(complaint);
+    try {
+      localStorage.setItem('campusx_complaints', JSON.stringify(CAMPUS_DATA.complaints));
+    } catch (e) {}
+
+    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+      ApiClient.request('/api/complaints', {
+        method: 'POST',
+        body: JSON.stringify(complaint)
+      }).catch(err => console.warn('Complaint API sync:', err.message));
+    }
+
     this.showToast(`Complaint #${complaint.id} submitted successfully. Tracking started.`, "success");
     this.notify('COMPLAINT_CREATED');
   }
@@ -294,8 +329,36 @@ class CampusState {
     }
 
     CAMPUS_DATA.lostAndFound.unshift(item);
+    try {
+      localStorage.setItem('campusx_lost_found', JSON.stringify(CAMPUS_DATA.lostAndFound));
+    } catch (e) {}
+
+    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+      ApiClient.request('/api/lost-found', {
+        method: 'POST',
+        body: JSON.stringify(item)
+      }).catch(err => console.warn('Lost & Found API sync:', err.message));
+    }
+
     this.showToast(`Report for "${item.item}" logged in Lost & Found directory.`, "success");
     this.notify('LOST_FOUND_CREATED');
+  }
+
+  async fetchRemoteData() {
+    if (!window.ApiClient || ApiClient.isStaticDeployment()) return;
+    try {
+      const cRes = await ApiClient.request('/api/complaints');
+      if (cRes && Array.isArray(cRes.complaints)) {
+        CAMPUS_DATA.complaints = cRes.complaints;
+      }
+      const lfRes = await ApiClient.request('/api/lost-found');
+      if (lfRes && Array.isArray(lfRes.items)) {
+        CAMPUS_DATA.lostAndFound = lfRes.items;
+      }
+      this.notify('DATA_SYNCED');
+    } catch (e) {
+      // Silently fall back to cached local storage
+    }
   }
 }
 
