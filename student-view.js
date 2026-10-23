@@ -121,19 +121,43 @@ class StudentView {
           <div class="mobile-summary-grid">
             <div class="mobile-summary-card">
               <div class="mobile-summary-label">Next Class</div>
-              <div class="mobile-summary-value">AIPD</div>
-              <div class="mobile-summary-sub">2:00 PM • Room 305</div>
+              <div class="mobile-summary-value">SPC (Theory)</div>
+              <div class="mobile-summary-sub">10:00 AM • Room S-21</div>
             </div>
 
             <div class="mobile-summary-card">
               <div class="mobile-summary-label">Attendance</div>
-              <div class="mobile-summary-value" style="color: var(--color-success);">84%</div>
-              <div class="mobile-summary-sub">Good standing</div>
+              ${(() => {
+                try {
+                  const recs = JSON.parse(localStorage.getItem('campusx_attendance_records') || '[]');
+                  if (recs.length > 0) {
+                    const userRoll = (appState.currentUser && appState.currentUser.rollNo) || "07";
+                    let attended = 0;
+                    recs.forEach(r => {
+                      if (r.records && Array.isArray(r.records)) {
+                        const m = r.records.find(s => s.rollNo === userRoll);
+                        if (m && m.present) attended++;
+                      } else {
+                        attended++;
+                      }
+                    });
+                    const pctVal = Math.round((attended / recs.length) * 100);
+                    return `
+                      <div class="mobile-summary-value" style="color: ${pctVal >= 75 ? 'var(--color-success)' : 'var(--color-error)'};">${pctVal}%</div>
+                      <div class="mobile-summary-sub">${pctVal >= 75 ? 'GTU Compliant' : 'Low Attendance'}</div>
+                    `;
+                  }
+                } catch(e) {}
+                return `
+                  <div class="mobile-summary-value" style="color: var(--text-primary);">--%</div>
+                  <div class="mobile-summary-sub">Pending Records</div>
+                `;
+              })()}
             </div>
 
             <div class="mobile-summary-card">
               <div class="mobile-summary-label">Upcoming Exam</div>
-              <div class="mobile-summary-value">Java</div>
+              <div class="mobile-summary-value">SPC (C Prog)</div>
               <div class="mobile-summary-sub">18 Sep • Mid-term</div>
             </div>
 

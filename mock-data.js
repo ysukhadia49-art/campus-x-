@@ -71,21 +71,23 @@ const CAMPUS_DATA = {
     }
   },
 
-  // Student Today's Schedule (Matching Visual Reference)
+  // Student Today's Schedule (Updated 5th Semester Time Table: Class 2452 - IT)
   studentSchedule: [
-    { time: "09:00 AM", subject: "SPC (Theory)", room: "R-201", faculty: "Prof. Mehta", type: "theory", color: "#3E6E9E" },
-    { time: "11:00 AM", subject: "EIDW (Lab)", room: "Lab-3", faculty: "Prof. Sharma", type: "lab", color: "#3F7D5A" },
-    { time: "01:00 PM", subject: "Lunch Break", room: "Campus Canteen", faculty: "Enjoy your break! ☕", type: "break", color: "#A87932" },
-    { time: "02:00 PM", subject: "AIPD (Theory)", room: "R-305", faculty: "Prof. Patel", type: "theory", color: "#3E6E9E" },
-    { time: "04:00 PM", subject: "Library Time", room: "Central Library Desk 4", faculty: "Good time to get ahead 🌿", type: "study", color: "#7B8794" }
+    { time: "10:00 AM", subject: "SPC - Structured Programming with C", room: "S-21", faculty: "Mrs. Disha P. Prajapati (DPP)", type: "theory", color: "#3E6E9E" },
+    { time: "11:00 AM", subject: "AIPE - AI with Prompt Engineering", room: "S-21", faculty: "Mrs. Binita B. Acharya (BBA)", type: "theory", color: "#2563EB" },
+    { time: "12:00 PM", subject: "EIDW - Emotional Intelligence & Digital Wellbeing", room: "S-21", faculty: "Ms. Krupali D. Vaghashiya (KDV)", type: "theory", color: "#059669" },
+    { time: "01:00 PM", subject: "Recess / Lunch Break", room: "Campus Canteen", faculty: "Enjoy your break! ☕", type: "break", color: "#A87932" },
+    { time: "01:30 PM", subject: "AIPD Lab (Batch A: DKP, T-16) / AIPE Lab (Batch B: AKV, T-13)", room: "Lab T-16 / T-13", faculty: "Mrs. Dipika Patel / Mrs. Aesha Virani", type: "lab", color: "#7C3AED" },
+    { time: "03:20 PM", subject: "Short Recess", room: "Campus", faculty: "10 mins tea break", type: "break", color: "#A87932" },
+    { time: "03:30 PM", subject: "EIDW Lab (Batch A: KDV, T-14) / CDCT Lab (Batch B: MSD, T-13)", room: "Lab T-14 / T-13", faculty: "Ms. Krupali Vaghashiya / Miss. Mayuri Devganiya", type: "lab", color: "#D97706" }
   ],
 
   // Faculty Today's Classes
   facultySchedule: [
-    { time: "09:00 AM", class: "Class 2451 - IT", subject: "Python Programming", room: "Lab-2", attendanceDone: true },
-    { time: "11:30 AM", class: "Class 2452 - IT", subject: "AIPD (Lab Batch A)", room: "Lab-3", attendanceDone: false },
-    { time: "02:00 PM", class: "Class 2452 - IT", subject: "AIPD (Theory)", room: "R-305", attendanceDone: false },
-    { time: "03:30 PM", class: "Class 2453 - IT", subject: "Project Mentorship", room: "Seminar Hall 1", attendanceDone: false }
+    { time: "10:00 AM", class: "Class 2452 - IT", subject: "SPC (Theory)", room: "S-21", attendanceDone: false },
+    { time: "11:00 AM", class: "Class 2452 - IT", subject: "AIPE (Theory)", room: "S-21", attendanceDone: false },
+    { time: "01:30 PM", class: "Class 2452 - IT", subject: "AIPD (Lab Batch A)", room: "Lab T-16", attendanceDone: false },
+    { time: "03:30 PM", class: "Class 2452 - IT", subject: "EIDW (Lab Batch A)", room: "Lab T-14", attendanceDone: false }
   ],
 
   // Attention Items (Dynamic, loaded from storage if present)
@@ -115,18 +117,18 @@ const CAMPUS_DATA = {
     ];
   })(),
 
-  // Student Attendance Roster for Faculty Marking
+  // Student Attendance Roster for Faculty Marking (All students start unmarked)
   studentRoster: [
-    { rollNo: "01", enrollment: "246470316101", name: "Aarav Mehta", present: true, attendancePct: "92%" },
-    { rollNo: "02", enrollment: "246470316103", name: "Rahil Shah", present: true, attendancePct: "94%" },
-    { rollNo: "03", enrollment: "246470316106", name: "Jahaan Randaria", present: true, attendancePct: "91%" },
-    { rollNo: "04", enrollment: "246470316110", name: "Kavya Patel", present: false, attendancePct: "78%" },
-    { rollNo: "05", enrollment: "246470316113", name: "Parshva Shah", present: true, attendancePct: "89%" },
-    { rollNo: "06", enrollment: "246470316115", name: "Parth Sonar", present: true, attendancePct: "87%" },
-    { rollNo: "07", enrollment: "246470316116", name: "Yug Sukhadia", present: true, attendancePct: "93%" },
-    { rollNo: "08", enrollment: "246470316120", name: "Diya Sharma", present: true, attendancePct: "96%" },
-    { rollNo: "09", enrollment: "246470316122", name: "Meet Vora", present: false, attendancePct: "74%" },
-    { rollNo: "10", enrollment: "246470316125", name: "Rohan Trivedi", present: true, attendancePct: "88%" }
+    { rollNo: "01", enrollment: "246470316101", name: "Aarav Mehta", present: null },
+    { rollNo: "02", enrollment: "246470316103", name: "Rahil Shah", present: null },
+    { rollNo: "03", enrollment: "246470316106", name: "Jahaan Randaria", present: null },
+    { rollNo: "04", enrollment: "246470316110", name: "Kavya Patel", present: null },
+    { rollNo: "05", enrollment: "246470316113", name: "Parshva Shah", present: null },
+    { rollNo: "06", enrollment: "246470316115", name: "Parth Sonar", present: null },
+    { rollNo: "07", enrollment: "246470316116", name: "Yug Sukhadia", present: null },
+    { rollNo: "08", enrollment: "246470316120", name: "Diya Sharma", present: null },
+    { rollNo: "09", enrollment: "246470316122", name: "Meet Vora", present: null },
+    { rollNo: "10", enrollment: "246470316125", name: "Rohan Trivedi", present: null }
   ],
 
   // Lost & Found Directory (Dynamic, persisted in local storage)

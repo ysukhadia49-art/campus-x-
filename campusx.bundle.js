@@ -1,7 +1,7 @@
 /* Campus X AI - Consolidated Application Bundle */
 
 
-/* --- File: mock-data.js --- */
+/* --- File: mock-data.js (js\mock-data.js) --- */
 /* ==========================================================
    Campus X AI - Realistic Mock Data Store
    College: Tapi Diploma Engineering College, Surat
@@ -75,21 +75,23 @@ const CAMPUS_DATA = {
     }
   },
 
-  // Student Today's Schedule (Matching Visual Reference)
+  // Student Today's Schedule (Updated 5th Semester Time Table: Class 2452 - IT)
   studentSchedule: [
-    { time: "09:00 AM", subject: "SPC (Theory)", room: "R-201", faculty: "Prof. Mehta", type: "theory", color: "#3E6E9E" },
-    { time: "11:00 AM", subject: "EIDW (Lab)", room: "Lab-3", faculty: "Prof. Sharma", type: "lab", color: "#3F7D5A" },
-    { time: "01:00 PM", subject: "Lunch Break", room: "Campus Canteen", faculty: "Enjoy your break! ☕", type: "break", color: "#A87932" },
-    { time: "02:00 PM", subject: "AIPD (Theory)", room: "R-305", faculty: "Prof. Patel", type: "theory", color: "#3E6E9E" },
-    { time: "04:00 PM", subject: "Library Time", room: "Central Library Desk 4", faculty: "Good time to get ahead 🌿", type: "study", color: "#7B8794" }
+    { time: "10:00 AM", subject: "SPC - Structured Programming with C", room: "S-21", faculty: "Mrs. Disha P. Prajapati (DPP)", type: "theory", color: "#3E6E9E" },
+    { time: "11:00 AM", subject: "AIPE - AI with Prompt Engineering", room: "S-21", faculty: "Mrs. Binita B. Acharya (BBA)", type: "theory", color: "#2563EB" },
+    { time: "12:00 PM", subject: "EIDW - Emotional Intelligence & Digital Wellbeing", room: "S-21", faculty: "Ms. Krupali D. Vaghashiya (KDV)", type: "theory", color: "#059669" },
+    { time: "01:00 PM", subject: "Recess / Lunch Break", room: "Campus Canteen", faculty: "Enjoy your break! ☕", type: "break", color: "#A87932" },
+    { time: "01:30 PM", subject: "AIPD Lab (Batch A: DKP, T-16) / AIPE Lab (Batch B: AKV, T-13)", room: "Lab T-16 / T-13", faculty: "Mrs. Dipika Patel / Mrs. Aesha Virani", type: "lab", color: "#7C3AED" },
+    { time: "03:20 PM", subject: "Short Recess", room: "Campus", faculty: "10 mins tea break", type: "break", color: "#A87932" },
+    { time: "03:30 PM", subject: "EIDW Lab (Batch A: KDV, T-14) / CDCT Lab (Batch B: MSD, T-13)", room: "Lab T-14 / T-13", faculty: "Ms. Krupali Vaghashiya / Miss. Mayuri Devganiya", type: "lab", color: "#D97706" }
   ],
 
   // Faculty Today's Classes
   facultySchedule: [
-    { time: "09:00 AM", class: "Class 2451 - IT", subject: "Python Programming", room: "Lab-2", attendanceDone: true },
-    { time: "11:30 AM", class: "Class 2452 - IT", subject: "AIPD (Lab Batch A)", room: "Lab-3", attendanceDone: false },
-    { time: "02:00 PM", class: "Class 2452 - IT", subject: "AIPD (Theory)", room: "R-305", attendanceDone: false },
-    { time: "03:30 PM", class: "Class 2453 - IT", subject: "Project Mentorship", room: "Seminar Hall 1", attendanceDone: false }
+    { time: "10:00 AM", class: "Class 2452 - IT", subject: "SPC (Theory)", room: "S-21", attendanceDone: false },
+    { time: "11:00 AM", class: "Class 2452 - IT", subject: "AIPE (Theory)", room: "S-21", attendanceDone: false },
+    { time: "01:30 PM", class: "Class 2452 - IT", subject: "AIPD (Lab Batch A)", room: "Lab T-16", attendanceDone: false },
+    { time: "03:30 PM", class: "Class 2452 - IT", subject: "EIDW (Lab Batch A)", room: "Lab T-14", attendanceDone: false }
   ],
 
   // Attention Items (Dynamic, loaded from storage if present)
@@ -119,18 +121,18 @@ const CAMPUS_DATA = {
     ];
   })(),
 
-  // Student Attendance Roster for Faculty Marking
+  // Student Attendance Roster for Faculty Marking (All students start unmarked)
   studentRoster: [
-    { rollNo: "01", enrollment: "246470316101", name: "Aarav Mehta", present: true, attendancePct: "92%" },
-    { rollNo: "02", enrollment: "246470316103", name: "Rahil Shah", present: true, attendancePct: "94%" },
-    { rollNo: "03", enrollment: "246470316106", name: "Jahaan Randaria", present: true, attendancePct: "91%" },
-    { rollNo: "04", enrollment: "246470316110", name: "Kavya Patel", present: false, attendancePct: "78%" },
-    { rollNo: "05", enrollment: "246470316113", name: "Parshva Shah", present: true, attendancePct: "89%" },
-    { rollNo: "06", enrollment: "246470316115", name: "Parth Sonar", present: true, attendancePct: "87%" },
-    { rollNo: "07", enrollment: "246470316116", name: "Yug Sukhadia", present: true, attendancePct: "93%" },
-    { rollNo: "08", enrollment: "246470316120", name: "Diya Sharma", present: true, attendancePct: "96%" },
-    { rollNo: "09", enrollment: "246470316122", name: "Meet Vora", present: false, attendancePct: "74%" },
-    { rollNo: "10", enrollment: "246470316125", name: "Rohan Trivedi", present: true, attendancePct: "88%" }
+    { rollNo: "01", enrollment: "246470316101", name: "Aarav Mehta", present: null },
+    { rollNo: "02", enrollment: "246470316103", name: "Rahil Shah", present: null },
+    { rollNo: "03", enrollment: "246470316106", name: "Jahaan Randaria", present: null },
+    { rollNo: "04", enrollment: "246470316110", name: "Kavya Patel", present: null },
+    { rollNo: "05", enrollment: "246470316113", name: "Parshva Shah", present: null },
+    { rollNo: "06", enrollment: "246470316115", name: "Parth Sonar", present: null },
+    { rollNo: "07", enrollment: "246470316116", name: "Yug Sukhadia", present: null },
+    { rollNo: "08", enrollment: "246470316120", name: "Diya Sharma", present: null },
+    { rollNo: "09", enrollment: "246470316122", name: "Meet Vora", present: null },
+    { rollNo: "10", enrollment: "246470316125", name: "Rohan Trivedi", present: null }
   ],
 
   // Lost & Found Directory (Dynamic, persisted in local storage)
@@ -193,7 +195,7 @@ window.CAMPUS_DATA = CAMPUS_DATA;
 
 
 
-/* --- File: security.js --- */
+/* --- File: security.js (js\security.js) --- */
 /* ==========================================================
    Campus X AI - Client-Side Security Utilities & API Client
    Tapi Diploma Engineering College, Surat
@@ -470,7 +472,7 @@ window.SecurityUtils = SecurityUtils;
 window.ApiClient = ApiClient;
 
 
-/* --- File: state.js --- */
+/* --- File: state.js (js\state.js) --- */
 /* ==========================================================
    Campus X AI - Central State & Reactive Event Manager
    Hardened RBAC, Secure Session Tracking & Audit Integration
@@ -752,6 +754,7 @@ class CampusState {
       localRecords.push({
         classId,
         subject,
+        records,
         recordedBy: this.currentUser.name,
         timestamp: new Date().toISOString()
       });
@@ -920,7 +923,7 @@ if (typeof window !== 'undefined' && window.supabase && !window.supabaseClient) 
 window.appState = new CampusState();
 
 
-/* --- File: navigation.js --- */
+/* --- File: navigation.js (js\navigation.js) --- */
 /* ==========================================================
    Campus X AI - Navigation & State Management
    Step 2: Component & Layout Handlers
@@ -1035,7 +1038,7 @@ class NavigationController {
 }
 
 
-/* --- File: motion.js --- */
+/* --- File: motion.js (js\motion.js) --- */
 /* ==========================================================
    Campus X AI - Premium Motion System
    Linear / Raycast / Arc / Vercel Motion Standard
@@ -1243,7 +1246,7 @@ window.CampusMotion = {
 };
 
 
-/* --- File: auth-view.js --- */
+/* --- File: auth-view.js (js\views\auth-view.js) --- */
 /* ==========================================================
    Campus X AI - Pre-Login & Authentication View
    Security Hardened: Generic Errors, Client Validation UX,
@@ -2271,7 +2274,7 @@ class AuthView {
 }
 
 
-/* --- File: student-view.js --- */
+/* --- File: student-view.js (js\views\student-view.js) --- */
 /* ==========================================================
    Campus X AI - Student Workspace View
    Dedicated Student Sidebar & Student Dashboard
@@ -2395,19 +2398,43 @@ class StudentView {
           <div class="mobile-summary-grid">
             <div class="mobile-summary-card">
               <div class="mobile-summary-label">Next Class</div>
-              <div class="mobile-summary-value">AIPD</div>
-              <div class="mobile-summary-sub">2:00 PM • Room 305</div>
+              <div class="mobile-summary-value">SPC (Theory)</div>
+              <div class="mobile-summary-sub">10:00 AM • Room S-21</div>
             </div>
 
             <div class="mobile-summary-card">
               <div class="mobile-summary-label">Attendance</div>
-              <div class="mobile-summary-value" style="color: var(--color-success);">84%</div>
-              <div class="mobile-summary-sub">Good standing</div>
+              ${(() => {
+                try {
+                  const recs = JSON.parse(localStorage.getItem('campusx_attendance_records') || '[]');
+                  if (recs.length > 0) {
+                    const userRoll = (appState.currentUser && appState.currentUser.rollNo) || "07";
+                    let attended = 0;
+                    recs.forEach(r => {
+                      if (r.records && Array.isArray(r.records)) {
+                        const m = r.records.find(s => s.rollNo === userRoll);
+                        if (m && m.present) attended++;
+                      } else {
+                        attended++;
+                      }
+                    });
+                    const pctVal = Math.round((attended / recs.length) * 100);
+                    return `
+                      <div class="mobile-summary-value" style="color: ${pctVal >= 75 ? 'var(--color-success)' : 'var(--color-error)'};">${pctVal}%</div>
+                      <div class="mobile-summary-sub">${pctVal >= 75 ? 'GTU Compliant' : 'Low Attendance'}</div>
+                    `;
+                  }
+                } catch(e) {}
+                return `
+                  <div class="mobile-summary-value" style="color: var(--text-primary);">--%</div>
+                  <div class="mobile-summary-sub">Pending Records</div>
+                `;
+              })()}
             </div>
 
             <div class="mobile-summary-card">
               <div class="mobile-summary-label">Upcoming Exam</div>
-              <div class="mobile-summary-value">Java</div>
+              <div class="mobile-summary-value">SPC (C Prog)</div>
               <div class="mobile-summary-sub">18 Sep • Mid-term</div>
             </div>
 
@@ -2565,7 +2592,7 @@ class StudentView {
 }
 
 
-/* --- File: faculty-view.js --- */
+/* --- File: faculty-view.js (js\views\faculty-view.js) --- */
 /* ==========================================================
    Campus X AI - Faculty Workspace View
    Dedicated Faculty Sidebar, Dashboard & Interactive Attendance
@@ -2757,37 +2784,45 @@ class FacultyView {
                 <span class="badge badge-available">Class 2452 IT</span>
               </div>
 
-              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
-                Semester 5 attendance compliance stands at <strong>89.4%</strong> with 2 students requiring mentorship attention.
-              </p>
+              ${(() => {
+                let recs = [];
+                try {
+                  recs = JSON.parse(localStorage.getItem('campusx_attendance_records') || '[]');
+                } catch(e) {}
+                const count = recs.length;
+                return `
+                  <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                    Semester 5 attendance recording active. <strong>${count} session${count === 1 ? '' : 's'}</strong> logged this term.
+                  </p>
 
-              <!-- Progress Visual Bars -->
-              <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <div>
-                  <div class="flex justify-between" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 0.25rem;">
-                    <span>AIPD (Artificial Intelligence & Python)</span>
-                    <span>91.2% Attendance</span>
-                  </div>
-                  <div style="height: 6px; background: #E5E7EB; border-radius: 999px; overflow: hidden;">
-                    <div style="width: 91.2%; height: 100%; background: var(--color-success);"></div>
-                  </div>
-                </div>
+                  <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div>
+                      <div class="flex justify-between" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 0.25rem;">
+                        <span>Academic Compliance (GTU 75% Rule)</span>
+                        <span>${count > 0 ? 'Active Tracking' : 'Awaiting Markings'}</span>
+                      </div>
+                      <div style="height: 6px; background: #E5E7EB; border-radius: 999px; overflow: hidden;">
+                        <div style="width: ${count > 0 ? '100%' : '0%'}; height: 100%; background: var(--color-success);"></div>
+                      </div>
+                    </div>
 
-                <div>
-                  <div class="flex justify-between" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 0.25rem;">
-                    <span>EIDW Lab Submissions</span>
-                    <span>84.0% Submitted</span>
+                    <div>
+                      <div class="flex justify-between" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 0.25rem;">
+                        <span>Term Duration Progress</span>
+                        <span>15/06/2026 To 30/10/2026</span>
+                      </div>
+                      <div style="height: 6px; background: #E5E7EB; border-radius: 999px; overflow: hidden;">
+                        <div style="width: 35%; height: 100%; background: var(--color-accent-blue);"></div>
+                      </div>
+                    </div>
                   </div>
-                  <div style="height: 6px; background: #E5E7EB; border-radius: 999px; overflow: hidden;">
-                    <div style="width: 84%; height: 100%; background: var(--color-accent-blue);"></div>
-                  </div>
-                </div>
-              </div>
+                `;
+              })()}
             </div>
 
             <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.78rem; color: var(--text-muted);">AI Mentor: Prof. S. R. Patel</span>
-              <a href="javascript:void(0)" onclick="appState.setView('performance')" style="font-size: 0.8rem; font-weight: 600;">Full Analytics &rarr;</a>
+              <span style="font-size: 0.78rem; color: var(--text-muted);">IT Dept Head: Mrs. Binita Acharya (BBA)</span>
+              <a href="javascript:void(0)" onclick="appState.setView('timetable')" style="font-size: 0.8rem; font-weight: 600;">Full Timetable &rarr;</a>
             </div>
           </div>
 
@@ -2799,12 +2834,14 @@ class FacultyView {
 
   // FACULTY INTERACTIVE ATTENDANCE MARKING (Section 20)
   static renderAttendanceMarking(container) {
+    const todayStr = new Date().toISOString().split('T')[0];
+
     container.innerHTML = `
       <div class="card-editorial" style="padding: 2rem;">
         <div class="flex items-center justify-between" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
           <div>
             <h2 style="font-size: 1.75rem; font-weight: 800;">Class Attendance Roster</h2>
-            <p style="font-size: 0.86rem; color: var(--text-secondary);">Select class and toggle student attendance status before saving.</p>
+            <p style="font-size: 0.86rem; color: var(--text-secondary);">Select subject and toggle student attendance status before saving.</p>
           </div>
           <div class="flex items-center gap-2">
             <button class="btn btn-secondary" onclick="appState.setView('dashboard')">Cancel</button>
@@ -2813,25 +2850,41 @@ class FacultyView {
         </div>
 
         <!-- Filters Strip -->
-        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap;">
           <div style="flex: 1; min-width: 180px;">
-            <label class="form-label">Class</label>
+            <label class="form-label">Class & Room</label>
             <select class="form-input" id="attClassSelect">
-              <option value="2452-IT">Class: 2452 - IT (Semester 5)</option>
-              <option value="2451-IT">Class: 2451 - IT (Semester 3)</option>
+              <option value="Class 2452 - IT (Room S-21)">Class 2452 - IT (Room S-21 / S-25)</option>
+              <option value="Class 2451 - IT (Room S-22)">Class 2451 - IT (Semester 3)</option>
             </select>
           </div>
-          <div style="flex: 1; min-width: 180px;">
-            <label class="form-label">Subject</label>
+          <div style="flex: 1.5; min-width: 220px;">
+            <label class="form-label">Subject & Course Code</label>
             <select class="form-input" id="attSubjectSelect">
-              <option value="AIPD-Lab">AIPD (Lab Batch A)</option>
-              <option value="AIPD-Theory">AIPD (Theory)</option>
-              <option value="Python">Python Programming</option>
+              <option value="SPC (DI05016061) - DPP">SPC: Structured Programming with C (DPP)</option>
+              <option value="AIPE (DI05016011) - BBA">AIPE: AI with Prompt Engineering (BBA)</option>
+              <option value="AIPD (DI05016021) - DKP">AIPD: AI Product Design (DKP)</option>
+              <option value="CDCT (DI05016031) - MSD">CDCT: Cloud & Data Center Tech (MSD)</option>
+              <option value="EIDW (DI05016081) - KDV">EIDW: Emotional Intelligence & Digital Wellbeing (KDV)</option>
+              <option value="MINOR PROJECT (DI05000341)">Minor Project (DI05000341)</option>
             </select>
           </div>
           <div style="flex: 1; min-width: 160px;">
             <label class="form-label">Date</label>
-            <input type="date" class="form-input" value="2026-09-11">
+            <input type="date" class="form-input" id="attDateInput" value="${todayStr}">
+          </div>
+        </div>
+
+        <!-- Quick Batch Actions Strip -->
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+          <div style="font-size: 0.82rem; color: var(--text-secondary);">
+            Batch Action:
+            <button class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; margin-left: 0.4rem;" onclick="FacultyView.markAll(true)">Mark All Present</button>
+            <button class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; margin-left: 0.3rem;" onclick="FacultyView.markAll(false)">Mark All Absent</button>
+            <button class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; margin-left: 0.3rem;" onclick="FacultyView.markAll(null)">Reset All (Unmark)</button>
+          </div>
+          <div id="markingSummaryBadge" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">
+            ${FacultyView.getMarkingSummary()}
           </div>
         </div>
 
@@ -2840,36 +2893,47 @@ class FacultyView {
           <table class="data-table">
             <thead>
               <tr>
-                <th>Roll No</th>
-                <th>Enrollment ID</th>
+                <th style="width: 80px;">Roll No</th>
+                <th style="width: 160px;">Enrollment ID</th>
                 <th>Student Name</th>
-                <th>Overall Attd.</th>
-                <th>Attendance Status</th>
+                <th style="width: 140px;">Term Status</th>
+                <th style="width: 160px; text-align: center;">Today's Attendance</th>
               </tr>
             </thead>
             <tbody>
-              ${CAMPUS_DATA.studentRoster.map(s => `
-                <tr id="roster-row-${s.rollNo}">
-                  <td style="font-weight: 700;">#${s.rollNo}</td>
-                  <td style="font-family: monospace; color: var(--color-accent-blue);">${s.enrollment}</td>
-                  <td style="font-weight: 600;">${s.name}</td>
-                  <td>${s.attendancePct}</td>
-                  <td>
-                    <button class="attendance-toggle-btn ${s.present ? 'attendance-present' : 'attendance-absent'}" 
-                            id="toggle-btn-${s.rollNo}"
-                            onclick="FacultyView.toggleStudentStatus('${s.rollNo}')">
-                      ${s.present ? '✓ PRESENT' : '× ABSENT'}
-                    </button>
-                  </td>
-                </tr>
-              `).join('')}
+              ${CAMPUS_DATA.studentRoster.map(s => {
+                let btnClass = 'attendance-unmarked';
+                let btnText = '— UNMARKED —';
+                if (s.present === true) {
+                  btnClass = 'attendance-present';
+                  btnText = '✓ PRESENT';
+                } else if (s.present === false) {
+                  btnClass = 'attendance-absent';
+                  btnText = '× ABSENT';
+                }
+                return `
+                  <tr id="roster-row-${s.rollNo}">
+                    <td style="font-weight: 700;">#${s.rollNo}</td>
+                    <td style="font-family: monospace; color: var(--color-accent-blue);">${s.enrollment}</td>
+                    <td style="font-weight: 600;">${s.name}</td>
+                    <td><span class="badge badge-secondary" style="font-size: 0.72rem;">Term In Progress</span></td>
+                    <td style="text-align: center;">
+                      <button class="attendance-toggle-btn ${btnClass}" 
+                              id="toggle-btn-${s.rollNo}"
+                              onclick="FacultyView.toggleStudentStatus('${s.rollNo}')">
+                        ${btnText}
+                      </button>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
             </tbody>
           </table>
         </div>
 
-        <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
           <div style="font-size: 0.8rem; color: var(--text-muted);">
-            Click status button to toggle Present / Absent. Records auto-validate before sync.
+            Click status button to cycle: Unmarked &rarr; Present &rarr; Absent.
           </div>
           <button class="btn btn-primary" onclick="FacultyView.saveAttendanceSubmission()">
             Save Attendance
@@ -2879,22 +2943,87 @@ class FacultyView {
     `;
   }
 
+  static getMarkingSummary() {
+    const presentCount = CAMPUS_DATA.studentRoster.filter(s => s.present === true).length;
+    const absentCount = CAMPUS_DATA.studentRoster.filter(s => s.present === false).length;
+    const unmarkedCount = CAMPUS_DATA.studentRoster.filter(s => s.present === null).length;
+    return `Present: ${presentCount} | Absent: ${absentCount} | Unmarked: ${unmarkedCount}`;
+  }
+
+  static updateSummaryBadge() {
+    const el = document.getElementById('markingSummaryBadge');
+    if (el) el.textContent = FacultyView.getMarkingSummary();
+  }
+
   static toggleStudentStatus(rollNo) {
     const student = CAMPUS_DATA.studentRoster.find(s => s.rollNo === rollNo);
     if (student) {
-      student.present = !student.present;
+      if (student.present === null) {
+        student.present = true;
+      } else if (student.present === true) {
+        student.present = false;
+      } else {
+        student.present = true;
+      }
+
       const btn = document.getElementById(`toggle-btn-${rollNo}`);
       if (btn) {
-        btn.className = `attendance-toggle-btn ${student.present ? 'attendance-present' : 'attendance-absent'}`;
-        btn.textContent = student.present ? '✓ PRESENT' : '× ABSENT';
+        let btnClass = 'attendance-unmarked';
+        let btnText = '— UNMARKED —';
+        if (student.present === true) {
+          btnClass = 'attendance-present';
+          btnText = '✓ PRESENT';
+        } else if (student.present === false) {
+          btnClass = 'attendance-absent';
+          btnText = '× ABSENT';
+        }
+        btn.className = `attendance-toggle-btn ${btnClass}`;
+        btn.textContent = btnText;
       }
+      FacultyView.updateSummaryBadge();
     }
   }
 
+  static markAll(status) {
+    CAMPUS_DATA.studentRoster.forEach(s => {
+      s.present = status;
+      const btn = document.getElementById(`toggle-btn-${s.rollNo}`);
+      if (btn) {
+        let btnClass = 'attendance-unmarked';
+        let btnText = '— UNMARKED —';
+        if (status === true) {
+          btnClass = 'attendance-present';
+          btnText = '✓ PRESENT';
+        } else if (status === false) {
+          btnClass = 'attendance-absent';
+          btnText = '× ABSENT';
+        }
+        btn.className = `attendance-toggle-btn ${btnClass}`;
+        btn.textContent = btnText;
+      }
+    });
+    FacultyView.updateSummaryBadge();
+  }
+
   static saveAttendanceSubmission() {
-    const cls = document.getElementById('attClassSelect') ? document.getElementById('attClassSelect').value : "Class 2452 IT";
-    const sub = document.getElementById('attSubjectSelect') ? document.getElementById('attSubjectSelect').value : "AIPD";
-    appState.saveAttendance(cls, sub);
+    const cls = document.getElementById('attClassSelect') ? document.getElementById('attClassSelect').value : "Class 2452 - IT (Room S-21)";
+    const sub = document.getElementById('attSubjectSelect') ? document.getElementById('attSubjectSelect').value : "SPC (DI05016061)";
+    
+    // Check if at least one student is marked
+    const markedStudents = CAMPUS_DATA.studentRoster.filter(s => s.present !== null);
+    if (markedStudents.length === 0) {
+      appState.showToast('Please mark student attendance (Present/Absent) before saving.', 'error');
+      return;
+    }
+
+    const records = CAMPUS_DATA.studentRoster.map(s => ({
+      rollNo: s.rollNo,
+      enrollment: s.enrollment,
+      name: s.name,
+      present: s.present === true
+    }));
+
+    appState.saveAttendance(cls, sub, records);
     setTimeout(() => {
       appState.setView('dashboard');
     }, 600);
@@ -2902,7 +3031,8 @@ class FacultyView {
 }
 
 
-/* --- File: admin-view.js --- */
+
+/* --- File: admin-view.js (js\views\admin-view.js) --- */
 /* ==========================================================
    Campus X AI - Administrator Workspace View
    Centralized Operational Dashboard & Support Dispatch
@@ -3152,7 +3282,7 @@ class AdminView {
 }
 
 
-/* --- File: stationery-view.js --- */
+/* --- File: stationery-view.js (js\views\stationery-view.js) --- */
 /* ==========================================================
    Campus X AI - Stationery Module & Operator Workspace
    Sections 16, 17, 18, 19, 20, 21, 22, 33
@@ -3704,117 +3834,448 @@ class StationeryView {
 }
 
 
-/* --- File: academics-view.js --- */
+/* --- File: academics-view.js (js\views\academics-view.js) --- */
 /* ==========================================================
    Campus X AI - Academics, Timetable & AI Risk View
-   Sections 36-38, 46: Timetable, Attendance Breakdown & AI Risk UI
+   Official Tapi Diploma Engineering College 5th Sem IT Timetable
    ========================================================== */
 
 class AcademicsView {
   static renderTimetable(container) {
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 style="font-size: 2rem; font-weight: 800;">Class Timetable</h2>
-            <p style="font-size: 0.9rem; color: var(--text-secondary);">Semester 5 • Class 2452 - IT • Tapi Diploma Engineering College</p>
+        <!-- INSTITUTION HEADER -->
+        <div class="card-editorial" style="padding: 1.5rem; border-left: 4px solid var(--color-accent-blue);">
+          <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--color-accent-blue); text-transform: uppercase;">
+                Tapi Diploma Engineering College [647] • IT Dept [16]
+              </div>
+              <h2 style="font-size: 1.75rem; font-weight: 800; margin: 0.25rem 0;">Updated Time Table: 5th Semester</h2>
+              <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0;">
+                <strong>Class:</strong> 2452 - IT &nbsp;|&nbsp; 
+                <strong>Class Room:</strong> S-21 / S-25 (Second Floor) &nbsp;|&nbsp; 
+                <strong>Term Duration:</strong> 15/06/2026 To 30/10/2026
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <span class="badge badge-blue">Class 2452 - IT</span>
+              <span class="badge badge-purple">40 Hrs/Week</span>
+            </div>
           </div>
-          <span class="badge badge-blue">Thursday Highlighted</span>
         </div>
 
+        <!-- WEEKLY TIMETABLE GRID -->
         <div class="table-responsive-card">
-          <table class="data-table">
+          <table class="data-table" style="font-size: 0.82rem;">
             <thead>
-              <tr>
-                <th>Day</th>
-                <th>09:00 - 10:00</th>
-                <th>10:00 - 11:00</th>
-                <th>11:15 - 01:15</th>
-                <th>02:00 - 03:00</th>
-                <th>03:00 - 04:00</th>
+              <tr style="background: var(--bg-surface-subtle);">
+                <th style="min-width: 50px;">Sr</th>
+                <th style="min-width: 110px;">Time</th>
+                <th style="min-width: 140px;">Monday</th>
+                <th style="min-width: 140px;">Tuesday</th>
+                <th style="min-width: 140px;">Wednesday</th>
+                <th style="min-width: 140px; background: rgba(59, 130, 246, 0.08);">Thursday</th>
+                <th style="min-width: 140px;">Friday</th>
+                <th style="min-width: 150px;">Saturday</th>
               </tr>
             </thead>
             <tbody>
+              <!-- Period 1 -->
               <tr>
-                <td style="font-weight: 700;">Monday</td>
-                <td>AIPD (R-305)</td>
-                <td>SPC (R-201)</td>
-                <td>AIPD Lab (Lab 3)</td>
-                <td>Python (R-204)</td>
-                <td>Library</td>
+                <td style="font-weight: 700; text-align: center;">1</td>
+                <td style="font-weight: 600; white-space: nowrap;">10:00 AM<br>TO<br>11:00 AM</td>
+                <td>
+                  <strong>SPC</strong><br>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">DI05016061</span><br>
+                  <span class="badge badge-blue" style="font-size: 0.7rem; padding: 2px 6px;">DPP</span>
+                </td>
+                <td>
+                  <strong>AIPE</strong><br>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">DI05016011</span><br>
+                  <span class="badge badge-green" style="font-size: 0.7rem; padding: 2px 6px;">BBA</span>
+                </td>
+                <td>
+                  <strong>AIPD</strong><br>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">DI05016021</span><br>
+                  <span class="badge badge-purple" style="font-size: 0.7rem; padding: 2px 6px;">DKP</span>
+                </td>
+                <td style="background: rgba(59, 130, 246, 0.04);">
+                  <strong style="color: var(--color-accent-blue);">APTITUDE</strong><br>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">-</span><br>
+                  <span class="badge badge-blue" style="font-size: 0.7rem; padding: 2px 6px;">General</span>
+                </td>
+                <td>
+                  <strong>SPC</strong><br>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">DI05016061</span><br>
+                  <span class="badge badge-blue" style="font-size: 0.7rem; padding: 2px 6px;">DPP</span>
+                </td>
+                <td rowspan="2" style="background: #F8FAFC; border-left: 2px solid var(--border-color); vertical-align: middle;">
+                  <strong>MINOR PROJECT</strong><br>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">DI05000341</span><br>
+                  <div style="font-size: 0.75rem; margin-top: 4px;">A - AKV<br>B - DBL</div>
+                  <span class="badge badge-secondary" style="font-size: 0.7rem; padding: 2px 6px; margin-top: 4px;">Lab T-13</span>
+                </td>
               </tr>
+
+              <!-- Period 2 -->
               <tr>
-                <td style="font-weight: 700;">Tuesday</td>
-                <td>Python (R-204)</td>
-                <td>AIPD (R-305)</td>
-                <td>Python Lab (Lab 2)</td>
-                <td>SPC (R-201)</td>
-                <td>Mentorship</td>
+                <td style="font-weight: 700; text-align: center;">2</td>
+                <td style="font-weight: 600; white-space: nowrap;">11:00 AM<br>TO<br>12:00 PM</td>
+                <td>
+                  <strong>AIPD</strong><br>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">DI05016021</span><br>
+                  <span class="badge badge-purple" style="font-size: 0.7rem; padding: 2px 6px;">DKP</span>
+                </td>
+                <td>
+                  <strong>SPC</strong><br>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">DI05016061</span><br>
+                  <span class="badge badge-blue" style="font-size: 0.7rem; padding: 2px 6px;">DPP</span>
+                </td>
+                <td>
+                  <strong>CDCT</strong><br>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">DI05016031</span><br>
+                  <span class="badge badge-peach" style="font-size: 0.7rem; padding: 2px 6px;">MSD</span>
+                </td>
+                <td style="background: rgba(59, 130, 246, 0.04);">
+                  <strong>AIPE</strong><br>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">DI05016011</span><br>
+                  <span class="badge badge-green" style="font-size: 0.7rem; padding: 2px 6px;">BBA</span>
+                </td>
+                <td>
+                  <strong>CDCT</strong><br>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">DI05016031</span><br>
+                  <span class="badge badge-peach" style="font-size: 0.7rem; padding: 2px 6px;">MSD</span>
+                </td>
               </tr>
+
+              <!-- Period 3 -->
               <tr>
-                <td style="font-weight: 700;">Wednesday</td>
-                <td>SPC (R-201)</td>
-                <td>Python (R-204)</td>
-                <td>EIDW Lab (Lab 3)</td>
-                <td>AIPD (R-305)</td>
-                <td>Sports</td>
+                <td style="font-weight: 700; text-align: center;">3</td>
+                <td style="font-weight: 600; white-space: nowrap;">12:00 PM<br>TO<br>01:00 PM</td>
+                <td>
+                  <strong>EIDW</strong><br>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">DI05016081</span><br>
+                  <span class="badge badge-secondary" style="font-size: 0.7rem; padding: 2px 6px;">KDV</span>
+                </td>
+                <td>
+                  <strong>CDCT</strong><br>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">DI05016031</span><br>
+                  <span class="badge badge-peach" style="font-size: 0.7rem; padding: 2px 6px;">MSD</span>
+                </td>
+                <td>
+                  <strong>AIPE</strong><br>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">DI05016011</span><br>
+                  <span class="badge badge-green" style="font-size: 0.7rem; padding: 2px 6px;">BBA</span>
+                </td>
+                <td style="background: rgba(59, 130, 246, 0.04);">
+                  <strong>EIDW</strong><br>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">DI05016081</span><br>
+                  <span class="badge badge-secondary" style="font-size: 0.7rem; padding: 2px 6px;">KDV</span>
+                </td>
+                <td>
+                  <strong>AIPD</strong><br>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">DI05016021</span><br>
+                  <span class="badge badge-purple" style="font-size: 0.7rem; padding: 2px 6px;">DKP</span>
+                </td>
+                <td style="text-align: center; color: var(--text-muted);">—</td>
               </tr>
-              <tr style="background: var(--tint-soft-blue); font-weight: 600;">
-                <td style="font-weight: 800; color: var(--color-accent-blue);">Thursday (Today)</td>
-                <td>SPC (Theory, R-201)</td>
-                <td>Self Study</td>
-                <td>EIDW Lab (Lab 3)</td>
-                <td>AIPD (Theory, R-305)</td>
-                <td>Library Time</td>
+
+              <!-- RECESS 1 -->
+              <tr style="background: #F1F5F9; font-weight: 700; text-align: center; color: var(--text-secondary); letter-spacing: 0.1em;">
+                <td colspan="2" style="font-size: 0.75rem;">01:00 PM TO 01:30 PM</td>
+                <td colspan="6" style="padding: 0.5rem; font-size: 0.8rem;">☕ RECESS (LUNCH BREAK)</td>
               </tr>
+
+              <!-- Period 4 & 5 (Lab Block 1) -->
               <tr>
-                <td style="font-weight: 700;">Friday</td>
-                <td>AIPD (R-305)</td>
-                <td>SPC (R-201)</td>
-                <td>Project Lab (Lab 4)</td>
-                <td>Seminar</td>
-                <td>Club Activity</td>
+                <td style="font-weight: 700; text-align: center;">4 & 5</td>
+                <td style="font-weight: 600; white-space: nowrap;">01:30 PM<br>TO<br>03:20 PM<br><span style="font-size: 0.68rem; color: var(--text-muted);">(2-Hr Practical)</span></td>
+                <td>
+                  <div style="margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px dashed var(--border-color);">
+                    <strong>SPC (A)</strong> <span style="font-size: 0.72rem;">(DPP)(T-16)</span>
+                  </div>
+                  <div>
+                    <strong>EIDW (B)</strong> <span style="font-size: 0.72rem;">(KDV)(T-14)</span>
+                  </div>
+                </td>
+                <td>
+                  <div style="margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px dashed var(--border-color);">
+                    <strong>AIPE (A)</strong> <span style="font-size: 0.72rem;">(AKV)(T-13)</span>
+                  </div>
+                  <div>
+                    <strong>SPC (B)</strong> <span style="font-size: 0.72rem;">(DPP)(T-16)</span>
+                  </div>
+                </td>
+                <td style="text-align: center; color: var(--text-muted); vertical-align: middle;">—</td>
+                <td style="background: rgba(59, 130, 246, 0.04);">
+                  <div style="margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px dashed var(--border-color);">
+                    <strong>AIPD (A)</strong> <span style="font-size: 0.72rem;">(DKP)(T-16)</span>
+                  </div>
+                  <div>
+                    <strong>AIPE (B)</strong> <span style="font-size: 0.72rem;">(AKV)(T-13)</span>
+                  </div>
+                </td>
+                <td style="background: #F8FAFC; vertical-align: middle;">
+                  <strong>MINOR PROJECT</strong><br>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">DI05000341</span><br>
+                  <div style="font-size: 0.75rem; margin-top: 4px;">A - NAP (T-15)<br>B - HSJ (T-14)</div>
+                </td>
+                <td style="text-align: center; color: var(--text-muted); vertical-align: middle;">—</td>
               </tr>
+
+              <!-- RECESS 2 -->
+              <tr style="background: #F1F5F9; font-weight: 700; text-align: center; color: var(--text-secondary); letter-spacing: 0.1em;">
+                <td colspan="2" style="font-size: 0.75rem;">03:20 PM TO 03:30 PM</td>
+                <td colspan="6" style="padding: 0.4rem; font-size: 0.8rem;">☕ SHORT RECESS</td>
+              </tr>
+
+              <!-- Period 6 & 7 (Lab Block 2) -->
               <tr>
-                <td style="font-weight: 700;">Saturday</td>
-                <td>Weekly Test</td>
-                <td>Remedial Class</td>
-                <td>Library & Project</td>
-                <td>-</td>
-                <td>-</td>
+                <td style="font-weight: 700; text-align: center;">6 & 7</td>
+                <td style="font-weight: 600; white-space: nowrap;">03:30 PM<br>TO<br>05:30 PM<br><span style="font-size: 0.68rem; color: var(--text-muted);">(2-Hr Practical)</span></td>
+                <td>
+                  <div style="margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px dashed var(--border-color);">
+                    <strong>CDCT (A)</strong> <span style="font-size: 0.72rem;">(MSD)(T-13)</span>
+                  </div>
+                  <div>
+                    <strong>AIPD (B)</strong> <span style="font-size: 0.72rem;">(DKP)(T-15)</span>
+                  </div>
+                </td>
+                <td style="text-align: center; color: var(--text-muted); vertical-align: middle;">—</td>
+                <td style="text-align: center; color: var(--text-muted); vertical-align: middle;">—</td>
+                <td style="background: rgba(59, 130, 246, 0.04);">
+                  <div style="margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px dashed var(--border-color);">
+                    <strong>EIDW (A)</strong> <span style="font-size: 0.72rem;">(KDV)(T-14)</span>
+                  </div>
+                  <div>
+                    <strong>CDCT (B)</strong> <span style="font-size: 0.72rem;">(MSD)(T-13)</span>
+                  </div>
+                </td>
+                <td style="background: #F8FAFC; vertical-align: middle;">
+                  <strong>MINOR PROJECT</strong><br>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);">DI05000341</span><br>
+                  <div style="font-size: 0.75rem; margin-top: 4px;">A - AKV<br>B - BBA (T-16)</div>
+                </td>
+                <td style="text-align: center; color: var(--text-muted); vertical-align: middle;">—</td>
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- TWO COLUMN REFERENCE MATRICES -->
+        <div class="middle-split-grid" style="gap: 1.5rem;">
+          <!-- COURSE REFERENCE TABLE -->
+          <div class="card-editorial" style="padding: 1.5rem;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Course Code & Teaching Scheme</h3>
+            <div class="table-responsive-card">
+              <table class="data-table" style="font-size: 0.78rem;">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Course Title</th>
+                    <th>TH</th>
+                    <th>TU</th>
+                    <th>PRAC</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="font-family: monospace;">DI05000341</td>
+                    <td><strong>Minor Project</strong></td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>6</td>
+                    <td><strong>6 hrs</strong></td>
+                  </tr>
+                  <tr>
+                    <td style="font-family: monospace;">DI05016011</td>
+                    <td><strong>AI with Prompt Engineering (AIPE)</strong></td>
+                    <td>3</td>
+                    <td>0</td>
+                    <td>4</td>
+                    <td><strong>7 hrs</strong></td>
+                  </tr>
+                  <tr>
+                    <td style="font-family: monospace;">DI05016021</td>
+                    <td><strong>AI Product Design (AIPD)</strong></td>
+                    <td>3</td>
+                    <td>0</td>
+                    <td>4</td>
+                    <td><strong>7 hrs</strong></td>
+                  </tr>
+                  <tr>
+                    <td style="font-family: monospace;">DI05016031</td>
+                    <td><strong>Cloud & Data Center Tech (CDCT)</strong></td>
+                    <td>3</td>
+                    <td>0</td>
+                    <td>4</td>
+                    <td><strong>7 hrs</strong></td>
+                  </tr>
+                  <tr>
+                    <td style="font-family: monospace;">DI05016061</td>
+                    <td><strong>Structured Programming with C (SPC)</strong></td>
+                    <td>3</td>
+                    <td>0</td>
+                    <td>4</td>
+                    <td><strong>7 hrs</strong></td>
+                  </tr>
+                  <tr>
+                    <td style="font-family: monospace;">DI05016081</td>
+                    <td><strong>Emotional Intelligence & Digital Wellbeing (EIDW)</strong></td>
+                    <td>0</td>
+                    <td>2</td>
+                    <td>4</td>
+                    <td><strong>6 hrs</strong></td>
+                  </tr>
+                  <tr style="background: var(--bg-surface-subtle); font-weight: 700;">
+                    <td colspan="2">Total Teaching Scheme</td>
+                    <td>12</td>
+                    <td>2</td>
+                    <td>26</td>
+                    <td>40 hrs</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- FACULTY INITIALS DIRECTORY -->
+          <div class="card-editorial" style="padding: 1.5rem;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Faculty Directory & Initials</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.8rem;">
+              <div style="padding: 0.5rem; background: var(--bg-surface-subtle); border-radius: 6px;">
+                <span class="badge badge-green" style="font-size: 0.7rem;">BBA</span><br>
+                <strong>Mrs. Binita B. Acharya</strong><br>
+                <span style="font-size: 0.74rem; color: var(--text-muted);">I/C H.O.D.</span>
+              </div>
+              <div style="padding: 0.5rem; background: var(--bg-surface-subtle); border-radius: 6px;">
+                <span class="badge badge-blue" style="font-size: 0.7rem;">DPP</span><br>
+                <strong>Mrs. Disha P. Prajapati</strong><br>
+                <span style="font-size: 0.74rem; color: var(--text-muted);">SPC Faculty</span>
+              </div>
+              <div style="padding: 0.5rem; background: var(--bg-surface-subtle); border-radius: 6px;">
+                <span class="badge badge-purple" style="font-size: 0.7rem;">DKP</span><br>
+                <strong>Mrs. Dipika K. Patel</strong><br>
+                <span style="font-size: 0.74rem; color: var(--text-muted);">AIPD Faculty</span>
+              </div>
+              <div style="padding: 0.5rem; background: var(--bg-surface-subtle); border-radius: 6px;">
+                <span class="badge badge-peach" style="font-size: 0.7rem;">MSD</span><br>
+                <strong>Miss. Mayuri S. Devganiya</strong><br>
+                <span style="font-size: 0.74rem; color: var(--text-muted);">CDCT Faculty</span>
+              </div>
+              <div style="padding: 0.5rem; background: var(--bg-surface-subtle); border-radius: 6px;">
+                <span class="badge badge-secondary" style="font-size: 0.7rem;">KDV</span><br>
+                <strong>Ms. Krupali D. Vaghashiya</strong><br>
+                <span style="font-size: 0.74rem; color: var(--text-muted);">EIDW Faculty</span>
+              </div>
+              <div style="padding: 0.5rem; background: var(--bg-surface-subtle); border-radius: 6px;">
+                <span class="badge badge-blue" style="font-size: 0.7rem;">AKV</span><br>
+                <strong>Mrs. Aesha K. Virani</strong><br>
+                <span style="font-size: 0.74rem; color: var(--text-muted);">AIPE & Project</span>
+              </div>
+              <div style="padding: 0.5rem; background: var(--bg-surface-subtle); border-radius: 6px;">
+                <span class="badge badge-secondary" style="font-size: 0.7rem;">NAP</span><br>
+                <strong>Miss. Nikita A. Patel</strong><br>
+                <span style="font-size: 0.74rem; color: var(--text-muted);">Minor Project</span>
+              </div>
+              <div style="padding: 0.5rem; background: var(--bg-surface-subtle); border-radius: 6px;">
+                <span class="badge badge-secondary" style="font-size: 0.7rem;">HSJ</span><br>
+                <strong>Mrs. Hina S. Jayani</strong><br>
+                <span style="font-size: 0.74rem; color: var(--text-muted);">Minor Project</span>
+              </div>
+            </div>
+            <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color); font-size: 0.78rem; color: var(--text-secondary); display: flex; justify-content: space-between;">
+              <span><strong>Principal:</strong> Dr. Y. S. Choupare</span>
+              <span><strong>Dept:</strong> IT [16]</span>
+            </div>
+          </div>
         </div>
       </div>
     `;
   }
 
   static renderAttendance(container) {
+    // Dynamic attendance reading - NO PRE-FILLED / HARDCODED NUMBERS
+    let localRecords = [];
+    try {
+      localRecords = JSON.parse(localStorage.getItem('campusx_attendance_records') || '[]');
+    } catch (e) {
+      localRecords = [];
+    }
+
+    const officialSubjects = [
+      { code: "DI05016061", name: "SPC (Structured Programming with C)", faculty: "Mrs. Disha P. Prajapati (DPP)" },
+      { code: "DI05016011", name: "AIPE (AI with Prompt Engineering)", faculty: "Mrs. Binita B. Acharya (BBA)" },
+      { code: "DI05016021", name: "AIPD (AI Product Design)", faculty: "Mrs. Dipika K. Patel (DKP)" },
+      { code: "DI05016031", name: "CDCT (Cloud and Data Center Tech)", faculty: "Miss. Mayuri S. Devganiya (MSD)" },
+      { code: "DI05016081", name: "EIDW (Emotional Intelligence & Digital Wellbeing)", faculty: "Ms. Krupali D. Vaghashiya (KDV)" },
+      { code: "DI05000341", name: "Minor Project", faculty: "Mrs. Aesha Virani / Miss Nikita Patel" }
+    ];
+
+    // Compute stats per subject if records exist
+    const totalSessions = localRecords.length;
+    let attendedSessions = 0;
+
+    const subjectsData = officialSubjects.map(sub => {
+      const subRecords = localRecords.filter(r => r.subject && r.subject.toUpperCase().includes(sub.code.substring(0, 4)) || (r.subject && sub.name.toUpperCase().includes(r.subject.toUpperCase())));
+      const held = subRecords.length;
+      // In student view, check if student was present
+      const attended = subRecords.filter(r => {
+        if (r.records && Array.isArray(r.records)) {
+          const userRoll = (appState.currentUser && appState.currentUser.rollNo) || "07";
+          const match = r.records.find(s => s.rollNo === userRoll);
+          return match ? match.present === true : false;
+        }
+        return true;
+      }).length;
+      attendedSessions += attended;
+      const pct = held > 0 ? ((attended / held) * 100).toFixed(1) + "%" : "--%";
+      return {
+        ...sub,
+        held,
+        attended,
+        pct,
+        status: held === 0 ? "Pending Marking" : (attended / held >= 0.75 ? "Eligible" : "Attendance Low")
+      };
+    });
+
+    const hasRecords = totalSessions > 0;
+    const overallPct = hasRecords ? ((attendedSessions / totalSessions) * 100).toFixed(1) + "%" : "--%";
+
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 1rem;">
           <div>
             <h2 style="font-size: 2rem; font-weight: 800;">Attendance Analytics</h2>
-            <p style="font-size: 0.9rem; color: var(--text-secondary);">Real-time GTU lecture attendance & AI compliance metrics.</p>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">
+              Tapi Diploma Engineering College • Class 2452 - IT (Semester 5)
+            </p>
           </div>
-          <span class="badge badge-available">Overall: 88.5% (Eligible)</span>
+          <span class="badge ${hasRecords ? 'badge-available' : 'badge-secondary'}" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
+            Overall: ${overallPct} ${hasRecords ? '' : '(No Records Marked Yet)'}
+          </span>
         </div>
 
-        <!-- 1. AI RISK UI (Section 46) -->
-        <div class="card-editorial" style="background: var(--tint-soft-green); border-color: #A7F3D0;">
-          <div class="flex justify-between items-center" style="margin-bottom: 0.5rem;">
+        <!-- AI RISK ASSESSMENT -->
+        <div class="card-editorial" style="background: ${hasRecords ? 'var(--tint-soft-green)' : 'var(--bg-surface-subtle)'}; border-color: ${hasRecords ? '#A7F3D0' : 'var(--border-color)'};">
+          <div class="flex justify-between items-center" style="margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
             <div class="flex items-center gap-2">
-              <span class="badge badge-available">AI Risk Assessment</span>
-              <strong style="color: var(--color-success); font-size: 1rem;">Academic Standing: Low Risk (94/100)</strong>
+              <span class="badge ${hasRecords ? 'badge-available' : 'badge-blue'}">AI Risk Assessment</span>
+              <strong style="color: ${hasRecords ? 'var(--color-success)' : 'var(--text-primary)'}; font-size: 1rem;">
+                Academic Standing: ${hasRecords ? 'Active Tracking' : 'Awaiting Faculty Attendance Submissions'}
+              </strong>
             </div>
-            <span style="font-size: 0.78rem; color: var(--color-success); font-weight: 700;">Zero Exam Detainment Risk</span>
+            <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">
+              GTU Mandatory Minimum: 75%
+            </span>
           </div>
-          <p style="font-size: 0.85rem; color: #065F46; line-height: 1.5;">
-            <strong>Factors affecting your current risk level:</strong><br>
-            • Attendance compliance: 88.5% (Well above GTU 75% statutory requirement)<br>
-            • Internal assessments: 26/30 average in Mid-term tests<br>
-            • Laboratory work: 100% journals certified and submitted on time.
+          <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+            ${hasRecords 
+              ? `Real-time attendance recorded across ${totalSessions} sessions. Keep attending all theory and lab practicals to maintain university clearance.`
+              : `All pre-filled mock attendance has been cleared for the new term (15/06/2026 - 30/10/2026). As faculty mark sessions in the Faculty Portal, live attendance calculations and GTU statutory compliance will dynamically update here.`
+            }
           </p>
         </div>
 
@@ -3824,7 +4285,7 @@ class AcademicsView {
             <thead>
               <tr>
                 <th>Subject Code & Name</th>
-                <th>Faculty</th>
+                <th>Assigned Faculty</th>
                 <th>Lectures Attended</th>
                 <th>Total Held</th>
                 <th>Attendance %</th>
@@ -3832,32 +4293,30 @@ class AcademicsView {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td><strong>AIPD (Artificial Intelligence & Python)</strong></td>
-                <td>Prof. S. R. Patel</td>
-                <td>32</td>
-                <td>35</td>
-                <td style="font-weight: 700;">91.4%</td>
-                <td><span class="badge badge-available">Excellent</span></td>
-              </tr>
-              <tr>
-                <td><strong>SPC (System Programming & Compiler)</strong></td>
-                <td>Prof. Mehta</td>
-                <td>28</td>
-                <td>32</td>
-                <td style="font-weight: 700;">87.5%</td>
-                <td><span class="badge badge-available">Good</span></td>
-              </tr>
-              <tr>
-                <td><strong>EIDW (Engineering Innovation & Data Works)</strong></td>
-                <td>Prof. Sharma</td>
-                <td>26</td>
-                <td>30</td>
-                <td style="font-weight: 700;">86.6%</td>
-                <td><span class="badge badge-available">Good</span></td>
-              </tr>
+              ${subjectsData.map(s => `
+                <tr>
+                  <td>
+                    <strong>${s.name}</strong><br>
+                    <span style="font-size: 0.72rem; font-family: monospace; color: var(--text-muted);">${s.code}</span>
+                  </td>
+                  <td>${s.faculty}</td>
+                  <td style="font-weight: 600;">${s.held > 0 ? s.attended : 0}</td>
+                  <td>${s.held}</td>
+                  <td style="font-weight: 700;">${s.pct}</td>
+                  <td>
+                    <span class="badge ${s.held === 0 ? 'badge-secondary' : (s.attended / s.held >= 0.75 ? 'badge-available' : 'badge-error')}">
+                      ${s.status}
+                    </span>
+                  </td>
+                </tr>
+              `).join('')}
             </tbody>
           </table>
+        </div>
+
+        <!-- QUICK HELPER -->
+        <div style="font-size: 0.8rem; color: var(--text-muted); text-align: right;">
+          Faculty can record new class attendance anytime from the <a href="javascript:void(0)" onclick="appState.setView('attendance-mark')" style="color: var(--color-accent-blue); text-decoration: underline; font-weight: 600;">Faculty Portal &rarr;</a>
         </div>
       </div>
     `;
@@ -3865,7 +4324,7 @@ class AcademicsView {
 }
 
 
-/* --- File: ai-chat-view.js --- */
+/* --- File: ai-chat-view.js (js\views\ai-chat-view.js) --- */
 /* ==========================================================
    Campus X AI - Conversational Assistant View ("Ask Campus X.")
    Section 44: Clean conversational shortcut, no sci-fi orbs/robots
@@ -4000,7 +4459,7 @@ class AiChatView {
 }
 
 
-/* --- File: complaints-view.js --- */
+/* --- File: complaints-view.js (js\views\complaints-view.js) --- */
 /* ==========================================================
    Campus X AI - Complaints & Grievance Module View
    Section 40: "Need something fixed?", Ticket Tracking & Admin Resolution
@@ -4179,7 +4638,7 @@ class ComplaintsView {
 }
 
 
-/* --- File: lost-found-view.js --- */
+/* --- File: lost-found-view.js (js\views\lost-found-view.js) --- */
 /* ==========================================================
    Campus X AI - Lost & Found Module View
    Sections 23, 24, 25, 26, 34
@@ -4588,7 +5047,7 @@ class LostFoundView {
 
 
 
-/* --- File: app.js --- */
+/* --- File: app.js (js\app.js) --- */
 /* ==========================================================
    Campus X AI - Master Application Orchestrator
    Role Dispatcher, Modal Engine, Navigation & Responsive Router

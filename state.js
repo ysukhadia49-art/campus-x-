@@ -279,6 +279,7 @@ class CampusState {
       localRecords.push({
         classId,
         subject,
+        records,
         recordedBy: this.currentUser.name,
         timestamp: new Date().toISOString()
       });

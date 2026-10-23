@@ -189,37 +189,45 @@ class FacultyView {
                 <span class="badge badge-available">Class 2452 IT</span>
               </div>
 
-              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
-                Semester 5 attendance compliance stands at <strong>89.4%</strong> with 2 students requiring mentorship attention.
-              </p>
+              ${(() => {
+                let recs = [];
+                try {
+                  recs = JSON.parse(localStorage.getItem('campusx_attendance_records') || '[]');
+                } catch(e) {}
+                const count = recs.length;
+                return `
+                  <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                    Semester 5 attendance recording active. <strong>${count} session${count === 1 ? '' : 's'}</strong> logged this term.
+                  </p>
 
-              <!-- Progress Visual Bars -->
-              <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <div>
-                  <div class="flex justify-between" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 0.25rem;">
-                    <span>AIPD (Artificial Intelligence & Python)</span>
-                    <span>91.2% Attendance</span>
-                  </div>
-                  <div style="height: 6px; background: #E5E7EB; border-radius: 999px; overflow: hidden;">
-                    <div style="width: 91.2%; height: 100%; background: var(--color-success);"></div>
-                  </div>
-                </div>
+                  <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div>
+                      <div class="flex justify-between" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 0.25rem;">
+                        <span>Academic Compliance (GTU 75% Rule)</span>
+                        <span>${count > 0 ? 'Active Tracking' : 'Awaiting Markings'}</span>
+                      </div>
+                      <div style="height: 6px; background: #E5E7EB; border-radius: 999px; overflow: hidden;">
+                        <div style="width: ${count > 0 ? '100%' : '0%'}; height: 100%; background: var(--color-success);"></div>
+                      </div>
+                    </div>
 
-                <div>
-                  <div class="flex justify-between" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 0.25rem;">
-                    <span>EIDW Lab Submissions</span>
-                    <span>84.0% Submitted</span>
+                    <div>
+                      <div class="flex justify-between" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 0.25rem;">
+                        <span>Term Duration Progress</span>
+                        <span>15/06/2026 To 30/10/2026</span>
+                      </div>
+                      <div style="height: 6px; background: #E5E7EB; border-radius: 999px; overflow: hidden;">
+                        <div style="width: 35%; height: 100%; background: var(--color-accent-blue);"></div>
+                      </div>
+                    </div>
                   </div>
-                  <div style="height: 6px; background: #E5E7EB; border-radius: 999px; overflow: hidden;">
-                    <div style="width: 84%; height: 100%; background: var(--color-accent-blue);"></div>
-                  </div>
-                </div>
-              </div>
+                `;
+              })()}
             </div>
 
             <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.78rem; color: var(--text-muted);">AI Mentor: Prof. S. R. Patel</span>
-              <a href="javascript:void(0)" onclick="appState.setView('performance')" style="font-size: 0.8rem; font-weight: 600;">Full Analytics &rarr;</a>
+              <span style="font-size: 0.78rem; color: var(--text-muted);">IT Dept Head: Mrs. Binita Acharya (BBA)</span>
+              <a href="javascript:void(0)" onclick="appState.setView('timetable')" style="font-size: 0.8rem; font-weight: 600;">Full Timetable &rarr;</a>
             </div>
           </div>
 
@@ -231,12 +239,14 @@ class FacultyView {
 
   // FACULTY INTERACTIVE ATTENDANCE MARKING (Section 20)
   static renderAttendanceMarking(container) {
+    const todayStr = new Date().toISOString().split('T')[0];
+
     container.innerHTML = `
       <div class="card-editorial" style="padding: 2rem;">
         <div class="flex items-center justify-between" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
           <div>
             <h2 style="font-size: 1.75rem; font-weight: 800;">Class Attendance Roster</h2>
-            <p style="font-size: 0.86rem; color: var(--text-secondary);">Select class and toggle student attendance status before saving.</p>
+            <p style="font-size: 0.86rem; color: var(--text-secondary);">Select subject and toggle student attendance status before saving.</p>
           </div>
           <div class="flex items-center gap-2">
             <button class="btn btn-secondary" onclick="appState.setView('dashboard')">Cancel</button>
@@ -245,25 +255,41 @@ class FacultyView {
         </div>
 
         <!-- Filters Strip -->
-        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap;">
           <div style="flex: 1; min-width: 180px;">
-            <label class="form-label">Class</label>
+            <label class="form-label">Class & Room</label>
             <select class="form-input" id="attClassSelect">
-              <option value="2452-IT">Class: 2452 - IT (Semester 5)</option>
-              <option value="2451-IT">Class: 2451 - IT (Semester 3)</option>
+              <option value="Class 2452 - IT (Room S-21)">Class 2452 - IT (Room S-21 / S-25)</option>
+              <option value="Class 2451 - IT (Room S-22)">Class 2451 - IT (Semester 3)</option>
             </select>
           </div>
-          <div style="flex: 1; min-width: 180px;">
-            <label class="form-label">Subject</label>
+          <div style="flex: 1.5; min-width: 220px;">
+            <label class="form-label">Subject & Course Code</label>
             <select class="form-input" id="attSubjectSelect">
-              <option value="AIPD-Lab">AIPD (Lab Batch A)</option>
-              <option value="AIPD-Theory">AIPD (Theory)</option>
-              <option value="Python">Python Programming</option>
+              <option value="SPC (DI05016061) - DPP">SPC: Structured Programming with C (DPP)</option>
+              <option value="AIPE (DI05016011) - BBA">AIPE: AI with Prompt Engineering (BBA)</option>
+              <option value="AIPD (DI05016021) - DKP">AIPD: AI Product Design (DKP)</option>
+              <option value="CDCT (DI05016031) - MSD">CDCT: Cloud & Data Center Tech (MSD)</option>
+              <option value="EIDW (DI05016081) - KDV">EIDW: Emotional Intelligence & Digital Wellbeing (KDV)</option>
+              <option value="MINOR PROJECT (DI05000341)">Minor Project (DI05000341)</option>
             </select>
           </div>
           <div style="flex: 1; min-width: 160px;">
             <label class="form-label">Date</label>
-            <input type="date" class="form-input" value="2026-09-11">
+            <input type="date" class="form-input" id="attDateInput" value="${todayStr}">
+          </div>
+        </div>
+
+        <!-- Quick Batch Actions Strip -->
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+          <div style="font-size: 0.82rem; color: var(--text-secondary);">
+            Batch Action:
+            <button class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; margin-left: 0.4rem;" onclick="FacultyView.markAll(true)">Mark All Present</button>
+            <button class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; margin-left: 0.3rem;" onclick="FacultyView.markAll(false)">Mark All Absent</button>
+            <button class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; margin-left: 0.3rem;" onclick="FacultyView.markAll(null)">Reset All (Unmark)</button>
+          </div>
+          <div id="markingSummaryBadge" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">
+            ${FacultyView.getMarkingSummary()}
           </div>
         </div>
 
@@ -272,36 +298,47 @@ class FacultyView {
           <table class="data-table">
             <thead>
               <tr>
-                <th>Roll No</th>
-                <th>Enrollment ID</th>
+                <th style="width: 80px;">Roll No</th>
+                <th style="width: 160px;">Enrollment ID</th>
                 <th>Student Name</th>
-                <th>Overall Attd.</th>
-                <th>Attendance Status</th>
+                <th style="width: 140px;">Term Status</th>
+                <th style="width: 160px; text-align: center;">Today's Attendance</th>
               </tr>
             </thead>
             <tbody>
-              ${CAMPUS_DATA.studentRoster.map(s => `
-                <tr id="roster-row-${s.rollNo}">
-                  <td style="font-weight: 700;">#${s.rollNo}</td>
-                  <td style="font-family: monospace; color: var(--color-accent-blue);">${s.enrollment}</td>
-                  <td style="font-weight: 600;">${s.name}</td>
-                  <td>${s.attendancePct}</td>
-                  <td>
-                    <button class="attendance-toggle-btn ${s.present ? 'attendance-present' : 'attendance-absent'}" 
-                            id="toggle-btn-${s.rollNo}"
-                            onclick="FacultyView.toggleStudentStatus('${s.rollNo}')">
-                      ${s.present ? '✓ PRESENT' : '× ABSENT'}
-                    </button>
-                  </td>
-                </tr>
-              `).join('')}
+              ${CAMPUS_DATA.studentRoster.map(s => {
+                let btnClass = 'attendance-unmarked';
+                let btnText = '— UNMARKED —';
+                if (s.present === true) {
+                  btnClass = 'attendance-present';
+                  btnText = '✓ PRESENT';
+                } else if (s.present === false) {
+                  btnClass = 'attendance-absent';
+                  btnText = '× ABSENT';
+                }
+                return `
+                  <tr id="roster-row-${s.rollNo}">
+                    <td style="font-weight: 700;">#${s.rollNo}</td>
+                    <td style="font-family: monospace; color: var(--color-accent-blue);">${s.enrollment}</td>
+                    <td style="font-weight: 600;">${s.name}</td>
+                    <td><span class="badge badge-secondary" style="font-size: 0.72rem;">Term In Progress</span></td>
+                    <td style="text-align: center;">
+                      <button class="attendance-toggle-btn ${btnClass}" 
+                              id="toggle-btn-${s.rollNo}"
+                              onclick="FacultyView.toggleStudentStatus('${s.rollNo}')">
+                        ${btnText}
+                      </button>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
             </tbody>
           </table>
         </div>
 
-        <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
           <div style="font-size: 0.8rem; color: var(--text-muted);">
-            Click status button to toggle Present / Absent. Records auto-validate before sync.
+            Click status button to cycle: Unmarked &rarr; Present &rarr; Absent.
           </div>
           <button class="btn btn-primary" onclick="FacultyView.saveAttendanceSubmission()">
             Save Attendance
@@ -311,24 +348,90 @@ class FacultyView {
     `;
   }
 
+  static getMarkingSummary() {
+    const presentCount = CAMPUS_DATA.studentRoster.filter(s => s.present === true).length;
+    const absentCount = CAMPUS_DATA.studentRoster.filter(s => s.present === false).length;
+    const unmarkedCount = CAMPUS_DATA.studentRoster.filter(s => s.present === null).length;
+    return `Present: ${presentCount} | Absent: ${absentCount} | Unmarked: ${unmarkedCount}`;
+  }
+
+  static updateSummaryBadge() {
+    const el = document.getElementById('markingSummaryBadge');
+    if (el) el.textContent = FacultyView.getMarkingSummary();
+  }
+
   static toggleStudentStatus(rollNo) {
     const student = CAMPUS_DATA.studentRoster.find(s => s.rollNo === rollNo);
     if (student) {
-      student.present = !student.present;
+      if (student.present === null) {
+        student.present = true;
+      } else if (student.present === true) {
+        student.present = false;
+      } else {
+        student.present = true;
+      }
+
       const btn = document.getElementById(`toggle-btn-${rollNo}`);
       if (btn) {
-        btn.className = `attendance-toggle-btn ${student.present ? 'attendance-present' : 'attendance-absent'}`;
-        btn.textContent = student.present ? '✓ PRESENT' : '× ABSENT';
+        let btnClass = 'attendance-unmarked';
+        let btnText = '— UNMARKED —';
+        if (student.present === true) {
+          btnClass = 'attendance-present';
+          btnText = '✓ PRESENT';
+        } else if (student.present === false) {
+          btnClass = 'attendance-absent';
+          btnText = '× ABSENT';
+        }
+        btn.className = `attendance-toggle-btn ${btnClass}`;
+        btn.textContent = btnText;
       }
+      FacultyView.updateSummaryBadge();
     }
   }
 
+  static markAll(status) {
+    CAMPUS_DATA.studentRoster.forEach(s => {
+      s.present = status;
+      const btn = document.getElementById(`toggle-btn-${s.rollNo}`);
+      if (btn) {
+        let btnClass = 'attendance-unmarked';
+        let btnText = '— UNMARKED —';
+        if (status === true) {
+          btnClass = 'attendance-present';
+          btnText = '✓ PRESENT';
+        } else if (status === false) {
+          btnClass = 'attendance-absent';
+          btnText = '× ABSENT';
+        }
+        btn.className = `attendance-toggle-btn ${btnClass}`;
+        btn.textContent = btnText;
+      }
+    });
+    FacultyView.updateSummaryBadge();
+  }
+
   static saveAttendanceSubmission() {
-    const cls = document.getElementById('attClassSelect') ? document.getElementById('attClassSelect').value : "Class 2452 IT";
-    const sub = document.getElementById('attSubjectSelect') ? document.getElementById('attSubjectSelect').value : "AIPD";
-    appState.saveAttendance(cls, sub);
+    const cls = document.getElementById('attClassSelect') ? document.getElementById('attClassSelect').value : "Class 2452 - IT (Room S-21)";
+    const sub = document.getElementById('attSubjectSelect') ? document.getElementById('attSubjectSelect').value : "SPC (DI05016061)";
+    
+    // Check if at least one student is marked
+    const markedStudents = CAMPUS_DATA.studentRoster.filter(s => s.present !== null);
+    if (markedStudents.length === 0) {
+      appState.showToast('Please mark student attendance (Present/Absent) before saving.', 'error');
+      return;
+    }
+
+    const records = CAMPUS_DATA.studentRoster.map(s => ({
+      rollNo: s.rollNo,
+      enrollment: s.enrollment,
+      name: s.name,
+      present: s.present === true
+    }));
+
+    appState.saveAttendance(cls, sub, records);
     setTimeout(() => {
       appState.setView('dashboard');
     }, 600);
   }
 }
+

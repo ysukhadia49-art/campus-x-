@@ -797,6 +797,13 @@
   border-color: #FECACA;
 }
 
+.attendance-unmarked {
+  background: #F3F4F6;
+  color: #6B7280;
+  border-color: #E5E7EB;
+}
+
+
 /* 9. SCHEDULE TIMELINE */
 .schedule-timeline-box {
   display: flex;
