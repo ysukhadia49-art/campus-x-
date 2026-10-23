@@ -292,7 +292,10 @@ const DB = {
   revokedTokens: new Set()
 };
 
-const DB_FILE = path.join(__dirname, 'campusx_db.json');
+const LOCAL_DB_FILE = path.join(__dirname, 'campusx_db.json');
+const DB_FILE = (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME)
+  ? path.join('/tmp', 'campusx_db.json')
+  : LOCAL_DB_FILE;
 
 function saveDatabaseToFile() {
   try {
@@ -309,18 +312,21 @@ function saveDatabaseToFile() {
 
 function loadDatabaseFromFile() {
   try {
-    if (fs.existsSync(DB_FILE)) {
+    // Check bundled database first
+    if (fs.existsSync(LOCAL_DB_FILE)) {
+      const raw = fs.readFileSync(LOCAL_DB_FILE, 'utf8');
+      const data = JSON.parse(raw);
+      if (data.accounts) Object.assign(DB.accounts, data.accounts);
+      if (Array.isArray(data.complaints)) DB.complaints = data.complaints;
+      if (Array.isArray(data.lostAndFound)) DB.lostAndFound = data.lostAndFound;
+    }
+    // Then check /tmp override if in serverless
+    if (DB_FILE !== LOCAL_DB_FILE && fs.existsSync(DB_FILE)) {
       const raw = fs.readFileSync(DB_FILE, 'utf8');
       const data = JSON.parse(raw);
-      if (data.accounts) {
-        Object.assign(DB.accounts, data.accounts);
-      }
-      if (Array.isArray(data.complaints)) {
-        DB.complaints = data.complaints;
-      }
-      if (Array.isArray(data.lostAndFound)) {
-        DB.lostAndFound = data.lostAndFound;
-      }
+      if (data.accounts) Object.assign(DB.accounts, data.accounts);
+      if (Array.isArray(data.complaints)) DB.complaints = data.complaints;
+      if (Array.isArray(data.lostAndFound)) DB.lostAndFound = data.lostAndFound;
     }
   } catch (err) {
     console.warn('[DB WARNING] Could not read existing database file:', err.message);
