@@ -1,7 +1,7 @@
 /* Campus X AI - Consolidated Application Bundle */
 
 
-/* --- File: mock-data.js --- */
+/* --- File: mock-data.js (js\mock-data.js) --- */
 /* ==========================================================
    Campus X AI - Realistic Mock Data Store
    College: Tapi Diploma Engineering College, Surat
@@ -193,7 +193,7 @@ window.CAMPUS_DATA = CAMPUS_DATA;
 
 
 
-/* --- File: security.js --- */
+/* --- File: security.js (js\security.js) --- */
 /* ==========================================================
    Campus X AI - Client-Side Security Utilities & API Client
    Tapi Diploma Engineering College, Surat
@@ -427,10 +427,24 @@ class ApiClient {
     });
   }
 
-  static async resetPassword(token, newPassword, confirmPassword) {
+  static async resendResetOtp(email) {
+    return ApiClient.request('/api/auth/resend-reset-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  }
+
+  static async verifyResetOtp(email, otp) {
+    return ApiClient.request('/api/auth/verify-reset-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp })
+    });
+  }
+
+  static async resetPassword(email, recoveryGrantToken, newPassword, confirmPassword) {
     return ApiClient.request('/api/auth/reset-password', {
       method: 'POST',
-      body: JSON.stringify({ token, newPassword, confirmPassword })
+      body: JSON.stringify({ email, recoveryGrantToken, newPassword, confirmPassword })
     });
   }
 
@@ -456,7 +470,7 @@ window.SecurityUtils = SecurityUtils;
 window.ApiClient = ApiClient;
 
 
-/* --- File: state.js --- */
+/* --- File: state.js (js\state.js) --- */
 /* ==========================================================
    Campus X AI - Central State & Reactive Event Manager
    Hardened RBAC, Secure Session Tracking & Audit Integration
@@ -906,7 +920,7 @@ if (typeof window !== 'undefined' && window.supabase && !window.supabaseClient) 
 window.appState = new CampusState();
 
 
-/* --- File: navigation.js --- */
+/* --- File: navigation.js (js\navigation.js) --- */
 /* ==========================================================
    Campus X AI - Navigation & State Management
    Step 2: Component & Layout Handlers
@@ -1021,7 +1035,7 @@ class NavigationController {
 }
 
 
-/* --- File: motion.js --- */
+/* --- File: motion.js (js\motion.js) --- */
 /* ==========================================================
    Campus X AI - Premium Motion System
    Linear / Raycast / Arc / Vercel Motion Standard
@@ -1229,7 +1243,7 @@ window.CampusMotion = {
 };
 
 
-/* --- File: auth-view.js --- */
+/* --- File: auth-view.js (js\views\auth-view.js) --- */
 /* ==========================================================
    Campus X AI - Pre-Login & Authentication View
    Security Hardened: Generic Errors, Client Validation UX,
@@ -1364,7 +1378,7 @@ class AuthView {
               <div class="form-group">
                 <div class="flex items-center justify-between" style="margin-bottom: 0.4rem;">
                   <label class="form-label" for="loginPassword" style="margin-bottom: 0;">Password</label>
-                  <a href="javascript:void(0)" onclick="AuthView.openForgotPasswordModal()" style="font-size: 0.75rem; color: var(--color-accent-blue); text-decoration: none;">Forgot password?</a>
+                  <a href="javascript:void(0)" onclick="appState.setView('forgot-password')" class="forgot-password-link">Forgot password?</a>
                 </div>
                 <div class="password-input-wrap">
                   <input 
@@ -1690,43 +1704,7 @@ class AuthView {
     }
   }
 
-  static openForgotPasswordModal() {
-    AppModal.show({
-      title: "Reset Institutional Password",
-      content: `
-        <div style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.5;">
-          Enter your registered institutional email. If the account exists, a secure, single-use password reset link will be dispatched.
-        </div>
-        <div id="forgotPwFeedback" style="display: none; padding: 0.75rem; border-radius: 6px; font-size: 0.84rem; margin-bottom: 1rem;"></div>
-        <div class="form-group">
-          <label class="form-label" for="forgotEmailInput">Registered Email</label>
-          <input type="email" id="forgotEmailInput" class="form-input" placeholder="e.g. name@tapi.edu" required>
-        </div>
-      `,
-      confirmText: "Send Reset Link",
-      onConfirm: async () => {
-        const emailInput = document.getElementById('forgotEmailInput');
-        const feedback = document.getElementById('forgotPwFeedback');
-        const email = emailInput ? emailInput.value.trim() : '';
 
-        if (!email || (window.SecurityUtils && !window.SecurityUtils.validateEmail(email))) {
-          appState.showToast('Please enter a valid email address.', 'error');
-          return;
-        }
-
-        try {
-          let msg = 'If an account exists with this email, password reset instructions have been sent.';
-          if (window.ApiClient && window.ApiClient.getApiBase()) {
-            const resp = await window.ApiClient.forgotPassword(email);
-            if (resp && resp.message) msg = resp.message;
-          }
-          appState.showToast(msg, 'success');
-        } catch (err) {
-          appState.showToast('If an account exists with this email, password reset instructions have been sent.', 'info');
-        }
-      }
-    });
-  }
 
   static triggerRoleRecognition(user) {
     const overlay = document.createElement('div');
@@ -1746,10 +1724,554 @@ class AuthView {
       appState.showToast(`Signed in as ${user.name} (${user.roleTitle})`, "success");
     }, 700);
   }
+
+  // ==========================================================
+  // Password Recovery State & Views
+  // ==========================================================
+  static recoveryEmail = '';
+  static recoveryGrantToken = '';
+  static resendCooldownUntil = 0;
+  static resendIntervalId = null;
+
+  static getEditorialColumnHtml() {
+    return `
+      <!-- Left Editorial Column -->
+      <div class="auth-editorial-col">
+        <div class="auth-brand-lockup">
+          <div class="auth-logo-badge">X</div>
+          <div class="auth-logo-text">Campus X AI</div>
+        </div>
+
+        <div class="auth-headline-box">
+          <h1 class="auth-editorial-title">
+            Everything campus,<br>in one place.
+          </h1>
+          <p class="auth-editorial-sub">
+            Access your academic, campus and support services from a single platform.
+          </p>
+
+          <div class="auth-image-card">
+            <img src="https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=700&q=80" alt="Campus Architecture">
+            <div class="auth-image-overlay-quote">
+              “Discipline today, a better tomorrow.”
+            </div>
+          </div>
+
+          <div class="auth-handwritten-tag">
+            Same goals. Brighter days ☺
+          </div>
+        </div>
+
+        <div class="auth-footer-credentials">
+          <strong>Tapi Diploma Engineering College</strong> • Information Technology Class 2452
+        </div>
+      </div>
+    `;
+  }
+
+  // 1. SCREEN ONE: FORGOT PASSWORD
+  static renderForgotPassword(container) {
+    container.innerHTML = `
+      <div class="auth-fullscreen-container">
+        ${AuthView.getEditorialColumnHtml()}
+
+        <div class="auth-form-col">
+          <div class="auth-card">
+            <div class="auth-card-header">
+              <h2 class="auth-card-title">Forgot Password?</h2>
+              <p class="auth-card-desc">Enter your registered Campus X email address to receive a verification code.</p>
+            </div>
+
+            <div id="forgotErrorBanner" class="auth-error-banner" style="display: none;">
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              <span id="forgotErrorText"></span>
+            </div>
+
+            <form id="forgotPasswordForm" onsubmit="AuthView.handleForgotPasswordSubmit(event)" novalidate>
+              <div class="form-group">
+                <label class="form-label" for="recoveryEmailInput">Email Address</label>
+                <input 
+                  type="email" 
+                  id="recoveryEmailInput" 
+                  class="form-input" 
+                  placeholder="e.g. student@tapi.edu" 
+                  required 
+                  autocomplete="email"
+                  value="${AuthView.recoveryEmail ? (window.SecurityUtils ? window.SecurityUtils.escapeHtml(AuthView.recoveryEmail) : AuthView.recoveryEmail) : ''}"
+                  oninput="AuthView.clearForgotErrors()">
+              </div>
+
+              <button type="submit" id="btnSendOtp" class="btn btn-primary w-full" style="padding: 0.85rem; font-size: 0.95rem; margin-top: 1rem;">
+                Send Verification Code
+              </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 1.5rem;">
+              <a href="javascript:void(0)" onclick="appState.setView('login')" class="back-to-login-link">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Back to Login
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    setTimeout(() => {
+      const emailInput = document.getElementById('recoveryEmailInput');
+      if (emailInput) emailInput.focus();
+    }, 50);
+  }
+
+  static clearForgotErrors() {
+    const banner = document.getElementById('forgotErrorBanner');
+    if (banner) banner.style.display = 'none';
+  }
+
+  static async handleForgotPasswordSubmit(e) {
+    if (e) e.preventDefault();
+    const emailInput = document.getElementById('recoveryEmailInput');
+    const submitBtn = document.getElementById('btnSendOtp');
+    const banner = document.getElementById('forgotErrorBanner');
+    const bannerText = document.getElementById('forgotErrorText');
+
+    const email = (emailInput ? emailInput.value : '').trim();
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+
+    if (!email || !emailRegex.test(email)) {
+      if (banner && bannerText) {
+        bannerText.textContent = 'Please enter a valid institutional email address.';
+        banner.style.display = 'flex';
+      }
+      return;
+    }
+
+    try {
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loading-spinner"></span> Sending Code...';
+      }
+
+      AuthView.recoveryEmail = email;
+      await ApiClient.forgotPassword(email);
+
+      // 60-second cooldown initialized
+      AuthView.resendCooldownUntil = Date.now() + 60000;
+      appState.setView('verify-otp');
+    } catch (err) {
+      if (banner && bannerText) {
+        bannerText.textContent = err.message || 'Unable to send verification code. Please try again.';
+        banner.style.display = 'flex';
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Verification Code';
+      }
+    }
+  }
+
+  // 2. SCREEN TWO: VERIFY OTP
+  static renderVerifyOtp(container) {
+    const displayEmail = AuthView.recoveryEmail
+      ? (window.SecurityUtils ? window.SecurityUtils.escapeHtml(AuthView.recoveryEmail) : AuthView.recoveryEmail)
+      : 'your email address';
+
+    container.innerHTML = `
+      <div class="auth-fullscreen-container">
+        ${AuthView.getEditorialColumnHtml()}
+
+        <div class="auth-form-col">
+          <div class="auth-card">
+            <div class="auth-card-header">
+              <h2 class="auth-card-title">Verify Your Email</h2>
+              <p class="auth-card-desc">Enter the 6-digit code sent to <strong>${displayEmail}</strong>.</p>
+            </div>
+
+            <div id="otpErrorBanner" class="auth-error-banner" style="display: none;">
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              <span id="otpErrorText"></span>
+            </div>
+
+            <form id="verifyOtpForm" onsubmit="AuthView.handleVerifyOtpSubmit(event)" novalidate>
+              <div class="otp-inputs-wrap" id="otpBoxesWrap">
+                <input type="text" class="otp-digit-box" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" data-index="0" aria-label="Digit 1">
+                <input type="text" class="otp-digit-box" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" data-index="1" aria-label="Digit 2">
+                <input type="text" class="otp-digit-box" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" data-index="2" aria-label="Digit 3">
+                <input type="text" class="otp-digit-box" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" data-index="3" aria-label="Digit 4">
+                <input type="text" class="otp-digit-box" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" data-index="4" aria-label="Digit 5">
+                <input type="text" class="otp-digit-box" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" data-index="5" aria-label="Digit 6">
+              </div>
+
+              <button type="submit" id="btnVerifyOtp" class="btn btn-primary w-full" style="padding: 0.85rem; font-size: 0.95rem; margin-top: 1rem;">
+                Verify Code
+              </button>
+
+              <div class="resend-section">
+                <button type="button" id="btnResendOtp" class="resend-btn" onclick="AuthView.handleResendOtp()">
+                  Resend Code
+                </button>
+                <span id="resendCountdown" class="resend-countdown"></span>
+              </div>
+            </form>
+
+            <div style="text-align: center; margin-top: 1.5rem;">
+              <a href="javascript:void(0)" onclick="appState.setView('forgot-password')" class="back-to-login-link">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Back
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    AuthView.setupOtpInputs();
+    AuthView.startResendCooldownTimer();
+  }
+
+  static setupOtpInputs() {
+    setTimeout(() => {
+      const boxes = Array.from(document.querySelectorAll('.otp-digit-box'));
+      if (!boxes.length) return;
+
+      boxes[0].focus();
+
+      boxes.forEach((box, idx) => {
+        box.addEventListener('input', (e) => {
+          const val = box.value.replace(/\D/g, '');
+          box.value = val ? val[0] : '';
+
+          if (box.value) {
+            box.classList.add('filled');
+            box.classList.remove('error');
+            if (idx < boxes.length - 1) {
+              boxes[idx + 1].focus();
+            }
+          } else {
+            box.classList.remove('filled');
+          }
+
+          const banner = document.getElementById('otpErrorBanner');
+          if (banner) banner.style.display = 'none';
+        });
+
+        box.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace') {
+            if (!box.value && idx > 0) {
+              boxes[idx - 1].focus();
+              boxes[idx - 1].value = '';
+              boxes[idx - 1].classList.remove('filled');
+            } else {
+              box.value = '';
+              box.classList.remove('filled');
+            }
+          } else if (e.key === 'ArrowLeft' && idx > 0) {
+            boxes[idx - 1].focus();
+          } else if (e.key === 'ArrowRight' && idx < boxes.length - 1) {
+            boxes[idx + 1].focus();
+          }
+        });
+
+        box.addEventListener('paste', (e) => {
+          e.preventDefault();
+          const pasted = (e.clipboardData || window.clipboardData).getData('text');
+          const digits = pasted.replace(/\D/g, '').slice(0, 6);
+          if (!digits) return;
+
+          digits.split('').forEach((d, i) => {
+            if (boxes[i]) {
+              boxes[i].value = d;
+              boxes[i].classList.add('filled');
+              boxes[i].classList.remove('error');
+            }
+          });
+
+          const nextIndex = Math.min(digits.length, boxes.length - 1);
+          boxes[nextIndex].focus();
+
+          const banner = document.getElementById('otpErrorBanner');
+          if (banner) banner.style.display = 'none';
+        });
+      });
+    }, 50);
+  }
+
+  static startResendCooldownTimer() {
+    if (AuthView.resendIntervalId) {
+      clearInterval(AuthView.resendIntervalId);
+      AuthView.resendIntervalId = null;
+    }
+
+    const updateTimer = () => {
+      const resendBtn = document.getElementById('btnResendOtp');
+      const countdownEl = document.getElementById('resendCountdown');
+      if (!resendBtn && !countdownEl) {
+        clearInterval(AuthView.resendIntervalId);
+        return;
+      }
+
+      const remainingMs = AuthView.resendCooldownUntil - Date.now();
+      const remainingSec = Math.ceil(remainingMs / 1000);
+
+      if (remainingSec > 0) {
+        if (resendBtn) resendBtn.disabled = true;
+        if (countdownEl) countdownEl.textContent = `Resend in ${remainingSec}s`;
+      } else {
+        if (resendBtn) resendBtn.disabled = false;
+        if (countdownEl) countdownEl.textContent = '';
+        clearInterval(AuthView.resendIntervalId);
+        AuthView.resendIntervalId = null;
+      }
+    };
+
+    updateTimer();
+    AuthView.resendIntervalId = setInterval(updateTimer, 1000);
+  }
+
+  static async handleResendOtp() {
+    const resendBtn = document.getElementById('btnResendOtp');
+    const banner = document.getElementById('otpErrorBanner');
+    const bannerText = document.getElementById('otpErrorText');
+
+    if (!AuthView.recoveryEmail) {
+      appState.setView('forgot-password');
+      return;
+    }
+
+    try {
+      if (resendBtn) resendBtn.disabled = true;
+      await ApiClient.resendResetOtp(AuthView.recoveryEmail);
+      AuthView.resendCooldownUntil = Date.now() + 60000;
+      AuthView.startResendCooldownTimer();
+      appState.showToast('A new 6-digit verification code has been dispatched to your email.', 'info');
+    } catch (err) {
+      if (banner && bannerText) {
+        bannerText.textContent = err.message || 'Unable to resend verification code.';
+        banner.style.display = 'flex';
+      }
+    }
+  }
+
+  static async handleVerifyOtpSubmit(e) {
+    if (e) e.preventDefault();
+    const boxes = Array.from(document.querySelectorAll('.otp-digit-box'));
+    const verifyBtn = document.getElementById('btnVerifyOtp');
+    const banner = document.getElementById('otpErrorBanner');
+    const bannerText = document.getElementById('otpErrorText');
+
+    const otpCode = boxes.map(b => b.value.trim()).join('');
+
+    if (otpCode.length !== 6 || !/^\d{6}$/.test(otpCode)) {
+      if (banner && bannerText) {
+        bannerText.textContent = 'Please enter all 6 numeric digits of your verification code.';
+        banner.style.display = 'flex';
+      }
+      boxes.forEach(b => { if (!b.value) b.classList.add('error'); });
+      return;
+    }
+
+    try {
+      if (verifyBtn) {
+        verifyBtn.disabled = true;
+        verifyBtn.innerHTML = '<span class="loading-spinner"></span> Verifying...';
+      }
+
+      const res = await ApiClient.verifyResetOtp(AuthView.recoveryEmail, otpCode);
+      if (res && res.recoveryGrantToken) {
+        AuthView.recoveryGrantToken = res.recoveryGrantToken;
+        if (AuthView.resendIntervalId) {
+          clearInterval(AuthView.resendIntervalId);
+          AuthView.resendIntervalId = null;
+        }
+        appState.setView('reset-password');
+      } else {
+        throw new Error('Verification grant missing from server response.');
+      }
+    } catch (err) {
+      if (banner && bannerText) {
+        bannerText.textContent = err.message || 'Incorrect or expired verification code.';
+        banner.style.display = 'flex';
+      }
+      boxes.forEach(b => b.classList.add('error'));
+    } finally {
+      if (verifyBtn) {
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = 'Verify Code';
+      }
+    }
+  }
+
+  // 3. SCREEN THREE: SET NEW PASSWORD
+  static renderResetPassword(container) {
+    container.innerHTML = `
+      <div class="auth-fullscreen-container">
+        ${AuthView.getEditorialColumnHtml()}
+
+        <div class="auth-form-col">
+          <div class="auth-card">
+            <div class="auth-card-header">
+              <h2 class="auth-card-title">Create New Password</h2>
+              <p class="auth-card-desc">Set a secure new password for your Campus X account.</p>
+            </div>
+
+            <div id="resetErrorBanner" class="auth-error-banner" style="display: none;">
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              <span id="resetErrorText"></span>
+            </div>
+
+            <form id="resetPasswordForm" onsubmit="AuthView.handleResetPasswordSubmit(event)" novalidate>
+              <div class="form-group">
+                <label class="form-label" for="newPasswordInput">New Password</label>
+                <div class="password-input-wrap">
+                  <input 
+                    type="password" 
+                    id="newPasswordInput" 
+                    class="form-input" 
+                    placeholder="At least 12 characters" 
+                    required 
+                    autocomplete="new-password"
+                    oninput="AuthView.clearResetErrors()">
+                  <button type="button" class="password-toggle-btn" aria-label="Toggle password visibility" onclick="AuthView.togglePasswordVisibility('newPasswordInput', this)">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                </div>
+                <span class="form-hint">Must be at least 12 characters.</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="confirmNewPasswordInput">Confirm New Password</label>
+                <div class="password-input-wrap">
+                  <input 
+                    type="password" 
+                    id="confirmNewPasswordInput" 
+                    class="form-input" 
+                    placeholder="Re-enter new password" 
+                    required 
+                    autocomplete="new-password"
+                    oninput="AuthView.clearResetErrors()">
+                  <button type="button" class="password-toggle-btn" aria-label="Toggle password visibility" onclick="AuthView.togglePasswordVisibility('confirmNewPasswordInput', this)">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" id="btnResetPassword" class="btn btn-primary w-full" style="padding: 0.85rem; font-size: 0.95rem; margin-top: 1rem;">
+                Reset Password
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    setTimeout(() => {
+      const p = document.getElementById('newPasswordInput');
+      if (p) p.focus();
+    }, 50);
+  }
+
+  static clearResetErrors() {
+    const banner = document.getElementById('resetErrorBanner');
+    if (banner) banner.style.display = 'none';
+  }
+
+  static async handleResetPasswordSubmit(e) {
+    if (e) e.preventDefault();
+    const pInput = document.getElementById('newPasswordInput');
+    const cpInput = document.getElementById('confirmNewPasswordInput');
+    const submitBtn = document.getElementById('btnResetPassword');
+    const banner = document.getElementById('resetErrorBanner');
+    const bannerText = document.getElementById('resetErrorText');
+
+    const newPassword = (pInput ? pInput.value : '').trim();
+    const confirmPassword = (cpInput ? cpInput.value : '').trim();
+
+    if (!newPassword || newPassword.length < 12) {
+      if (banner && bannerText) {
+        bannerText.textContent = 'Password must be at least 12 characters long.';
+        banner.style.display = 'flex';
+      }
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      if (banner && bannerText) {
+        bannerText.textContent = 'Passwords do not match.';
+        banner.style.display = 'flex';
+      }
+      return;
+    }
+
+    if (!AuthView.recoveryGrantToken) {
+      if (banner && bannerText) {
+        bannerText.textContent = 'Recovery authorization missing or expired. Please start over.';
+        banner.style.display = 'flex';
+      }
+      return;
+    }
+
+    try {
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loading-spinner"></span> Resetting Password...';
+      }
+
+      await ApiClient.resetPassword(
+        AuthView.recoveryEmail,
+        AuthView.recoveryGrantToken,
+        newPassword,
+        confirmPassword
+      );
+
+      // Invalidate frontend recovery tokens
+      AuthView.recoveryGrantToken = '';
+      AuthView.recoveryEmail = '';
+
+      appState.setView('reset-success');
+    } catch (err) {
+      if (banner && bannerText) {
+        bannerText.textContent = err.message || 'Failed to reset password. Please try again.';
+        banner.style.display = 'flex';
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Reset Password';
+      }
+    }
+  }
+
+  // 4. SCREEN FOUR: SUCCESS
+  static renderResetSuccess(container) {
+    container.innerHTML = `
+      <div class="auth-fullscreen-container">
+        ${AuthView.getEditorialColumnHtml()}
+
+        <div class="auth-form-col">
+          <div class="auth-card" style="text-align: center; padding: 2.5rem 2rem;">
+            <div class="success-check-circle">
+              <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <h2 class="auth-card-title" style="margin-bottom: 0.5rem;">Password Reset Successful</h2>
+            <p class="auth-card-desc" style="margin-bottom: 2rem;">
+              Your Campus X password has been updated. You can now sign in with your new password.
+            </p>
+
+            <button type="button" class="btn btn-primary w-full" style="padding: 0.85rem; font-size: 0.95rem;" onclick="appState.setView('login')">
+              Back to Login
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
 }
 
 
-/* --- File: student-view.js --- */
+/* --- File: student-view.js (js\views\student-view.js) --- */
 /* ==========================================================
    Campus X AI - Student Workspace View
    Dedicated Student Sidebar & Student Dashboard
@@ -2043,7 +2565,7 @@ class StudentView {
 }
 
 
-/* --- File: faculty-view.js --- */
+/* --- File: faculty-view.js (js\views\faculty-view.js) --- */
 /* ==========================================================
    Campus X AI - Faculty Workspace View
    Dedicated Faculty Sidebar, Dashboard & Interactive Attendance
@@ -2380,7 +2902,7 @@ class FacultyView {
 }
 
 
-/* --- File: admin-view.js --- */
+/* --- File: admin-view.js (js\views\admin-view.js) --- */
 /* ==========================================================
    Campus X AI - Administrator Workspace View
    Centralized Operational Dashboard & Support Dispatch
@@ -2630,7 +3152,7 @@ class AdminView {
 }
 
 
-/* --- File: stationery-view.js --- */
+/* --- File: stationery-view.js (js\views\stationery-view.js) --- */
 /* ==========================================================
    Campus X AI - Stationery Module & Operator Workspace
    Sections 16, 17, 18, 19, 20, 21, 22, 33
@@ -3182,7 +3704,7 @@ class StationeryView {
 }
 
 
-/* --- File: academics-view.js --- */
+/* --- File: academics-view.js (js\views\academics-view.js) --- */
 /* ==========================================================
    Campus X AI - Academics, Timetable & AI Risk View
    Sections 36-38, 46: Timetable, Attendance Breakdown & AI Risk UI
@@ -3343,7 +3865,7 @@ class AcademicsView {
 }
 
 
-/* --- File: ai-chat-view.js --- */
+/* --- File: ai-chat-view.js (js\views\ai-chat-view.js) --- */
 /* ==========================================================
    Campus X AI - Conversational Assistant View ("Ask Campus X.")
    Section 44: Clean conversational shortcut, no sci-fi orbs/robots
@@ -3478,7 +4000,7 @@ class AiChatView {
 }
 
 
-/* --- File: complaints-view.js --- */
+/* --- File: complaints-view.js (js\views\complaints-view.js) --- */
 /* ==========================================================
    Campus X AI - Complaints & Grievance Module View
    Section 40: "Need something fixed?", Ticket Tracking & Admin Resolution
@@ -3657,7 +4179,7 @@ class ComplaintsView {
 }
 
 
-/* --- File: lost-found-view.js --- */
+/* --- File: lost-found-view.js (js\views\lost-found-view.js) --- */
 /* ==========================================================
    Campus X AI - Lost & Found Module View
    Sections 23, 24, 25, 26, 34
@@ -4066,7 +4588,7 @@ class LostFoundView {
 
 
 
-/* --- File: app.js --- */
+/* --- File: app.js (js\app.js) --- */
 /* ==========================================================
    Campus X AI - Master Application Orchestrator
    Role Dispatcher, Modal Engine, Navigation & Responsive Router
@@ -4148,6 +4670,14 @@ class CampusApplication {
         AuthView.renderLogin(root);
       } else if (appState.activeView === 'register') {
         AuthView.renderRegister(root);
+      } else if (appState.activeView === 'forgot-password') {
+        AuthView.renderForgotPassword(root);
+      } else if (appState.activeView === 'verify-otp') {
+        AuthView.renderVerifyOtp(root);
+      } else if (appState.activeView === 'reset-password') {
+        AuthView.renderResetPassword(root);
+      } else if (appState.activeView === 'reset-success') {
+        AuthView.renderResetSuccess(root);
       } else {
         AuthView.renderLanding(root);
       }

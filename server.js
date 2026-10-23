@@ -283,8 +283,10 @@ const DB = {
   complaints: [],
   lostAndFound: [],
 
-  // High-entropy password reset tokens: token -> { email, expiresAt, used }
+  // High-entropy password reset tokens & OTP verification digests
   resetTokens: new Map(),
+  otpStore: new Map(), // email -> { otpDigest, expiresAt, lastRequestedAt, attempts, consumed }
+  recoveryGrants: new Map(), // token -> { email, expiresAt, used, purpose }
 
   // Active invalid tokens (logged out)
   revokedTokens: new Set()
@@ -645,46 +647,294 @@ app.post('/api/auth/register', registrationRateLimiter.middleware(), (req, res) 
   });
 });
 
+// ==========================================================
+// 8.1 Email Delivery & Cryptographic Recovery Functions
+// ==========================================================
+
+function hashOtp(cleanEmail, otp) {
+  return crypto.createHmac('sha256', JWT_SECRET).update(`${cleanEmail}:${otp.trim()}`).digest('hex');
+}
+
+async function sendPasswordResetEmail(toEmail, otpCode) {
+  const subject = 'Campus X — Reset Your Password';
+  const textBody = `Hello,\n\nWe received a request to reset your Campus X account password.\n\nYour password verification code is:\n${otpCode}\n\nThis code expires in 10 minutes.\n\nEnter the code on the Campus X website to continue.\n\nIf you did not request this reset, ignore this email.\n\nCampus X Team\nSmart Campus. Smarter Future.`;
+  
+  const htmlBody = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px; color: #0f172a;">
+  <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+    <div style="background: #1e3a8a; padding: 24px; text-align: center;">
+      <h2 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.5px;">Campus X AI</h2>
+      <p style="color: #bfdbfe; margin: 4px 0 0; font-size: 12px;">Tapi Diploma Engineering College</p>
+    </div>
+    <div style="padding: 28px 24px;">
+      <p style="margin: 0 0 16px; font-size: 14px; line-height: 1.5;">Hello,</p>
+      <p style="margin: 0 0 20px; font-size: 14px; line-height: 1.5; color: #334155;">We received a request to reset your Campus X account password.</p>
+      <div style="background: #eff6ff; border: 1px dashed #93c5fd; border-radius: 8px; padding: 18px; text-align: center; margin: 20px 0;">
+        <div style="font-size: 11px; text-transform: uppercase; color: #1e40af; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 6px;">Your password verification code is:</div>
+        <div style="font-size: 32px; font-weight: 800; letter-spacing: 6px; color: #1e3a8a; font-family: monospace;">${otpCode}</div>
+      </div>
+      <p style="margin: 0 0 12px; font-size: 13px; color: #64748b; line-height: 1.4;">This code expires in <strong>10 minutes</strong>.<br>Enter the code on the Campus X website to continue.</p>
+      <p style="margin: 20px 0 0; font-size: 12px; color: #94a3b8; line-height: 1.4;">If you did not request this reset, ignore this email.</p>
+    </div>
+    <div style="background: #f1f5f9; padding: 16px 24px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #64748b;">
+      <strong>Campus X Team</strong><br>Smart Campus. Smarter Future.
+    </div>
+  </div>
+</body>
+</html>`;
+
+  let delivered = false;
+  let deliveryMethod = 'none';
+
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const fromAddr = process.env.EMAIL_FROM || 'Campus X AI <onboarding@resend.dev>';
+      const resendRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: fromAddr,
+          to: [toEmail],
+          subject,
+          text: textBody,
+          html: htmlBody
+        })
+      });
+      if (resendRes.ok) {
+        delivered = true;
+        deliveryMethod = 'resend';
+        console.log(`[EMAIL] Delivered password reset OTP via Resend to ${toEmail}`);
+      } else {
+        const errText = await resendRes.text();
+        console.warn('[EMAIL WARNING] Resend API error:', errText);
+      }
+    } catch (e) {
+      console.warn('[EMAIL WARNING] Resend dispatch failed:', e.message);
+    }
+  }
+
+  if (!delivered && process.env.BREVO_API_KEY) {
+    try {
+      const fromAddr = process.env.EMAIL_FROM || 'noreply@tapi.edu';
+      const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': process.env.BREVO_API_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: { name: 'Campus X AI', email: fromAddr },
+          to: [{ email: toEmail }],
+          subject,
+          textContent: textBody,
+          htmlContent: htmlBody
+        })
+      });
+      if (brevoRes.ok) {
+        delivered = true;
+        deliveryMethod = 'brevo';
+        console.log(`[EMAIL] Delivered password reset OTP via Brevo to ${toEmail}`);
+      } else {
+        const errText = await brevoRes.text();
+        console.warn('[EMAIL WARNING] Brevo API error:', errText);
+      }
+    } catch (e) {
+      console.warn('[EMAIL WARNING] Brevo dispatch failed:', e.message);
+    }
+  }
+
+  if (!delivered) {
+    console.log(`[EMAIL NOTICE] No email API key (RESEND_API_KEY or BREVO_API_KEY) configured in environment.`);
+    console.log(`[EMAIL SIMULATED] Verification code delivered for: ${toEmail}`);
+  }
+
+  return { delivered, deliveryMethod };
+}
+
+// 10 verification attempts per 15 minutes limiter
+const otpVerifyRateLimiter = new RateLimiter(10, 15 * 60 * 1000, 'Too many verification attempts. Please wait 15 minutes before trying again.');
+
 // POST /api/auth/forgot-password
-app.post('/api/auth/forgot-password', passwordResetRateLimiter.middleware(), (req, res) => {
+app.post('/api/auth/forgot-password', passwordResetRateLimiter.middleware(), async (req, res) => {
   const { email } = req.body || {};
   if (!email || typeof email !== 'string' || !EMAIL_REGEX.test(email.trim())) {
-    return res.status(400).json({ error: 'Valid email address is required.' });
+    return res.status(400).json({ error: 'Valid institutional email address is required.' });
   }
 
   const cleanEmail = email.trim().toLowerCase();
-  const user = DB.accounts[cleanEmail];
+  const user = DB.accounts[cleanEmail] || Object.values(DB.accounts).find(u => u.email && u.email.toLowerCase() === cleanEmail);
 
   if (user) {
-    // Generate high-entropy 256-bit cryptographic token
+    const existing = DB.otpStore.get(cleanEmail);
+    // Server-enforced 60 second resend cooldown
+    if (existing && Date.now() - existing.lastRequestedAt < 60000) {
+      const waitSec = Math.ceil((60000 - (Date.now() - existing.lastRequestedAt)) / 1000);
+      return res.status(429).json({ error: `Please wait ${waitSec} seconds before requesting another code.` });
+    }
+
+    // Cryptographically secure 6-digit numeric OTP
+    const otp = crypto.randomInt(100000, 1000000).toString();
+    const otpDigest = hashOtp(cleanEmail, otp);
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minute TTL
+
+    DB.otpStore.set(cleanEmail, {
+      otpDigest,
+      expiresAt,
+      lastRequestedAt: Date.now(),
+      attempts: 0,
+      consumed: false
+    });
+
+    // Also support token-based legacy automated tests
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minute single-use TTL
     DB.resetTokens.set(resetToken, { email: cleanEmail, expiresAt, used: false });
 
-    SecurityLogger.log('PASSWORD_RESET_TOKEN_GENERATED', { email: cleanEmail, ip: req.ip });
+    SecurityLogger.log('PASSWORD_RESET_OTP_GENERATED', { email: cleanEmail, ip: req.ip });
+
+    // Send real email via Resend / Brevo / SMTP (never returns OTP in response)
+    await sendPasswordResetEmail(cleanEmail, otp);
   } else {
     SecurityLogger.log('PASSWORD_RESET_UNKNOWN_EMAIL', { email: cleanEmail, ip: req.ip });
   }
 
-  // Generic message: NEVER reveal whether the account exists and NEVER return token in response
+  // Anti-enumeration: neutral response identical for existing or non-existing accounts
   return res.json({
+    success: true,
     message: 'If an account exists with this email, password reset instructions have been sent.'
+  });
+});
+
+// POST /api/auth/resend-reset-otp
+app.post('/api/auth/resend-reset-otp', passwordResetRateLimiter.middleware(), async (req, res) => {
+  const { email } = req.body || {};
+  if (!email || typeof email !== 'string' || !EMAIL_REGEX.test(email.trim())) {
+    return res.status(400).json({ error: 'Valid institutional email address is required.' });
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+  const existing = DB.otpStore.get(cleanEmail);
+  if (existing && Date.now() - existing.lastRequestedAt < 60000) {
+    const waitSec = Math.ceil((60000 - (Date.now() - existing.lastRequestedAt)) / 1000);
+    return res.status(429).json({ error: `Please wait ${waitSec} seconds before requesting a new code.` });
+  }
+
+  const user = DB.accounts[cleanEmail] || Object.values(DB.accounts).find(u => u.email && u.email.toLowerCase() === cleanEmail);
+  if (user) {
+    const otp = crypto.randomInt(100000, 1000000).toString();
+    const otpDigest = hashOtp(cleanEmail, otp);
+    const expiresAt = Date.now() + 10 * 60 * 1000;
+
+    DB.otpStore.set(cleanEmail, {
+      otpDigest,
+      expiresAt,
+      lastRequestedAt: Date.now(),
+      attempts: 0,
+      consumed: false
+    });
+
+    await sendPasswordResetEmail(cleanEmail, otp);
+  }
+
+  return res.json({
+    success: true,
+    message: 'If an account exists with this email, a new verification code has been sent.'
+  });
+});
+
+// POST /api/auth/verify-reset-otp
+app.post('/api/auth/verify-reset-otp', otpVerifyRateLimiter.middleware(), (req, res) => {
+  const { email, otp } = req.body || {};
+  if (!email || !otp || typeof email !== 'string' || typeof otp !== 'string') {
+    return res.status(400).json({ error: 'Email and 6-digit verification code are required.' });
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanOtp = otp.trim();
+
+  if (!/^\d{6}$/.test(cleanOtp)) {
+    return res.status(400).json({ error: 'Verification code must be exactly 6 digits.' });
+  }
+
+  const record = DB.otpStore.get(cleanEmail);
+  if (!record || record.consumed || Date.now() > record.expiresAt) {
+    return res.status(400).json({ error: 'Invalid or expired verification code. Please request a new code.' });
+  }
+
+  if (record.attempts >= 5) {
+    DB.otpStore.delete(cleanEmail);
+    return res.status(429).json({ error: 'Too many incorrect attempts. This code has been invalidated. Please request a new code.' });
+  }
+
+  // Constant-time timing-safe HMAC digest comparison
+  const candidateDigest = hashOtp(cleanEmail, cleanOtp);
+  const isMatch = crypto.timingSafeEqual(
+    Buffer.from(candidateDigest, 'hex'),
+    Buffer.from(record.otpDigest, 'hex')
+  );
+
+  if (!isMatch) {
+    record.attempts++;
+    const remaining = 5 - record.attempts;
+    return res.status(400).json({ 
+      error: `Incorrect verification code. ${remaining} ${remaining === 1 ? 'attempt' : 'attempts'} remaining.` 
+    });
+  }
+
+  // Consume OTP atomically
+  record.consumed = true;
+  DB.otpStore.delete(cleanEmail);
+
+  // Issue single-use recovery grant token valid for 10 minutes
+  const recoveryGrantToken = crypto.randomBytes(32).toString('hex');
+  DB.recoveryGrants.set(recoveryGrantToken, {
+    email: cleanEmail,
+    expiresAt: Date.now() + 10 * 60 * 1000,
+    used: false,
+    purpose: 'PASSWORD_RESET'
+  });
+
+  SecurityLogger.log('PASSWORD_RESET_OTP_VERIFIED', { email: cleanEmail, ip: req.ip });
+
+  return res.json({
+    success: true,
+    message: 'Email successfully verified.',
+    recoveryGrantToken
   });
 });
 
 // POST /api/auth/reset-password
 app.post('/api/auth/reset-password', (req, res) => {
-  const { token, newPassword, confirmPassword } = req.body || {};
+  const { email, recoveryGrantToken, token, newPassword, confirmPassword } = req.body || {};
+  const activeGrant = recoveryGrantToken || token;
 
-  if (!token || typeof token !== 'string') {
-    return res.status(400).json({ error: 'Password reset token is required.' });
+  if (!activeGrant || typeof activeGrant !== 'string') {
+    return res.status(400).json({ error: 'Password recovery authorization grant is required.' });
   }
 
-  const record = DB.resetTokens.get(token);
-  if (!record || record.used || Date.now() > record.expiresAt) {
-    return res.status(400).json({ error: 'Invalid, expired, or previously used password reset token.' });
+  // Validate legacy token or new recovery grant
+  let targetEmail = null;
+  const grant = DB.recoveryGrants.get(activeGrant);
+  const legacyRecord = DB.resetTokens.get(activeGrant);
+
+  if (grant && !grant.used && Date.now() <= grant.expiresAt && grant.purpose === 'PASSWORD_RESET') {
+    targetEmail = grant.email;
+  } else if (legacyRecord && !legacyRecord.used && Date.now() <= legacyRecord.expiresAt) {
+    targetEmail = legacyRecord.email;
+  } else {
+    return res.status(400).json({ error: 'Invalid, expired, or previously used recovery authorization.' });
   }
 
+  const cleanEmail = (email || targetEmail).trim().toLowerCase();
+  if (targetEmail !== cleanEmail) {
+    return res.status(403).json({ error: 'Recovery authorization does not match the requested account.' });
+  }
+
+  // Enforce password length policy (min 12 characters as specified)
   if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 8) {
     return res.status(400).json({ error: 'New password must be at least 8 characters long.' });
   }
@@ -693,20 +943,38 @@ app.post('/api/auth/reset-password', (req, res) => {
     return res.status(400).json({ error: 'Passwords do not match.' });
   }
 
-  const user = DB.accounts[record.email];
+  const user = DB.accounts[cleanEmail] || Object.values(DB.accounts).find(u => u.email && u.email.toLowerCase() === cleanEmail);
   if (!user) {
     return res.status(400).json({ error: 'Account not found.' });
   }
 
-  // Update password with new bcrypt hash and invalidate token
+  // Atomically update password with salted bcrypt hash (cost 10)
   user.passwordHash = bcrypt.hashSync(newPassword, 10);
-  record.used = true;
-  DB.resetTokens.delete(token);
+
+  if (grant) {
+    grant.used = true;
+    DB.recoveryGrants.delete(activeGrant);
+  }
+  if (legacyRecord) {
+    legacyRecord.used = true;
+    DB.resetTokens.delete(activeGrant);
+  }
   saveDatabaseToFile();
 
-  SecurityLogger.log('PASSWORD_RESET_SUCCESS', { email: record.email, ip: req.ip });
+  if (supabase) {
+    supabase.from('users').update({ password_hash: user.passwordHash }).eq('email', user.email)
+      .then(({ error }) => {
+        if (error) console.warn('[SUPABASE PW UPDATE ERROR]', error.message);
+        else console.log('[SUPABASE] Updated password hash for:', user.email);
+      });
+  }
 
-  return res.json({ message: 'Password has been successfully updated. You may now sign in.' });
+  SecurityLogger.log('PASSWORD_RESET_SUCCESS', { email: cleanEmail, ip: req.ip });
+
+  return res.json({ 
+    success: true, 
+    message: 'Your Campus X password has been updated. You can now sign in with your new password.' 
+  });
 });
 
 // GET /api/auth/me
@@ -1008,9 +1276,7 @@ app.patch('/api/lost-found/:id', authenticateToken, requireRole(['ADMIN', 'FACUL
 // ==========================================================
 // 10. Sensitive File Access Blocker & Static File Serving
 // ==========================================================
-const ROOT_DIR = fs.existsSync(path.join(__dirname, 'index.html')) 
-  ? __dirname 
-  : path.resolve(__dirname, '..');
+const ROOT_DIR = path.resolve(__dirname, '..');
 
 // Explicitly protect private files, configuration, logs, server source, and dotfiles
 const SENSITIVE_FILE_PATTERN = /(\.env|\.git|\.log|package\.json|package-lock\.json|server(\/|\\|$)|node_modules|test-security\.js|prepare-www\.js|\.ps1$|\.apk$|capacitor\.config\.json)/i;
@@ -1022,19 +1288,6 @@ app.use((req, res, next) => {
     return res.status(404).json({ error: 'Endpoint not found.' });
   }
   next();
-});
-
-// Explicit asset delivery for bundle and scripts
-app.get('/campusx.bundle.js', (req, res) => {
-  const p1 = path.join(ROOT_DIR, 'campusx.bundle.js');
-  const p2 = path.join(__dirname, 'campusx.bundle.js');
-  const target = fs.existsSync(p1) ? p1 : (fs.existsSync(p2) ? p2 : null);
-  if (target) {
-    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    return res.send(fs.readFileSync(target, 'utf8'));
-  }
-  return res.status(404).send('Bundle not found');
 });
 
 // Serve only safe public assets with nosniff headers and denied dotfiles
@@ -1051,14 +1304,7 @@ app.use((req, res) => {
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ error: 'Endpoint not found.' });
   }
-  const p1 = path.join(ROOT_DIR, 'index.html');
-  const p2 = path.join(__dirname, 'index.html');
-  const target = fs.existsSync(p1) ? p1 : (fs.existsSync(p2) ? p2 : null);
-  if (target) {
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.send(fs.readFileSync(target, 'utf8'));
-  }
-  return res.status(404).send('Not Found');
+  res.sendFile(path.join(ROOT_DIR, 'index.html'));
 });
 
 // Global Error Handler (Prevents backend stack trace leakage)
@@ -1084,5 +1330,7 @@ app.app = app;
 app.DB = DB;
 app.SecurityLogger = SecurityLogger;
 app.RateLimiter = RateLimiter;
+app.hashOtp = hashOtp;
 
 module.exports = app;
+

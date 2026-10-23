@@ -79,6 +79,14 @@ class CampusApplication {
         AuthView.renderLogin(root);
       } else if (appState.activeView === 'register') {
         AuthView.renderRegister(root);
+      } else if (appState.activeView === 'forgot-password') {
+        AuthView.renderForgotPassword(root);
+      } else if (appState.activeView === 'verify-otp') {
+        AuthView.renderVerifyOtp(root);
+      } else if (appState.activeView === 'reset-password') {
+        AuthView.renderResetPassword(root);
+      } else if (appState.activeView === 'reset-success') {
+        AuthView.renderResetSuccess(root);
       } else {
         AuthView.renderLanding(root);
       }

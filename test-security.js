@@ -6,11 +6,8 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const serverModule = fs.existsSync(path.join(__dirname, 'server.js')) 
-  ? require('./server.js') 
-  : require('./server/server.js');
-const app = serverModule.app || serverModule;
-const DB = serverModule.DB;
+const serverPath = fs.existsSync('./server.js') ? './server.js' : './server/server.js';
+const { app, DB } = require(serverPath);
 
 let server;
 const PORT = 3099;
@@ -72,13 +69,11 @@ async function runTests() {
   server = app.listen(PORT);
   await new Promise(r => setTimeout(r, 200));
 
-  // Reset database test state to ensure idempotent clean test runs
+  // Reset test fixtures for idempotent test runs
   delete DB.accounts['attacker@tapi.edu'];
   if (DB.accounts['student@tapi.edu']) {
-    DB.accounts['student@tapi.edu'].passwordHash = "$2b$10$iWgE7uOCIwkR7N0SPgFeHOtN8oEwvGOiCxZvmd6vO4epzcgG77nJS";
+    DB.accounts['student@tapi.edu'].passwordHash = require('bcryptjs').hashSync('password123', 10);
   }
-  DB.revokedTokens.clear();
-  DB.resetTokens.clear();
 
   try {
     // ---------------------------------------------------------
@@ -485,11 +480,10 @@ async function runTests() {
     // ---------------------------------------------------------
     // 12. Client-Side Data & XSS Sanitation
     // ---------------------------------------------------------
-    console.log('\n--- 12. Client-Side Asset & Sanitization Checks ---');
-    const mockDataPath = fs.existsSync(path.join(__dirname, 'mock-data.js'))
-      ? path.join(__dirname, 'mock-data.js')
-      : path.join(__dirname, 'js', 'mock-data.js');
-    const mockDataContent = fs.readFileSync(mockDataPath, 'utf8');
+    const mockDataFile = fs.existsSync(path.join(__dirname, 'js', 'mock-data.js'))
+      ? path.join(__dirname, 'js', 'mock-data.js')
+      : path.join(__dirname, 'mock-data.js');
+    const mockDataContent = fs.readFileSync(mockDataFile, 'utf8');
     const mockHashesFound = mockDataContent.includes('passwordHash:');
     recordTest(
       'Client mock-data.js contains zero passwordHash fields',

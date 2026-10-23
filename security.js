@@ -231,10 +231,24 @@ class ApiClient {
     });
   }
 
-  static async resetPassword(token, newPassword, confirmPassword) {
+  static async resendResetOtp(email) {
+    return ApiClient.request('/api/auth/resend-reset-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  }
+
+  static async verifyResetOtp(email, otp) {
+    return ApiClient.request('/api/auth/verify-reset-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp })
+    });
+  }
+
+  static async resetPassword(email, recoveryGrantToken, newPassword, confirmPassword) {
     return ApiClient.request('/api/auth/reset-password', {
       method: 'POST',
-      body: JSON.stringify({ token, newPassword, confirmPassword })
+      body: JSON.stringify({ email, recoveryGrantToken, newPassword, confirmPassword })
     });
   }
 
