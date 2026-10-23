@@ -19,6 +19,23 @@ const CAMPUS_DATA = {
   // Accounts for Role Recognition (No manual role dropdown during auth!)
   // Note: Password hashes are strictly server-side and never exposed to the client
   accounts: {
+    "ysukhadia49@gmail.com": {
+      id: "246470316116",
+      email: "ysukhadia49@gmail.com",
+      name: "Yug Sukhadia",
+      role: "STUDENT",
+      roleTitle: "Student (Class 2452 - IT)",
+      department: "Information Technology",
+      semester: "Semester 5",
+      phone: "+91 98251 00000",
+      avatarInitials: "YS",
+      academicRisk: {
+        level: "Low Risk",
+        score: "98/100",
+        summary: "Optimal academic standing with consistent attendance.",
+        factors: []
+      }
+    },
     "student@tapi.edu": {
       id: "246470316113",
       email: "student@tapi.edu",

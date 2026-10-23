@@ -35,9 +35,18 @@ if (!url || !sec) {
 const client = createClient(url, sec);
 
 // Bcrypt hash for 'password123' (cost 10)
-const defaultHash = '$2b$10$iWgE7uOCIwkR7N0SPgFeHOtN8oEwvGOiCxZvmd6vO4epzcgG77nJS';
+const defaultHash = '$2b$10$K3PGwi8OoB1XuhmRVs7un.lbK07zNwAw1iOzsvl/igmTwx1nvogPC';
 
 const accounts = [
+  {
+    id: '246470316116',
+    email: 'ysukhadia49@gmail.com',
+    name: 'Yug Sukhadia',
+    role: 'STUDENT',
+    department: 'Information Technology',
+    phone: '+91 98251 00000',
+    password_hash: defaultHash
+  },
   {
     id: '246470316113',
     email: 'student@tapi.edu',

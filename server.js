@@ -210,10 +210,10 @@ class RateLimiter {
   }
 }
 
-// 5 failed login attempts per 15 minutes
-const loginRateLimiter = new RateLimiter(5, 15 * 60 * 1000, 'Too many login attempts. Please wait 15 minutes before trying again.');
-// 3 password reset requests per 15 minutes
-const passwordResetRateLimiter = new RateLimiter(3, 15 * 60 * 1000, 'Too many password reset requests. Please wait 15 minutes before trying again.');
+// 15 failed login attempts per 15 minutes (with rate limit reset on successful login)
+const loginRateLimiter = new RateLimiter(15, 15 * 60 * 1000, 'Too many login attempts. Please wait 15 minutes before trying again.');
+// 5 password reset requests per 15 minutes
+const passwordResetRateLimiter = new RateLimiter(5, 15 * 60 * 1000, 'Too many password reset requests. Please wait 15 minutes before trying again.');
 // 10 registration attempts per hour per IP
 const registrationRateLimiter = new RateLimiter(10, 60 * 60 * 1000, 'Too many registration attempts. Please try again later.');
 
@@ -221,7 +221,7 @@ const registrationRateLimiter = new RateLimiter(10, 60 * 60 * 1000, 'Too many re
 // 5. Secure In-Memory Database (No Plaintext Passwords)
 // ==========================================================
 // Pre-computed salted bcrypt hash for default test accounts: "password123"
-const DEFAULT_BCRYPT_HASH = "$2b$10$iWgE7uOCIwkR7N0SPgFeHOtN8oEwvGOiCxZvmd6vO4epzcgG77nJS";
+const DEFAULT_BCRYPT_HASH = "$2b$10$K3PGwi8OoB1XuhmRVs7un.lbK07zNwAw1iOzsvl/igmTwx1nvogPC";
 
 const DB = {
   accounts: {
@@ -274,7 +274,7 @@ const DB = {
       avatarInitials: "RP"
     },
     "ysukhadia49@gmail.com": {
-      id: "246470316999",
+      id: "246470316116",
       email: "ysukhadia49@gmail.com",
       passwordHash: DEFAULT_BCRYPT_HASH,
       name: "Yug Sukhadia",
@@ -581,6 +581,11 @@ app.post('/api/auth/login', loginRateLimiter.middleware(), (req, res) => {
     name: user.name
   };
   const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+
+  // Reset rate limiter on successful authentication
+  const forwarded = req.headers['x-forwarded-for'];
+  const clientIp = forwarded ? forwarded.split(',')[0].trim() : (req.ip || req.socket.remoteAddress || 'unknown-ip');
+  loginRateLimiter.reset(`${clientIp}_${req.baseUrl || req.path}`);
 
   SecurityLogger.log('LOGIN_SUCCESS', {
     userId: user.id,
