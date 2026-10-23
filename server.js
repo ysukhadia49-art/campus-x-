@@ -1279,10 +1279,9 @@ app.patch('/api/lost-found/:id', authenticateToken, requireRole(['ADMIN', 'FACUL
   return res.json({ status: 'success', item });
 });
 
-// ==========================================================
-// 10. Sensitive File Access Blocker & Static File Serving
-// ==========================================================
-const ROOT_DIR = path.resolve(__dirname, '..');
+const ROOT_DIR = fs.existsSync(path.join(__dirname, 'index.html'))
+  ? __dirname
+  : path.resolve(__dirname, '..');
 
 // Explicitly protect private files, configuration, logs, server source, and dotfiles
 const SENSITIVE_FILE_PATTERN = /(\.env|\.git|\.log|package\.json|package-lock\.json|server(\/|\\|$)|node_modules|test-security\.js|prepare-www\.js|\.ps1$|\.apk$|capacitor\.config\.json)/i;
