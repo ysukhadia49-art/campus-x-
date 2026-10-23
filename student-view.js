@@ -187,9 +187,9 @@ class StudentView {
           </div>
 
           <div class="editorial-hero-media">
-            <img src="https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=700&q=80" alt="College Campus">
+            <img src="img/tapi-it-computer-lab.jpg" alt="Tapi Diploma IT Computer Lab" onerror="this.src='tapi-it-computer-lab.jpg'">
             <div class="editorial-hero-badge">
-              A Better You<br>Brighter Tomorrow
+              IT Computer Lab<br>Tapi Diploma Engineering College
             </div>
           </div>
         </section>

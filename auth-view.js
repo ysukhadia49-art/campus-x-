@@ -24,9 +24,9 @@ class AuthView {
             </p>
 
             <div class="auth-image-card">
-              <img src="https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=700&q=80" alt="Campus Architecture">
+              <img src="img/tapi-it-computer-lab.jpg" alt="Tapi Diploma IT Computer Lab" onerror="this.src='tapi-it-computer-lab.jpg'">
               <div class="auth-image-overlay-quote">
-                “A Better You, Brighter Tomorrow”
+                “IT Department Computer Lab • Tapi Diploma”
               </div>
             </div>
 
@@ -86,9 +86,9 @@ class AuthView {
             </p>
 
             <div class="auth-image-card">
-              <img src="https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=700&q=80" alt="Campus Architecture">
+              <img src="img/tapi-it-computer-lab.jpg" alt="Tapi Diploma IT Computer Lab" onerror="this.src='tapi-it-computer-lab.jpg'">
               <div class="auth-image-overlay-quote">
-                “Discipline today, a better tomorrow.”
+                “IT Department Computer Lab • Tapi Diploma”
               </div>
             </div>
 
@@ -505,9 +505,9 @@ class AuthView {
           </p>
 
           <div class="auth-image-card">
-            <img src="https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=700&q=80" alt="Campus Architecture">
+            <img src="img/tapi-it-computer-lab.jpg" alt="Tapi Diploma IT Computer Lab" onerror="this.src='tapi-it-computer-lab.jpg'">
             <div class="auth-image-overlay-quote">
-              “Discipline today, a better tomorrow.”
+              “IT Department Computer Lab • Tapi Diploma”
             </div>
           </div>
 

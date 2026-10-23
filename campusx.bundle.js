@@ -1290,9 +1290,9 @@ class AuthView {
             </p>
 
             <div class="auth-image-card">
-              <img src="https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=700&q=80" alt="Campus Architecture">
+              <img src="img/tapi-it-computer-lab.jpg" alt="Tapi Diploma IT Computer Lab" onerror="this.src='tapi-it-computer-lab.jpg'">
               <div class="auth-image-overlay-quote">
-                “A Better You, Brighter Tomorrow”
+                “IT Department Computer Lab • Tapi Diploma”
               </div>
             </div>
 
@@ -1352,9 +1352,9 @@ class AuthView {
             </p>
 
             <div class="auth-image-card">
-              <img src="https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=700&q=80" alt="Campus Architecture">
+              <img src="img/tapi-it-computer-lab.jpg" alt="Tapi Diploma IT Computer Lab" onerror="this.src='tapi-it-computer-lab.jpg'">
               <div class="auth-image-overlay-quote">
-                “Discipline today, a better tomorrow.”
+                “IT Department Computer Lab • Tapi Diploma”
               </div>
             </div>
 
@@ -1771,9 +1771,9 @@ class AuthView {
           </p>
 
           <div class="auth-image-card">
-            <img src="https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=700&q=80" alt="Campus Architecture">
+            <img src="img/tapi-it-computer-lab.jpg" alt="Tapi Diploma IT Computer Lab" onerror="this.src='tapi-it-computer-lab.jpg'">
             <div class="auth-image-overlay-quote">
-              “Discipline today, a better tomorrow.”
+              “IT Department Computer Lab • Tapi Diploma”
             </div>
           </div>
 
@@ -2481,9 +2481,9 @@ class StudentView {
           </div>
 
           <div class="editorial-hero-media">
-            <img src="https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=700&q=80" alt="College Campus">
+            <img src="img/tapi-it-computer-lab.jpg" alt="Tapi Diploma IT Computer Lab" onerror="this.src='tapi-it-computer-lab.jpg'">
             <div class="editorial-hero-badge">
-              A Better You<br>Brighter Tomorrow
+              IT Computer Lab<br>Tapi Diploma Engineering College
             </div>
           </div>
         </section>
@@ -4078,6 +4078,19 @@ class AcademicsView {
               </tr>
             </tbody>
           </table>
+        <!-- AUTHENTIC IT COMPUTER LAB SHOWCASE BANNER -->
+        <div class="card-editorial" style="padding: 1.25rem; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; background: #ffffff;">
+          <img src="img/tapi-it-computer-lab.jpg" alt="Tapi Diploma IT Computer Lab" onerror="this.src='tapi-it-computer-lab.jpg'" style="width: 240px; height: 135px; object-fit: cover; border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.12);">
+          <div style="flex: 1; min-width: 240px;">
+            <div class="flex items-center gap-2" style="margin-bottom: 0.35rem;">
+              <span class="badge badge-blue">Official IT Lab Facility</span>
+              <span class="badge badge-purple">Labs T-13, T-14, T-15, T-16</span>
+            </div>
+            <h3 style="margin: 0.25rem 0; font-size: 1.2rem; font-weight: 800;">IT Department Computer Laboratories</h3>
+            <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+              Workstations dedicated for 5th Semester practical batches: <strong>SPC Lab</strong> (DPP, T-16), <strong>AIPE Lab</strong> (AKV, T-13), <strong>AIPD Lab</strong> (DKP, T-16), <strong>CDCT Lab</strong> (MSD, T-13), <strong>EIDW Lab</strong> (KDV, T-14), and <strong>Minor Project</strong> (T-13, T-15, T-16).
+            </p>
+          </div>
         </div>
 
         <!-- TWO COLUMN REFERENCE MATRICES -->
