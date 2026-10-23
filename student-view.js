@@ -242,16 +242,45 @@ class StudentView {
           
           <!-- TODAY'S SCHEDULE -->
           <div class="card-editorial">
-            <div class="flex items-center justify-between" style="margin-bottom: 1.25rem;">
+            <div class="flex items-center justify-between" style="margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
               <div>
-                <h3 style="font-size: 1.15rem; font-weight: 700;">Today's Schedule</h3>
-                <p style="font-size: 0.78rem; color: var(--text-muted);">Thu, 11 Sep 2026 • Class 2452 IT</p>
+                <div class="flex items-center gap-2">
+                  <h3 style="font-size: 1.15rem; font-weight: 700;">Today's Schedule</h3>
+                  <span class="badge badge-green" style="font-size: 0.65rem; padding: 2px 7px;">● LIVE</span>
+                </div>
+                <p class="live-realtime-clock" style="font-size: 0.8rem; color: var(--color-accent-blue); font-weight: 700; margin-top: 3px;">
+                  ${StudentView.getFormattedNow()}
+                </p>
               </div>
-              <a href="javascript:void(0)" onclick="appState.setView('timetable')" style="font-size: 0.8rem; font-weight: 600;">View All &rarr;</a>
+              <a href="javascript:void(0)" onclick="appState.setView('timetable')" style="font-size: 0.8rem; font-weight: 600;">Full Timetable &rarr;</a>
+            </div>
+
+            <!-- Dynamic Day Selector Filter Strip -->
+            <div style="display: flex; gap: 0.4rem; margin-bottom: 1.1rem; overflow-x: auto; padding-bottom: 4px;">
+              ${[
+                { d: 1, name: 'Mon' },
+                { d: 2, name: 'Tue' },
+                { d: 3, name: 'Wed' },
+                { d: 4, name: 'Thu' },
+                { d: 5, name: 'Fri' },
+                { d: 6, name: 'Sat' }
+              ].map(day => {
+                const todayNum = new Date().getDay();
+                const activeDay = (StudentView.selectedDay !== undefined) ? StudentView.selectedDay : todayNum;
+                const isToday = day.d === todayNum;
+                const isActive = day.d === activeDay;
+                return `
+                  <button class="btn ${isActive ? 'btn-primary' : 'btn-secondary'}" 
+                          style="padding: 0.25rem 0.65rem; font-size: 0.72rem; border-radius: 9999px; ${isActive ? 'font-weight: 700;' : ''}" 
+                          onclick="StudentView.selectDaySchedule(${day.d})">
+                    ${day.name}${isToday ? ' (Today)' : ''}
+                  </button>
+                `;
+              }).join('')}
             </div>
 
             <div class="schedule-timeline-box">
-              ${CAMPUS_DATA.studentSchedule.map(item => `
+              ${(CAMPUS_DATA.getTodaySchedule(StudentView.selectedDay !== undefined ? StudentView.selectedDay : new Date().getDay())).map(item => `
                 <div class="timeline-row">
                   <span class="timeline-time-col">${item.time}</span>
                   <span class="timeline-dot" style="background-color: ${item.color};"></span>
@@ -311,5 +340,49 @@ class StudentView {
 
       </div>
     `;
+    StudentView.startLiveClock();
+  }
+
+  static selectedDay = new Date().getDay();
+
+  static getFormattedNow() {
+    const now = new Date();
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    const dayName = days[now.getDay()];
+    const dayNum = now.getDate();
+    const monthName = months[now.getMonth()];
+    const year = now.getFullYear();
+    
+    let hours = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const hoursStr = hours.toString().padStart(2, '0');
+    
+    return `${dayName}, ${dayNum} ${monthName} ${year} • ${hoursStr}:${minutes}:${seconds} ${ampm} • Class 2452 IT`;
+  }
+
+  static selectDaySchedule(dayIndex) {
+    StudentView.selectedDay = dayIndex;
+    const container = document.getElementById('view-container');
+    if (container) {
+      StudentView.renderDashboard(container);
+    }
+  }
+
+  static startLiveClock() {
+    if (window._campusxLiveClockInterval) return;
+    window._campusxLiveClockInterval = setInterval(() => {
+      const clockElements = document.querySelectorAll('.live-realtime-clock');
+      if (clockElements.length > 0) {
+        const text = StudentView.getFormattedNow();
+        clockElements.forEach(el => el.textContent = text);
+      }
+    }, 1000);
   }
 }
+

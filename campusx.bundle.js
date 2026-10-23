@@ -92,24 +92,108 @@ const CAMPUS_DATA = {
     }
   },
 
-  // Student Today's Schedule (Updated 5th Semester Time Table: Class 2452 - IT)
-  studentSchedule: [
-    { time: "10:00 AM", subject: "SPC - Structured Programming with C", room: "S-21", faculty: "Mrs. Disha P. Prajapati (DPP)", type: "theory", color: "#3E6E9E" },
-    { time: "11:00 AM", subject: "AIPE - AI with Prompt Engineering", room: "S-21", faculty: "Mrs. Binita B. Acharya (BBA)", type: "theory", color: "#2563EB" },
-    { time: "12:00 PM", subject: "EIDW - Emotional Intelligence & Digital Wellbeing", room: "S-21", faculty: "Ms. Krupali D. Vaghashiya (KDV)", type: "theory", color: "#059669" },
-    { time: "01:00 PM", subject: "Recess / Lunch Break", room: "Campus Canteen", faculty: "Enjoy your break! ☕", type: "break", color: "#A87932" },
-    { time: "01:30 PM", subject: "AIPD Lab (Batch A: DKP, T-16) / AIPE Lab (Batch B: AKV, T-13)", room: "Lab T-16 / T-13", faculty: "Mrs. Dipika Patel / Mrs. Aesha Virani", type: "lab", color: "#7C3AED" },
-    { time: "03:20 PM", subject: "Short Recess", room: "Campus", faculty: "10 mins tea break", type: "break", color: "#A87932" },
-    { time: "03:30 PM", subject: "EIDW Lab (Batch A: KDV, T-14) / CDCT Lab (Batch B: MSD, T-13)", room: "Lab T-14 / T-13", faculty: "Ms. Krupali Vaghashiya / Miss. Mayuri Devganiya", type: "lab", color: "#D97706" }
-  ],
+  // Full Weekly Student Timetable (Tapi Diploma IT Dept [16], Class 2452 - IT)
+  weeklyStudentSchedule: {
+    1: [ // Monday
+      { time: "10:00 AM", subject: "SPC - Structured Programming with C", room: "S-21", faculty: "Mrs. Disha P. Prajapati (DPP)", type: "theory", color: "#2563EB" },
+      { time: "11:00 AM", subject: "AIPD - AI Product Design", room: "S-21", faculty: "Mrs. Dipika K. Patel (DKP)", type: "theory", color: "#7C3AED" },
+      { time: "12:00 PM", subject: "EIDW - Emotional Intelligence & Digital Wellbeing", room: "S-21", faculty: "Ms. Krupali D. Vaghashiya (KDV)", type: "theory", color: "#059669" },
+      { time: "01:00 PM", subject: "Recess / Lunch Break", room: "Campus Canteen", faculty: "Enjoy your break! ☕", type: "break", color: "#A87932" },
+      { time: "01:30 PM", subject: "SPC Lab (Batch A: DPP, T-16) / EIDW Lab (Batch B: KDV, T-14)", room: "Lab T-16 / T-14", faculty: "Mrs. Disha Prajapati / Ms. Krupali Vaghashiya", type: "lab", color: "#2563EB" },
+      { time: "03:20 PM", subject: "Short Recess", room: "Campus", faculty: "10 mins tea break", type: "break", color: "#A87932" },
+      { time: "03:30 PM", subject: "CDCT Lab (Batch A: MSD, T-13) / AIPD Lab (Batch B: DKP, T-15)", room: "Lab T-13 / T-15", faculty: "Miss. Mayuri Devganiya / Mrs. Dipika Patel", type: "lab", color: "#D97706" }
+    ],
+    2: [ // Tuesday
+      { time: "10:00 AM", subject: "AIPE - AI with Prompt Engineering", room: "S-21", faculty: "Mrs. Binita B. Acharya (BBA)", type: "theory", color: "#059669" },
+      { time: "11:00 AM", subject: "SPC - Structured Programming with C", room: "S-21", faculty: "Mrs. Disha P. Prajapati (DPP)", type: "theory", color: "#2563EB" },
+      { time: "12:00 PM", subject: "CDCT - Cloud & Data Center Technology", room: "S-21", faculty: "Miss. Mayuri S. Devganiya (MSD)", type: "theory", color: "#D97706" },
+      { time: "01:00 PM", subject: "Recess / Lunch Break", room: "Campus Canteen", faculty: "Enjoy your break! ☕", type: "break", color: "#A87932" },
+      { time: "01:30 PM", subject: "AIPE Lab (Batch A: AKV, T-13) / SPC Lab (Batch B: DPP, T-16)", room: "Lab T-13 / T-16", faculty: "Mrs. Aesha Virani / Mrs. Disha Prajapati", type: "lab", color: "#059669" },
+      { time: "03:20 PM", subject: "Short Recess", room: "Campus", faculty: "10 mins tea break", type: "break", color: "#A87932" },
+      { time: "03:30 PM", subject: "Independent Study & Project Mentorship", room: "Central Library", faculty: "Department Faculty", type: "study", color: "#6B7280" }
+    ],
+    3: [ // Wednesday
+      { time: "10:00 AM", subject: "AIPD - AI Product Design", room: "S-21", faculty: "Mrs. Dipika K. Patel (DKP)", type: "theory", color: "#7C3AED" },
+      { time: "11:00 AM", subject: "CDCT - Cloud & Data Center Technology", room: "S-21", faculty: "Miss. Mayuri S. Devganiya (MSD)", type: "theory", color: "#D97706" },
+      { time: "12:00 PM", subject: "AIPE - AI with Prompt Engineering", room: "S-21", faculty: "Mrs. Binita B. Acharya (BBA)", type: "theory", color: "#059669" },
+      { time: "01:00 PM", subject: "Recess / Lunch Break", room: "Campus Canteen", faculty: "Enjoy your break! ☕", type: "break", color: "#A87932" },
+      { time: "01:30 PM", subject: "Technical Seminar & Co-Curricular Lab", room: "Room S-25", faculty: "IT Faculty Team", type: "study", color: "#6B7280" }
+    ],
+    4: [ // Thursday
+      { time: "10:00 AM", subject: "APTITUDE - Quantitative & Technical Skills", room: "S-21", faculty: "General Aptitude Faculty", type: "theory", color: "#2563EB" },
+      { time: "11:00 AM", subject: "AIPE - AI with Prompt Engineering", room: "S-21", faculty: "Mrs. Binita B. Acharya (BBA)", type: "theory", color: "#059669" },
+      { time: "12:00 PM", subject: "EIDW - Emotional Intelligence & Digital Wellbeing", room: "S-21", faculty: "Ms. Krupali D. Vaghashiya (KDV)", type: "theory", color: "#0284C7" },
+      { time: "01:00 PM", subject: "Recess / Lunch Break", room: "Campus Canteen", faculty: "Enjoy your break! ☕", type: "break", color: "#A87932" },
+      { time: "01:30 PM", subject: "AIPD Lab (Batch A: DKP, T-16) / AIPE Lab (Batch B: AKV, T-13)", room: "Lab T-16 / T-13", faculty: "Mrs. Dipika Patel / Mrs. Aesha Virani", type: "lab", color: "#7C3AED" },
+      { time: "03:20 PM", subject: "Short Recess", room: "Campus", faculty: "10 mins tea break", type: "break", color: "#A87932" },
+      { time: "03:30 PM", subject: "EIDW Lab (Batch A: KDV, T-14) / CDCT Lab (Batch B: MSD, T-13)", room: "Lab T-14 / T-13", faculty: "Ms. Krupali Vaghashiya / Miss. Mayuri Devganiya", type: "lab", color: "#D97706" }
+    ],
+    5: [ // Friday
+      { time: "10:00 AM", subject: "SPC - Structured Programming with C", room: "S-21", faculty: "Mrs. Disha P. Prajapati (DPP)", type: "theory", color: "#2563EB" },
+      { time: "11:00 AM", subject: "CDCT - Cloud & Data Center Technology", room: "S-21", faculty: "Miss. Mayuri S. Devganiya (MSD)", type: "theory", color: "#D97706" },
+      { time: "12:00 PM", subject: "AIPD - AI Product Design", room: "S-21", faculty: "Mrs. Dipika K. Patel (DKP)", type: "theory", color: "#7C3AED" },
+      { time: "01:00 PM", subject: "Recess / Lunch Break", room: "Campus Canteen", faculty: "Enjoy your break! ☕", type: "break", color: "#A87932" },
+      { time: "01:30 PM", subject: "Minor Project (Batch A: NAP, T-15 / Batch B: HSJ, T-14)", room: "Lab T-15 / T-14", faculty: "Miss. Nikita Patel / Mrs. Hina Jayani", type: "lab", color: "#7C3AED" },
+      { time: "03:20 PM", subject: "Short Recess", room: "Campus", faculty: "10 mins tea break", type: "break", color: "#A87932" },
+      { time: "03:30 PM", subject: "Minor Project (Batch A: AKV, T-16 / Batch B: BBA, T-16)", room: "Lab T-16", faculty: "Mrs. Aesha Virani / Mrs. Binita Acharya", type: "lab", color: "#059669" }
+    ],
+    6: [ // Saturday
+      { time: "10:00 AM", subject: "Minor Project (Batch A: AKV / Batch B: DBL)", room: "Lab T-13", faculty: "Mrs. Aesha Virani / Mrs. Dipika Patel", type: "lab", color: "#7C3AED" },
+      { time: "12:00 PM", subject: "Minor Project Progress Review & Mentorship", room: "Room S-21", faculty: "Project Evaluation Committee", type: "theory", color: "#2563EB" }
+    ],
+    0: [ // Sunday
+      { time: "All Day", subject: "Weekend - No Scheduled Lectures", room: "Campus Closed", faculty: "Rest & Independent Practice", type: "break", color: "#6B7280" }
+    ]
+  },
 
-  // Faculty Today's Classes
-  facultySchedule: [
-    { time: "10:00 AM", class: "Class 2452 - IT", subject: "SPC (Theory)", room: "S-21", attendanceDone: false },
-    { time: "11:00 AM", class: "Class 2452 - IT", subject: "AIPE (Theory)", room: "S-21", attendanceDone: false },
-    { time: "01:30 PM", class: "Class 2452 - IT", subject: "AIPD (Lab Batch A)", room: "Lab T-16", attendanceDone: false },
-    { time: "03:30 PM", class: "Class 2452 - IT", subject: "EIDW (Lab Batch A)", room: "Lab T-14", attendanceDone: false }
-  ],
+  // Dynamic getter for today's schedule based on the real-world day of week
+  get studentSchedule() {
+    const day = new Date().getDay();
+    return this.weeklyStudentSchedule[day] || this.weeklyStudentSchedule[4];
+  },
+
+  getTodaySchedule(dayIndex) {
+    if (dayIndex !== undefined && dayIndex !== null) {
+      return this.weeklyStudentSchedule[dayIndex] || this.weeklyStudentSchedule[4];
+    }
+    const day = new Date().getDay();
+    return this.weeklyStudentSchedule[day] || this.weeklyStudentSchedule[4];
+  },
+
+  // Weekly Faculty Schedule
+  weeklyFacultySchedule: {
+    1: [
+      { time: "10:00 AM", class: "Class 2452 - IT", subject: "SPC (Theory)", room: "S-21", attendanceDone: false },
+      { time: "01:30 PM", class: "Class 2452 - IT", subject: "SPC (Lab Batch A)", room: "Lab T-16", attendanceDone: false }
+    ],
+    2: [
+      { time: "11:00 AM", class: "Class 2452 - IT", subject: "SPC (Theory)", room: "S-21", attendanceDone: false },
+      { time: "01:30 PM", class: "Class 2452 - IT", subject: "SPC (Lab Batch B)", room: "Lab T-16", attendanceDone: false }
+    ],
+    3: [
+      { time: "10:00 AM", class: "Class 2452 - IT", subject: "AIPD (Theory)", room: "S-21", attendanceDone: false }
+    ],
+    4: [
+      { time: "10:00 AM", class: "Class 2452 - IT", subject: "Aptitude (Theory)", room: "S-21", attendanceDone: false },
+      { time: "11:00 AM", class: "Class 2452 - IT", subject: "AIPE (Theory)", room: "S-21", attendanceDone: false },
+      { time: "01:30 PM", class: "Class 2452 - IT", subject: "AIPD (Lab Batch A)", room: "Lab T-16", attendanceDone: false },
+      { time: "03:30 PM", class: "Class 2452 - IT", subject: "EIDW (Lab Batch A)", room: "Lab T-14", attendanceDone: false }
+    ],
+    5: [
+      { time: "10:00 AM", class: "Class 2452 - IT", subject: "SPC (Theory)", room: "S-21", attendanceDone: false },
+      { time: "01:30 PM", class: "Class 2452 - IT", subject: "Minor Project (Batch A)", room: "Lab T-15", attendanceDone: false },
+      { time: "03:30 PM", class: "Class 2452 - IT", subject: "Minor Project (Batch A)", room: "Lab T-16", attendanceDone: false }
+    ],
+    6: [
+      { time: "10:00 AM", class: "Class 2452 - IT", subject: "Minor Project (Batch A)", room: "Lab T-13", attendanceDone: false }
+    ],
+    0: []
+  },
+
+  get facultySchedule() {
+    const day = new Date().getDay();
+    return this.weeklyFacultySchedule[day] || this.weeklyFacultySchedule[4];
+  },
 
   // Attention Items (Dynamic, loaded from storage if present)
   attentionItems: (() => {
@@ -2536,16 +2620,45 @@ class StudentView {
           
           <!-- TODAY'S SCHEDULE -->
           <div class="card-editorial">
-            <div class="flex items-center justify-between" style="margin-bottom: 1.25rem;">
+            <div class="flex items-center justify-between" style="margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
               <div>
-                <h3 style="font-size: 1.15rem; font-weight: 700;">Today's Schedule</h3>
-                <p style="font-size: 0.78rem; color: var(--text-muted);">Thu, 11 Sep 2026 • Class 2452 IT</p>
+                <div class="flex items-center gap-2">
+                  <h3 style="font-size: 1.15rem; font-weight: 700;">Today's Schedule</h3>
+                  <span class="badge badge-green" style="font-size: 0.65rem; padding: 2px 7px;">● LIVE</span>
+                </div>
+                <p class="live-realtime-clock" style="font-size: 0.8rem; color: var(--color-accent-blue); font-weight: 700; margin-top: 3px;">
+                  ${StudentView.getFormattedNow()}
+                </p>
               </div>
-              <a href="javascript:void(0)" onclick="appState.setView('timetable')" style="font-size: 0.8rem; font-weight: 600;">View All &rarr;</a>
+              <a href="javascript:void(0)" onclick="appState.setView('timetable')" style="font-size: 0.8rem; font-weight: 600;">Full Timetable &rarr;</a>
+            </div>
+
+            <!-- Dynamic Day Selector Filter Strip -->
+            <div style="display: flex; gap: 0.4rem; margin-bottom: 1.1rem; overflow-x: auto; padding-bottom: 4px;">
+              ${[
+                { d: 1, name: 'Mon' },
+                { d: 2, name: 'Tue' },
+                { d: 3, name: 'Wed' },
+                { d: 4, name: 'Thu' },
+                { d: 5, name: 'Fri' },
+                { d: 6, name: 'Sat' }
+              ].map(day => {
+                const todayNum = new Date().getDay();
+                const activeDay = (StudentView.selectedDay !== undefined) ? StudentView.selectedDay : todayNum;
+                const isToday = day.d === todayNum;
+                const isActive = day.d === activeDay;
+                return `
+                  <button class="btn ${isActive ? 'btn-primary' : 'btn-secondary'}" 
+                          style="padding: 0.25rem 0.65rem; font-size: 0.72rem; border-radius: 9999px; ${isActive ? 'font-weight: 700;' : ''}" 
+                          onclick="StudentView.selectDaySchedule(${day.d})">
+                    ${day.name}${isToday ? ' (Today)' : ''}
+                  </button>
+                `;
+              }).join('')}
             </div>
 
             <div class="schedule-timeline-box">
-              ${CAMPUS_DATA.studentSchedule.map(item => `
+              ${(CAMPUS_DATA.getTodaySchedule(StudentView.selectedDay !== undefined ? StudentView.selectedDay : new Date().getDay())).map(item => `
                 <div class="timeline-row">
                   <span class="timeline-time-col">${item.time}</span>
                   <span class="timeline-dot" style="background-color: ${item.color};"></span>
@@ -2605,8 +2718,52 @@ class StudentView {
 
       </div>
     `;
+    StudentView.startLiveClock();
+  }
+
+  static selectedDay = new Date().getDay();
+
+  static getFormattedNow() {
+    const now = new Date();
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    const dayName = days[now.getDay()];
+    const dayNum = now.getDate();
+    const monthName = months[now.getMonth()];
+    const year = now.getFullYear();
+    
+    let hours = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const hoursStr = hours.toString().padStart(2, '0');
+    
+    return `${dayName}, ${dayNum} ${monthName} ${year} • ${hoursStr}:${minutes}:${seconds} ${ampm} • Class 2452 IT`;
+  }
+
+  static selectDaySchedule(dayIndex) {
+    StudentView.selectedDay = dayIndex;
+    const container = document.getElementById('view-container');
+    if (container) {
+      StudentView.renderDashboard(container);
+    }
+  }
+
+  static startLiveClock() {
+    if (window._campusxLiveClockInterval) return;
+    window._campusxLiveClockInterval = setInterval(() => {
+      const clockElements = document.querySelectorAll('.live-realtime-clock');
+      if (clockElements.length > 0) {
+        const text = StudentView.getFormattedNow();
+        clockElements.forEach(el => el.textContent = text);
+      }
+    }, 1000);
   }
 }
+
 
 
 /* --- File: faculty-view.js (js\views\faculty-view.js) --- */
@@ -2727,7 +2884,9 @@ class FacultyView {
                 Faculty Portal • IT Department
               </span>
               <h2 style="font-size: 2.2rem; font-weight: 800; color: var(--text-primary); margin: 0.25rem 0;">Good morning.</h2>
-              <p style="font-size: 0.95rem; color: var(--text-secondary);">Your academic overview for today, 11 Sep 2026.</p>
+              <p class="live-realtime-clock" style="font-size: 0.92rem; color: var(--text-secondary); font-weight: 600;">
+                ${typeof StudentView !== 'undefined' ? StudentView.getFormattedNow() : new Date().toLocaleDateString('en-GB')}
+              </p>
             </div>
             <button class="btn btn-primary" onclick="appState.setView('attendance-mark')">
               <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"></path></svg>

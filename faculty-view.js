@@ -115,7 +115,9 @@ class FacultyView {
                 Faculty Portal • IT Department
               </span>
               <h2 style="font-size: 2.2rem; font-weight: 800; color: var(--text-primary); margin: 0.25rem 0;">Good morning.</h2>
-              <p style="font-size: 0.95rem; color: var(--text-secondary);">Your academic overview for today, 11 Sep 2026.</p>
+              <p class="live-realtime-clock" style="font-size: 0.92rem; color: var(--text-secondary); font-weight: 600;">
+                ${typeof StudentView !== 'undefined' ? StudentView.getFormattedNow() : new Date().toLocaleDateString('en-GB')}
+              </p>
             </div>
             <button class="btn btn-primary" onclick="appState.setView('attendance-mark')">
               <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"></path></svg>
