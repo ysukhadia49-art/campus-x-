@@ -511,9 +511,26 @@ function requireRole(allowedRoles) {
   };
 }
 
-// ==========================================================
-// 8. Authentication API Routes
-// ==========================================================
+// GET /api/version
+app.get('/api/version', (req, res) => {
+  let bundleSize = 0;
+  let hasRecovery = false;
+  try {
+    const bundlePath = path.join(ROOT_DIR, 'campusx.bundle.js');
+    if (fs.existsSync(bundlePath)) {
+      bundleSize = fs.statSync(bundlePath).size;
+      const content = fs.readFileSync(bundlePath, 'utf8');
+      hasRecovery = content.includes('renderForgotPassword');
+    }
+  } catch (e) {}
+  return res.json({
+    version: '7.0.0',
+    rootDir: ROOT_DIR,
+    __dirname,
+    bundleSize,
+    hasRecovery
+  });
+});
 
 // POST /api/auth/login
 app.post('/api/auth/login', loginRateLimiter.middleware(), (req, res) => {
