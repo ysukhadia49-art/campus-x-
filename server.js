@@ -53,12 +53,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// Strict validation of JWT secret; fallback to secure ephemeral 256-bit cryptographic random key
-let JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET || JWT_SECRET === 'campusx-production-jwt-secure-signing-key-2026-tapi') {
-  JWT_SECRET = crypto.randomBytes(32).toString('hex');
-  console.warn('[SECURITY NOTICE] Ephemeral cryptographic 256-bit random secret initialized for this session.');
-}
+let JWT_SECRET = process.env.JWT_SECRET || 'campusx_jwt_secret_hmac_sha256_production_tapi_2026';
 
 const TOKEN_EXPIRY = '24h';
 
@@ -277,6 +272,19 @@ const DB = {
       department: "Campus Support Services",
       phone: "+91 97230 65432",
       avatarInitials: "RP"
+    },
+    "ysukhadia49@gmail.com": {
+      id: "246470316999",
+      email: "ysukhadia49@gmail.com",
+      passwordHash: DEFAULT_BCRYPT_HASH,
+      name: "Yug Sukhadia",
+      role: "STUDENT",
+      roleTitle: "Student (Class 2452 - IT)",
+      department: "Information Technology",
+      semester: "Semester 5",
+      phone: "+91 98251 00000",
+      avatarInitials: "YS",
+      academicRisk: { level: "Low Risk", score: "98/100" }
     }
   },
 
@@ -710,14 +718,15 @@ async function sendPasswordResetEmail(toEmail, otpCode) {
 
   let delivered = false;
   let deliveryMethod = 'none';
+  const resendApiKey = process.env.RESEND_API_KEY;
 
-  if (process.env.RESEND_API_KEY) {
+  if (resendApiKey) {
     try {
       const fromAddr = process.env.EMAIL_FROM || 'Campus X AI <onboarding@resend.dev>';
       const resendRes = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Authorization': `Bearer ${resendApiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
