@@ -17,6 +17,7 @@ const bundleFiles = [
   'ai-chat-view.js',
   'complaints-view.js',
   'lost-found-view.js',
+  'emergency-view.js',
   'app.js'
 ];
 

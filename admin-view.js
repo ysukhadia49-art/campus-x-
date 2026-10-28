@@ -63,6 +63,11 @@ class AdminView {
           </a>
 
           <div class="sidebar-category-label">Support</div>
+          <a href="javascript:void(0)" onclick="appState.setView('emergency')" class="sidebar-item-link ${activeTab === 'emergency' ? 'active' : ''} ${appState.isSosActive ? 'sidebar-item-sos-active' : ''}">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span style="font-weight: 700; color: #dc2626;">Emergency SOS</span>
+            <span class="badge ${appState.isSosActive ? 'badge-out-of-stock' : 'badge-low-stock'}" style="margin-left: auto;">${appState.isSosActive ? 'ALERT' : '24/7'}</span>
+          </a>
           <a href="javascript:void(0)" onclick="appState.setView('complaints')" class="sidebar-item-link ${activeTab === 'complaints' ? 'active' : ''}">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
             <span>Complaints</span>
@@ -107,11 +112,25 @@ class AdminView {
 
         <!-- ADMIN HEADER (Section 23) -->
         <div class="card-editorial" style="padding: 2rem;">
-          <span class="sidebar-role-indicator" style="color: var(--color-accent-blue); background: var(--tint-soft-blue); margin-bottom: 0.5rem;">
-            Tapi Central Admin Hub
-          </span>
-          <h2 style="font-size: 2.2rem; font-weight: 800; color: var(--text-primary); margin: 0.25rem 0;">Campus overview</h2>
-          <p style="font-size: 0.95rem; color: var(--text-secondary);">Real-time operations, facilities status, and support tracking.</p>
+          <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <span class="sidebar-role-indicator" style="color: var(--color-accent-blue); background: var(--tint-soft-blue); margin-bottom: 0.5rem;">
+                Tapi Central Admin Hub
+              </span>
+              <h2 style="font-size: 2.2rem; font-weight: 800; color: var(--text-primary); margin: 0.25rem 0;">Campus overview</h2>
+              <p style="font-size: 0.95rem; color: var(--text-secondary); margin: 0;">Real-time operations, facilities status, attendance tracking, and support dispatch.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="btn btn-primary" onclick="AdminView.openNoticeModal()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Upload Notice</span>
+              </button>
+              <button class="btn btn-secondary" onclick="appState.setView('attendance-overview')">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span>Attendance Overview</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- 6 KEY METRICS (Section 23) -->
@@ -145,6 +164,12 @@ class AdminView {
           </div>
 
           <div class="card-editorial" style="padding: 1.25rem;">
+            <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Campus Notices</span>
+            <div style="font-size: 1.75rem; font-weight: 800; color: var(--color-accent-blue); margin-top: 0.2rem;">${(CAMPUS_DATA.notices || []).length}</div>
+            <div style="font-size: 0.75rem; color: var(--color-accent-blue); font-weight: 600;">Active circulars posted</div>
+          </div>
+
+          <div class="card-editorial" style="padding: 1.25rem;">
             <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Low Stock Items</span>
             <div style="font-size: 1.75rem; font-weight: 800; color: ${lowStockItems.length > 0 ? 'var(--color-error)' : 'var(--color-success)'}; margin-top: 0.2rem;">
               ${lowStockItems.length}
@@ -152,12 +177,6 @@ class AdminView {
             <div style="font-size: 0.75rem; color: ${lowStockItems.length > 0 ? 'var(--color-error)' : 'var(--color-success)'}; font-weight: 600;">
               ${lowStockItems.length > 0 ? 'Requires store replenishment' : 'Store adequately stocked'}
             </div>
-          </div>
-
-          <div class="card-editorial" style="padding: 1.25rem;">
-            <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Campus Infrastructure</span>
-            <div style="font-size: 1.75rem; font-weight: 800; color: var(--color-success); margin-top: 0.2rem;">99.4%</div>
-            <div style="font-size: 0.75rem; color: var(--color-success); font-weight: 600;">All facilities active</div>
           </div>
         </div>
 
@@ -241,7 +260,204 @@ class AdminView {
 
         </div>
 
+        <!-- CAMPUS NOTICES & CIRCULARS MANAGEMENT (Section 25) -->
+        <div class="card-editorial" style="padding: 1.75rem;">
+          <div class="flex items-center justify-between" style="margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 style="font-size: 1.25rem; font-weight: 800; margin: 0;">Campus Notice Board & Circulars</h3>
+                <span class="badge badge-blue">${(CAMPUS_DATA.notices || []).length} Active</span>
+              </div>
+              <p style="font-size: 0.84rem; color: var(--text-secondary); margin-top: 0.2rem;">
+                Official institutional circulars published to student, faculty, and operator dashboards.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="btn btn-primary" onclick="AdminView.openNoticeModal()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Upload Notice</span>
+              </button>
+              <button class="btn btn-secondary" onclick="appState.setView('notices')">
+                <span>View Public Board &rarr;</span>
+              </button>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+            ${(!CAMPUS_DATA.notices || CAMPUS_DATA.notices.length === 0) ? `
+              <div style="padding: 2.5rem 1rem; text-align: center; color: var(--text-muted);">
+                <div style="font-weight: 700; font-size: 1rem; color: var(--text-primary);">No active circulars</div>
+                <div style="font-size: 0.85rem; margin-top: 0.25rem;">Click "Upload Notice" above to publish institutional announcements.</div>
+              </div>
+            ` : CAMPUS_DATA.notices.map(ntc => {
+              const esc = window.SecurityUtils ? window.SecurityUtils.escapeHtml : (s => s);
+              const isUrgent = (ntc.priority && (ntc.priority.toUpperCase() === 'URGENT' || ntc.priority.toUpperCase() === 'HIGH'));
+              return `
+                <div style="padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: var(--bg-surface-subtle); display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+                  <div style="flex: 1; min-width: 250px;">
+                    <div class="flex items-center gap-2" style="margin-bottom: 0.35rem;">
+                      <span class="badge ${isUrgent ? 'badge-out-of-stock' : 'badge-blue'}">${esc(ntc.category || 'Circular')}</span>
+                      ${ntc.pinned ? '<span class="badge badge-purple">📌 Pinned</span>' : ''}
+                      <span style="font-size: 0.76rem; color: var(--text-muted);">${esc(ntc.date || 'Today')} ${ntc.time ? `• ${esc(ntc.time)}` : ''}</span>
+                    </div>
+                    <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0.2rem 0; color: var(--text-primary);">${esc(ntc.title)}</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin: 0.35rem 0;">${esc(ntc.description || ntc.desc || '')}</p>
+                    <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 0.4rem;">
+                      Posted by: <strong>${esc(ntc.postedBy || 'Admin')}</strong> • Dept: <strong>${esc(ntc.department || 'All Departments')}</strong>
+                      ${ntc.attachmentName ? ` • Attachment: <strong style="color: var(--color-accent-blue);">📎 ${esc(ntc.attachmentName)}</strong>` : ''}
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; color: var(--color-error);" onclick="AdminView.deleteNotice('${esc(ntc.id)}')">
+                      Delete Notice
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
       </div>
     `;
+  }
+
+  // MODAL: UPLOAD CAMPUS NOTICE & CIRCULAR
+  static openNoticeModal() {
+    AppModal.show({
+      title: "Upload Campus Notice & Official Circular",
+      content: `
+        <form id="adminNoticeForm" onsubmit="event.preventDefault(); AdminView.submitNotice();" style="display: flex; flex-direction: column; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Notice Title <span style="color: var(--color-error);">*</span></label>
+            <input type="text" class="form-input" id="modalNoticeTitle" placeholder="e.g. GTU Mid-Term Examination Form Submission" required maxlength="150">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select class="form-input" id="modalNoticeCategory">
+                <option value="Academic Circular">Academic Circular</option>
+                <option value="GTU Examination">GTU Examination</option>
+                <option value="Campus Event">Campus Event / Symposium</option>
+                <option value="Placement & Training">Placement & Career</option>
+                <option value="Emergency Advisory">Emergency Advisory</option>
+                <option value="Hostel & Facilities">Hostel & Facilities</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Priority</label>
+              <select class="form-input" id="modalNoticePriority">
+                <option value="Normal">Normal</option>
+                <option value="High">High (Highlighted)</option>
+                <option value="Urgent">Urgent / Critical Alert</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Target Department</label>
+            <select class="form-input" id="modalNoticeDept">
+              <option value="All Departments">All Departments (College-Wide)</option>
+              <option value="Information Technology">Information Technology (IT Dept [16])</option>
+              <option value="Computer Engineering">Computer Engineering</option>
+              <option value="Mechanical Engineering">Mechanical Engineering</option>
+              <option value="Electrical Engineering">Electrical Engineering</option>
+              <option value="Civil Engineering">Civil Engineering</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notice Body / Circular Details <span style="color: var(--color-error);">*</span></label>
+            <textarea class="form-input" id="modalNoticeBody" rows="4" placeholder="Enter the official circular particulars, instructions, and deadlines for students and staff..." required maxlength="2500"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Document Attachment (Optional)</label>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <input type="text" class="form-input" id="modalNoticeAttachment" placeholder="e.g. gtu_circular_sem5_winter2026.pdf" maxlength="100">
+            </div>
+            <span style="font-size: 0.74rem; color: var(--text-muted); margin-top: 0.2rem; display: block;">
+              Name of official PDF circular or link to downloadable institutional file.
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2" style="margin-top: 0.25rem;">
+            <input type="checkbox" id="modalNoticePinned" style="width: 16px; height: 16px; accent-color: var(--color-primary); cursor: pointer;">
+            <label for="modalNoticePinned" style="font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--text-primary);">
+              Pin this notice to the top of the Notice Board
+            </label>
+          </div>
+        </form>
+      `,
+      confirmText: "Publish Notice",
+      confirmClass: "btn-primary",
+      onConfirm: () => {
+        AdminView.submitNotice();
+      }
+    });
+  }
+
+  static submitNotice() {
+    const titleEl = document.getElementById('modalNoticeTitle');
+    const bodyEl = document.getElementById('modalNoticeBody');
+    const categoryEl = document.getElementById('modalNoticeCategory');
+    const priorityEl = document.getElementById('modalNoticePriority');
+    const deptEl = document.getElementById('modalNoticeDept');
+    const attachEl = document.getElementById('modalNoticeAttachment');
+    const pinnedEl = document.getElementById('modalNoticePinned');
+
+    if (!titleEl || !bodyEl) return;
+
+    const title = titleEl.value.trim();
+    const description = bodyEl.value.trim();
+
+    if (!title) {
+      appState.showToast('Please provide a notice title.', 'error');
+      return;
+    }
+    if (!description) {
+      appState.showToast('Please provide notice circular particulars.', 'error');
+      return;
+    }
+
+    const category = categoryEl ? categoryEl.value : 'Academic Circular';
+    const priority = priorityEl ? priorityEl.value : 'Normal';
+    const department = deptEl ? deptEl.value : 'All Departments';
+    const attachmentName = attachEl && attachEl.value.trim() ? attachEl.value.trim() : null;
+    const pinned = pinnedEl ? pinnedEl.checked : false;
+
+    appState.addNotice({
+      title,
+      category,
+      priority,
+      department,
+      description,
+      desc: description,
+      attachmentName,
+      pinned
+    });
+
+    // Re-render current view if on admin dashboard
+    const container = document.getElementById('viewContainer') || document.getElementById('view-container');
+    if (container && appState.activeView === 'dashboard') {
+      AdminView.renderDashboard(container);
+    } else if (container && appState.activeView === 'notices') {
+      CampusApplication.renderNoticesView(container);
+    }
+  }
+
+  static deleteNotice(noticeId) {
+    if (!confirm('Are you sure you want to remove this notice from the campus board?')) {
+      return;
+    }
+    appState.deleteNotice(noticeId);
+    const container = document.getElementById('viewContainer') || document.getElementById('view-container');
+    if (container && appState.activeView === 'dashboard') {
+      AdminView.renderDashboard(container);
+    } else if (container && appState.activeView === 'notices') {
+      CampusApplication.renderNoticesView(container);
+    }
   }
 }

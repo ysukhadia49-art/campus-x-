@@ -101,7 +101,8 @@ class NavigationController {
       'inventory': { title: 'Stationery & Inventory ERP', desc: 'Automated predictive stocking for college resources' },
       'complaints': { title: 'Grievance & Complaint Portal', desc: 'Transparent ticket tracking for campus maintenance' },
       'lost-found': { title: 'Lost & Found Hub', desc: 'Digital community bulletin for displaced campus items' },
-      'ai-chat': { title: 'Campus X AI Virtual Assistant', desc: '24/7 Generative AI assistant for students & faculty' }
+      'ai-chat': { title: 'Campus X AI Virtual Assistant', desc: '24/7 Generative AI assistant for students & faculty' },
+      'emergency': { title: 'Campus Emergency SOS', desc: 'Emergency dispatch, security sirens, 24/7 hotlines & live broadcast' }
     };
 
     if (titles[viewName]) {

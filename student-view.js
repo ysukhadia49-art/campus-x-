@@ -70,6 +70,11 @@ class StudentView {
           </a>
 
           <div class="sidebar-category-label">Communication</div>
+          <a href="javascript:void(0)" onclick="appState.setView('emergency')" class="sidebar-item-link ${activeTab === 'emergency' ? 'active' : ''} ${appState.isSosActive ? 'sidebar-item-sos-active' : ''}">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span style="font-weight: 700; color: #dc2626;">Emergency SOS</span>
+            <span class="badge ${appState.isSosActive ? 'badge-out-of-stock' : 'badge-low-stock'}" style="margin-left: auto;">${appState.isSosActive ? 'ALERT' : '24/7'}</span>
+          </a>
           <a href="javascript:void(0)" onclick="appState.setView('notices')" class="sidebar-item-link ${activeTab === 'notices' ? 'active' : ''}">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
             <span>Notices</span>
@@ -128,26 +133,13 @@ class StudentView {
             <div class="mobile-summary-card">
               <div class="mobile-summary-label">Attendance</div>
               ${(() => {
-                try {
-                  const recs = JSON.parse(localStorage.getItem('campusx_attendance_records') || '[]');
-                  if (recs.length > 0) {
-                    const userRoll = (appState.currentUser && appState.currentUser.rollNo) || "07";
-                    let attended = 0;
-                    recs.forEach(r => {
-                      if (r.records && Array.isArray(r.records)) {
-                        const m = r.records.find(s => s.rollNo === userRoll);
-                        if (m && m.present) attended++;
-                      } else {
-                        attended++;
-                      }
-                    });
-                    const pctVal = Math.round((attended / recs.length) * 100);
-                    return `
-                      <div class="mobile-summary-value" style="color: ${pctVal >= 75 ? 'var(--color-success)' : 'var(--color-error)'};">${pctVal}%</div>
-                      <div class="mobile-summary-sub">${pctVal >= 75 ? 'GTU Compliant' : 'Low Attendance'}</div>
-                    `;
-                  }
-                } catch(e) {}
+                const attStats = CAMPUS_DATA.getStudentAttendance(appState.currentUser ? (appState.currentUser.id || appState.currentUser.rollNo || appState.currentUser.name) : '07');
+                if (attStats.totalHeld > 0) {
+                  return `
+                    <div class="mobile-summary-value" style="color: ${attStats.compliant ? 'var(--color-success)' : 'var(--color-error)'};">${attStats.percentageStr}</div>
+                    <div class="mobile-summary-sub">${attStats.compliant ? 'GTU Compliant' : 'Low Attendance'} (${attStats.totalAttended}/${attStats.totalHeld})</div>
+                  `;
+                }
                 return `
                   <div class="mobile-summary-value" style="color: var(--text-primary);">--%</div>
                   <div class="mobile-summary-sub">Pending Records</div>
@@ -235,7 +227,58 @@ class StudentView {
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"></path></svg>
             <span>Ask Campus X</span>
           </a>
+
+          <a href="javascript:void(0)" onclick="appState.setView('emergency')" class="action-pill action-pill-red">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span>Emergency SOS</span>
+          </a>
         </section>
+
+        <!-- REAL-TIME LIVE ATTENDANCE SNAPSHOT BANNER -->
+        ${(() => {
+          const attStats = CAMPUS_DATA.getStudentAttendance(appState.currentUser ? (appState.currentUser.id || appState.currentUser.rollNo || appState.currentUser.name) : '07');
+          const hasRecords = attStats.totalHeld > 0;
+          return `
+            <div class="card-editorial" style="padding: 1.25rem 1.5rem; background: ${hasRecords ? (attStats.compliant ? 'var(--tint-soft-green)' : '#FEF2F2') : 'var(--bg-surface)'}; border-left: 4px solid ${hasRecords ? (attStats.compliant ? 'var(--color-success)' : 'var(--color-error)') : 'var(--color-accent-blue)'};">
+              <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 1rem;">
+                <div style="flex: 1; min-width: 220px;">
+                  <div class="flex items-center gap-2" style="margin-bottom: 0.25rem;">
+                    <span class="badge ${hasRecords ? (attStats.compliant ? 'badge-available' : 'badge-out-of-stock') : 'badge-blue'}">
+                      ● LIVE ATTENDANCE
+                    </span>
+                    <span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 600;">GTU 75% Rule Compliance</span>
+                  </div>
+                  <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0.2rem 0;">
+                    ${hasRecords 
+                      ? `Your Overall Attendance: <span style="color: ${attStats.compliant ? 'var(--color-success)' : 'var(--color-error)'};">${attStats.percentageStr}</span> (${attStats.totalAttended} of ${attStats.totalHeld} Sessions Attended)` 
+                      : 'Awaiting Faculty Attendance Submissions for Term 2026'}
+                  </div>
+                  <div style="font-size: 0.82rem; color: var(--text-secondary);">
+                    ${hasRecords 
+                      ? (attStats.compliant 
+                          ? '✓ Academic standing compliant with university examination eligibility requirements.' 
+                          : '⚠️ Attendance below statutory 75% limit. Attend next scheduled theory & lab sessions.') 
+                      : 'Real-time GTU tracking will automatically calculate as faculty record daily lecture rosters.'}
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                  <div style="text-align: right;">
+                    <div style="font-size: 1.6rem; font-weight: 900; color: ${hasRecords ? (attStats.compliant ? 'var(--color-success)' : 'var(--color-error)') : 'var(--text-muted)'}; line-height: 1;">
+                      ${attStats.percentageStr}
+                    </div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">
+                      ${attStats.statusText}
+                    </div>
+                  </div>
+                  <button class="btn btn-secondary" onclick="appState.setView('attendance')" style="padding: 0.45rem 0.9rem; font-size: 0.8rem; white-space: nowrap;">
+                    View Analytics &rarr;
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        })()}
 
         <!-- 2-COLUMN SPLIT: SCHEDULE & ATTENTION FEED -->
         <div class="middle-split-grid">

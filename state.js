@@ -3,6 +3,75 @@
    Hardened RBAC, Secure Session Tracking & Audit Integration
    ========================================================== */
 
+class SosAudioEngine {
+  static audioCtx = null;
+  static osc = null;
+  static gainNode = null;
+  static intervalId = null;
+  static isPlaying = false;
+
+  static playSiren() {
+    try {
+      if (this.isPlaying) return;
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      
+      this.audioCtx = new AudioCtx();
+      if (this.audioCtx.state === 'suspended') {
+        this.audioCtx.resume();
+      }
+
+      this.osc = this.audioCtx.createOscillator();
+      this.gainNode = this.audioCtx.createGain();
+
+      this.osc.type = 'sawtooth';
+      this.gainNode.gain.setValueAtTime(0.08, this.audioCtx.currentTime);
+
+      this.osc.connect(this.gainNode);
+      this.gainNode.connect(this.audioCtx.destination);
+      this.osc.start();
+      this.isPlaying = true;
+
+      let highTone = false;
+      this.intervalId = setInterval(() => {
+        if (!this.audioCtx || !this.osc) return;
+        const now = this.audioCtx.currentTime;
+        const freq = highTone ? 880 : 660;
+        this.osc.frequency.setValueAtTime(freq, now);
+        highTone = !highTone;
+      }, 350);
+    } catch (e) {
+      console.warn("Audio Context unavailable:", e);
+    }
+  }
+
+  static stopSiren() {
+    try {
+      if (this.intervalId) {
+        clearInterval(this.intervalId);
+        this.intervalId = null;
+      }
+      if (this.osc) {
+        this.osc.stop();
+        this.osc.disconnect();
+        this.osc = null;
+      }
+      if (this.gainNode) {
+        this.gainNode.disconnect();
+        this.gainNode = null;
+      }
+      if (this.audioCtx) {
+        this.audioCtx.close();
+        this.audioCtx = null;
+      }
+      this.isPlaying = false;
+    } catch (e) {
+      this.isPlaying = false;
+    }
+  }
+}
+window.SosAudioEngine = SosAudioEngine;
+
 class CampusState {
   constructor() {
     let savedUser = null;
@@ -19,6 +88,8 @@ class CampusState {
     this.activeView = this.currentUser ? 'dashboard' : 'landing';
     this.stationeryRush = false;
     this.rushStartTime = null;
+    this.isSosActive = false;
+    this.isSosSoundEnabled = true;
     this.toasts = [];
     this.listeners = [];
 
@@ -28,6 +99,14 @@ class CampusState {
       if (savedRush === 'true') {
         this.stationeryRush = true;
         this.rushStartTime = localStorage.getItem('campusx_rush_time') || "11:42 AM";
+      }
+    } catch (e) {}
+
+    // Load persisted SOS state
+    try {
+      const savedSos = localStorage.getItem('campusx_sos_active');
+      if (savedSos === 'true') {
+        this.isSosActive = true;
       }
     } catch (e) {}
   }
@@ -182,6 +261,80 @@ class CampusState {
     this.notify('RUSH_CHANGED');
   }
 
+  triggerSos() {
+    this.isSosActive = true;
+    try {
+      localStorage.setItem('campusx_sos_active', 'true');
+    } catch (e) {}
+
+    if (this.isSosSoundEnabled) {
+      SosAudioEngine.playSiren();
+    }
+
+    this.showToast('🚨 EMERGENCY SOS ACTIVATED! Campus Security & Medical notified.', 'error');
+    this.notify('SOS_CHANGED');
+  }
+
+  cancelSos() {
+    this.isSosActive = false;
+    try {
+      localStorage.setItem('campusx_sos_active', 'false');
+    } catch (e) {}
+
+    SosAudioEngine.stopSiren();
+    this.showToast('Emergency SOS cancelled. Stand down confirmed.', 'info');
+    this.notify('SOS_CHANGED');
+  }
+
+  toggleSos() {
+    if (this.isSosActive) {
+      this.cancelSos();
+    } else {
+      this.triggerSos();
+    }
+  }
+
+  toggleSosSound() {
+    this.isSosSoundEnabled = !this.isSosSoundEnabled;
+    if (!this.isSosSoundEnabled) {
+      SosAudioEngine.stopSiren();
+      this.showToast('Emergency siren sound muted.', 'info');
+    } else {
+      if (this.isSosActive) {
+        SosAudioEngine.playSiren();
+      }
+      this.showToast('Emergency siren sound enabled.', 'info');
+    }
+    this.notify('SOS_CHANGED');
+  }
+
+  addEmergencyBroadcast(text) {
+    if (!text || !text.trim()) return false;
+    const cleanText = (window.SecurityUtils && window.SecurityUtils.sanitizeInput)
+      ? window.SecurityUtils.sanitizeInput(text, 300)
+      : text.trim().slice(0, 300);
+
+    const senderName = this.currentUser ? this.currentUser.name : 'Tapi Control Room';
+    const newBroadcast = {
+      id: Date.now(),
+      text: cleanText,
+      sender: senderName,
+      time: 'Just now',
+      priority: 'Alert'
+    };
+
+    if (typeof CAMPUS_DATA !== 'undefined' && Array.isArray(CAMPUS_DATA.emergencyBroadcasts)) {
+      CAMPUS_DATA.emergencyBroadcasts.unshift(newBroadcast);
+      try {
+        localStorage.setItem('campusx_emergency_broadcasts', JSON.stringify(CAMPUS_DATA.emergencyBroadcasts));
+      } catch (e) {}
+    }
+
+    this.showToast('Emergency broadcast alert published.', 'success');
+    this.notify('BROADCAST_ADDED');
+    return true;
+  }
+
   showToast(message, type = 'info') {
     // Ensure message string is sanitized
     const safeMessage = (window.SecurityUtils && window.SecurityUtils.escapeHtml) 
@@ -267,34 +420,155 @@ class CampusState {
     this.notify('INVENTORY_CHANGED');
   }
 
-  saveAttendance(classId, subject, records = []) {
+  saveAttendance(classId, subject, records = [], date = null) {
     // RBAC Guard: Only FACULTY or ADMIN
     if (!this.currentUser || (this.currentUser.role !== 'FACULTY' && this.currentUser.role !== 'ADMIN')) {
-      this.showToast('Access denied: Only faculty members can record attendance.', 'error');
+      this.showToast('Access denied: Only faculty members or administrators can record attendance.', 'error');
       return;
     }
 
+    const sessionDate = date || new Date().toISOString().slice(0, 10);
+    const sessionObj = {
+      id: `ATT-${Date.now()}`,
+      classId,
+      subject,
+      date: sessionDate,
+      records,
+      recordedBy: this.currentUser.name,
+      recordedById: this.currentUser.id,
+      timestamp: new Date().toISOString()
+    };
+
     try {
       const localRecords = JSON.parse(localStorage.getItem('campusx_attendance_records') || '[]');
-      localRecords.push({
-        classId,
-        subject,
-        records,
-        recordedBy: this.currentUser.name,
-        timestamp: new Date().toISOString()
-      });
+      localRecords.unshift(sessionObj);
       localStorage.setItem('campusx_attendance_records', JSON.stringify(localRecords));
     } catch (e) {}
 
     if (window.ApiClient && !ApiClient.isStaticDeployment()) {
       ApiClient.request('/api/faculty/attendance', {
         method: 'POST',
-        body: JSON.stringify({ classId, subject, records })
+        body: JSON.stringify({ classId, subject, records, date: sessionDate })
       }).catch(err => console.warn('Attendance server sync:', err.message));
     }
 
-    this.showToast(`Attendance saved for ${classId} (${subject}). Synced to Supabase.`, "success");
+    this.showToast(`Attendance saved for ${classId} (${subject}). Synced in real time.`, "success");
     this.notify('ATTENDANCE_SAVED');
+  }
+
+  addNotice(notice) {
+    // RBAC Guard: Only ADMIN or FACULTY
+    if (!this.currentUser || (this.currentUser.role !== 'ADMIN' && this.currentUser.role !== 'FACULTY')) {
+      this.showToast('Access denied: Only administrators or faculty can upload notices.', 'error');
+      return false;
+    }
+
+    // Sanitize user inputs
+    if (window.SecurityUtils) {
+      notice.title = window.SecurityUtils.sanitizeInput(notice.title, 150);
+      notice.category = window.SecurityUtils.sanitizeInput(notice.category || 'Academic Circular', 50);
+      notice.department = window.SecurityUtils.sanitizeInput(notice.department || 'All Departments', 60);
+      notice.description = window.SecurityUtils.sanitizeInput(notice.description || notice.desc || '', 3000);
+      notice.desc = notice.description;
+    }
+
+    const now = new Date();
+    const newNotice = {
+      id: notice.id || `NTC-${Date.now().toString().slice(-4)}`,
+      title: notice.title,
+      category: notice.category || 'Academic Circular',
+      description: notice.description,
+      desc: notice.description,
+      priority: notice.priority || 'Normal',
+      department: notice.department || 'All Departments',
+      pinned: Boolean(notice.pinned),
+      attachmentName: notice.attachmentName || null,
+      attachmentUrl: notice.attachmentUrl || null,
+      date: 'Today',
+      time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      postedBy: this.currentUser.name,
+      postedByRole: this.currentUser.role,
+      timestamp: now.toISOString()
+    };
+
+    if (typeof CAMPUS_DATA !== 'undefined' && Array.isArray(CAMPUS_DATA.notices)) {
+      if (newNotice.pinned) {
+        CAMPUS_DATA.notices.unshift(newNotice);
+      } else {
+        const firstUnpinned = CAMPUS_DATA.notices.findIndex(n => !n.pinned);
+        if (firstUnpinned === -1) CAMPUS_DATA.notices.push(newNotice);
+        else CAMPUS_DATA.notices.splice(firstUnpinned, 0, newNotice);
+      }
+      try {
+        localStorage.setItem('campusx_notices', JSON.stringify(CAMPUS_DATA.notices));
+      } catch (e) {}
+
+      // Add attention alert for students
+      if (Array.isArray(CAMPUS_DATA.attentionItems)) {
+        CAMPUS_DATA.attentionItems.unshift({
+          id: `ATT-NTC-${Date.now()}`,
+          title: `New Circular: ${newNotice.title}`,
+          desc: `${newNotice.category} • Posted by ${newNotice.postedBy}`,
+          time: 'Just now',
+          bg: 'var(--tint-soft-peach)',
+          color: 'var(--color-peach)'
+        });
+        try {
+          localStorage.setItem('campusx_attention', JSON.stringify(CAMPUS_DATA.attentionItems));
+        } catch (e) {}
+      }
+    }
+
+    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+      ApiClient.request('/api/notices', {
+        method: 'POST',
+        body: JSON.stringify(newNotice)
+      }).catch(err => console.warn('Notice API sync:', err.message));
+    } else if (window.supabaseClient) {
+      window.supabaseClient.from('notices').insert([{
+        id: newNotice.id,
+        title: newNotice.title,
+        category: newNotice.category,
+        description: newNotice.description,
+        priority: newNotice.priority,
+        posted_by: newNotice.postedBy,
+        pinned: newNotice.pinned
+      }]).then(({ error }) => {
+        if (error) console.warn('Supabase notice insert:', error.message);
+      });
+    }
+
+    this.showToast(`Notice "${newNotice.title}" published to Campus Board!`, "success");
+    this.notify('NOTICES_CHANGED');
+    return true;
+  }
+
+  deleteNotice(noticeId) {
+    if (!this.currentUser || this.currentUser.role !== 'ADMIN') {
+      this.showToast('Access denied: Only administrators can delete circulars.', 'error');
+      return false;
+    }
+
+    if (typeof CAMPUS_DATA !== 'undefined' && Array.isArray(CAMPUS_DATA.notices)) {
+      CAMPUS_DATA.notices = CAMPUS_DATA.notices.filter(n => n.id !== noticeId);
+      try {
+        localStorage.setItem('campusx_notices', JSON.stringify(CAMPUS_DATA.notices));
+      } catch (e) {}
+    }
+
+    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+      ApiClient.request(`/api/notices/${noticeId}`, {
+        method: 'DELETE'
+      }).catch(err => console.warn('Notice delete API:', err.message));
+    } else if (window.supabaseClient) {
+      window.supabaseClient.from('notices').delete().eq('id', noticeId).then(({ error }) => {
+        if (error) console.warn('Supabase notice delete:', error.message);
+      });
+    }
+
+    this.showToast('Notice removed from Campus Board.', 'info');
+    this.notify('NOTICES_CHANGED');
+    return true;
   }
 
   createComplaint(complaint) {
@@ -377,13 +651,31 @@ class CampusState {
   async fetchRemoteData() {
     if (window.ApiClient && !ApiClient.isStaticDeployment()) {
       try {
-        const cRes = await ApiClient.request('/api/complaints');
-        if (cRes && Array.isArray(cRes.complaints)) {
-          CAMPUS_DATA.complaints = cRes.complaints;
+        const [cRes, lfRes, attRes, ntcRes] = await Promise.allSettled([
+          ApiClient.request('/api/complaints'),
+          ApiClient.request('/api/lost-found'),
+          ApiClient.request('/api/attendance'),
+          ApiClient.request('/api/notices')
+        ]);
+
+        if (cRes.status === 'fulfilled' && cRes.value && Array.isArray(cRes.value.complaints)) {
+          CAMPUS_DATA.complaints = cRes.value.complaints;
         }
-        const lfRes = await ApiClient.request('/api/lost-found');
-        if (lfRes && Array.isArray(lfRes.items)) {
-          CAMPUS_DATA.lostAndFound = lfRes.items;
+        if (lfRes.status === 'fulfilled' && lfRes.value && Array.isArray(lfRes.value.items)) {
+          CAMPUS_DATA.lostAndFound = lfRes.value.items;
+        }
+        if (attRes.status === 'fulfilled' && attRes.value && Array.isArray(attRes.value.attendance)) {
+          try {
+            localStorage.setItem('campusx_attendance_records', JSON.stringify(attRes.value.attendance));
+            this.notify('ATTENDANCE_SAVED');
+          } catch(e) {}
+        }
+        if (ntcRes.status === 'fulfilled' && ntcRes.value && Array.isArray(ntcRes.value.notices)) {
+          CAMPUS_DATA.notices = ntcRes.value.notices;
+          try {
+            localStorage.setItem('campusx_notices', JSON.stringify(ntcRes.value.notices));
+            this.notify('NOTICES_CHANGED');
+          } catch(e) {}
         }
         this.notify('DATA_SYNCED');
         return;
@@ -428,6 +720,25 @@ class CampusState {
             contact: lf.contact
           }));
         }
+
+        const { data: ntcData, error: ntcErr } = await window.supabaseClient.from('notices').select('*').order('created_at', { ascending: false });
+        if (!ntcErr && Array.isArray(ntcData) && ntcData.length > 0) {
+          CAMPUS_DATA.notices = ntcData.map(n => ({
+            id: n.id,
+            title: n.title,
+            category: n.category,
+            description: n.description,
+            desc: n.description,
+            priority: n.priority || 'Normal',
+            postedBy: n.posted_by || 'Administration',
+            pinned: Boolean(n.pinned),
+            date: n.created_at ? new Date(n.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Today',
+            time: '9:00 AM'
+          }));
+          localStorage.setItem('campusx_notices', JSON.stringify(CAMPUS_DATA.notices));
+          this.notify('NOTICES_CHANGED');
+        }
+
         this.notify('DATA_SYNCED');
       } catch (err) {
         console.warn('Direct Supabase fetch:', err.message);
@@ -446,3 +757,33 @@ if (typeof window !== 'undefined' && window.supabase && !window.supabaseClient) 
 }
 
 window.appState = new CampusState();
+
+// Real-Time Cross-Tab Event Bus & Background Heartbeat Polling
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'campusx_attendance_records') {
+      window.appState.notify('ATTENDANCE_SAVED');
+    } else if (e.key === 'campusx_notices') {
+      try {
+        const parsed = JSON.parse(e.newValue || '[]');
+        if (Array.isArray(parsed) && typeof CAMPUS_DATA !== 'undefined') {
+          CAMPUS_DATA.notices = parsed;
+        }
+      } catch (err) {}
+      window.appState.notify('NOTICES_CHANGED');
+    } else if (e.key === 'campusx_rush') {
+      window.appState.stationeryRush = e.newValue === 'true';
+      window.appState.notify('RUSH_CHANGED');
+    } else if (e.key === 'campusx_sos_active') {
+      window.appState.isSosActive = e.newValue === 'true';
+      window.appState.notify('SOS_CHANGED');
+    }
+  });
+
+  // Background real-time sync polling every 6 seconds when user is authenticated
+  setInterval(() => {
+    if (window.appState && window.appState.currentUser) {
+      window.appState.fetchRemoteData();
+    }
+  }, 6000);
+}

@@ -250,36 +250,155 @@ const CAMPUS_DATA = {
     return [];
   })(),
 
-  // Campus Notices
-  notices: [
-    {
-      id: "NTC-501",
-      category: "Academic",
-      title: "GTU Mid-Semester Examination Schedule (Winter 2026)",
-      date: "11 Sep 2026",
-      audience: "All Semester 5 IT Students",
-      priority: "URGENT",
-      content: "Mid-semester theory examinations will commence from 24th September 2026. Hall tickets will be issued via the student portal."
-    },
-    {
-      id: "NTC-502",
-      category: "Campus Services",
-      title: "Stationery Requisition Guidelines for Practical Journals",
-      date: "10 Sep 2026",
-      audience: "All Departments",
-      priority: "NORMAL",
-      content: "Certified A4 engineering and programming journals are now available at the Central Stationery counter. Check real-time counter rush before visiting."
-    },
-    {
-      id: "NTC-503",
-      category: "Events",
-      title: "Annual Tech Fest 'Innovate Tapi 2026' Registrations Open",
-      date: "08 Sep 2026",
-      audience: "All Students & Faculty",
-      priority: "NORMAL",
-      content: "Participate in AI Hackathon, Web Speed Coding, and Circuit Debugging. Exciting awards and industry sponsorship."
+  // Campus Notices (Dynamic, persisted in local storage)
+  notices: (() => {
+    try {
+      const stored = localStorage.getItem('campusx_notices');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return [
+      {
+        id: "NTC-501",
+        category: "Academic Circular",
+        title: "GTU Mid-Semester Examination Schedule (Winter 2026)",
+        date: "Today",
+        time: "9:00 AM",
+        audience: "All Semester 5 IT Students",
+        department: "Information Technology",
+        priority: "High",
+        pinned: true,
+        postedBy: "Dr. A. K. Joshi (Admin)",
+        description: "All 3rd and 5th-semester diploma engineering students are required to verify their examination slots and hall ticket particulars with departmental coordinators.",
+        desc: "All 3rd and 5th-semester diploma engineering students are required to verify their examination slots and hall ticket particulars with departmental coordinators."
+      },
+      {
+        id: "NTC-502",
+        category: "Campus Event",
+        title: "Annual Tech Symposium \"IGNITE 2026\" Registrations Open",
+        date: "Yesterday",
+        time: "2:30 PM",
+        audience: "All Students & Faculty",
+        department: "All Departments",
+        priority: "Normal",
+        pinned: false,
+        postedBy: "Prof. S. R. Patel (Faculty)",
+        description: "Paper presentation, robotics challenge, and coding hackathon entries are now accepted at the central auditorium lobby.",
+        desc: "Paper presentation, robotics challenge, and coding hackathon entries are now accepted at the central auditorium lobby."
+      },
+      {
+        id: "NTC-503",
+        category: "Campus Services",
+        title: "Stationery Requisition Guidelines for Practical Journals",
+        date: "10 Sep 2026",
+        time: "11:00 AM",
+        audience: "All Departments",
+        department: "Campus Support Services",
+        priority: "Normal",
+        pinned: false,
+        postedBy: "Ramesh Bhai Patel (Stationery)",
+        description: "Certified A4 engineering and programming journals are now available at the Central Stationery counter. Check real-time counter rush before visiting.",
+        desc: "Certified A4 engineering and programming journals are now available at the Central Stationery counter. Check real-time counter rush before visiting."
+      }
+    ];
+  })(),
+
+  // Real-Time Student Attendance Calculation Engine
+  getStudentAttendance(studentIdentifier) {
+    let recs = [];
+    try {
+      recs = JSON.parse(localStorage.getItem('campusx_attendance_records') || '[]');
+    } catch(e) {}
+    if (!Array.isArray(recs) || recs.length === 0) {
+      return { totalHeld: 0, totalAttended: 0, percentage: null, percentageStr: "--%", compliant: true, statusText: "Awaiting Markings" };
     }
-  ]
+    const cleanId = String(studentIdentifier || '').trim().toLowerCase();
+    let attended = 0;
+    recs.forEach(r => {
+      if (Array.isArray(r.records)) {
+        const match = r.records.find(s => 
+          (s.enrollment && s.enrollment.toLowerCase() === cleanId) ||
+          (s.rollNo && s.rollNo.toLowerCase() === cleanId) ||
+          (s.name && s.name.toLowerCase() === cleanId)
+        );
+        if (match && match.present) attended++;
+      } else {
+        attended++;
+      }
+    });
+    const pct = Number(((attended / recs.length) * 100).toFixed(1));
+    const compliant = pct >= 75;
+    return {
+      totalHeld: recs.length,
+      totalAttended: attended,
+      percentage: pct,
+      percentageStr: `${pct}%`,
+      compliant,
+      statusText: compliant ? "GTU Compliant" : "Low Attendance"
+    };
+  },
+
+  // Emergency Hotlines & Campus Safety Hotlines
+  emergencyContacts: [
+    { 
+      id: 'SEC-1', 
+      title: 'Campus Security Control Room', 
+      phone: '+91 261 2345678', 
+      type: 'Security', 
+      location: 'Gate 1 Main Guard Command Station', 
+      available: '24/7 Priority Line' 
+    },
+    { 
+      id: 'MED-1', 
+      title: 'Medical First Aid & Doctor on Call', 
+      phone: '+91 261 2345679', 
+      type: 'Medical', 
+      location: 'Campus Health Clinic, Ground Floor Room 102', 
+      available: '24/7 On-Duty Medical' 
+    },
+    { 
+      id: 'FIRE-1', 
+      title: 'Campus Fire & Safety Officer', 
+      phone: '+91 94280 12345', 
+      type: 'Fire Safety', 
+      location: 'Central Disaster Response Post, Block B', 
+      available: '24/7 Emergency Response' 
+    },
+    { 
+      id: 'WARD-1', 
+      title: 'Hostel Chief Warden Office', 
+      phone: '+91 261 2345680', 
+      type: 'Hostel Care', 
+      location: 'Hostel Administrative Office', 
+      available: '8:00 AM - 10:00 PM' 
+    }
+  ],
+
+  // Emergency Alert Broadcast Feed
+  emergencyBroadcasts: (() => {
+    try {
+      const stored = localStorage.getItem('campusx_emergency_broadcasts');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return [
+      { 
+        id: 1, 
+        text: 'ALERT: Electrical maintenance near Computer Lab 4 tomorrow 10 AM. Stay alert around ground transformers.', 
+        sender: 'Admin Office', 
+        time: 'Yesterday',
+        priority: 'Notice'
+      },
+      { 
+        id: 2, 
+        text: 'CAMPUS ADVISORY: Heavy rainfall alert in Surat region. Please keep to designated covered corridors.', 
+        sender: 'Campus Security', 
+        time: '2 days ago',
+        priority: 'Advisory'
+      }
+    ];
+  })()
 };
 
 // Hydrate any registered institutional accounts from persistent local storage

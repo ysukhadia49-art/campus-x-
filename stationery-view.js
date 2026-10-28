@@ -42,6 +42,11 @@ class StationeryView {
           </a>
 
           <div class="sidebar-category-label">Counter Operations</div>
+          <a href="javascript:void(0)" onclick="appState.setView('emergency')" class="sidebar-item-link ${activeTab === 'emergency' ? 'active' : ''} ${appState.isSosActive ? 'sidebar-item-sos-active' : ''}">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span style="font-weight: 700; color: #dc2626;">Emergency SOS</span>
+            <span class="badge ${appState.isSosActive ? 'badge-out-of-stock' : 'badge-low-stock'}" style="margin-left: auto;">${appState.isSosActive ? 'ALERT' : '24/7'}</span>
+          </a>
           <a href="javascript:void(0)" onclick="StationeryView.openRushModal()" class="sidebar-item-link">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             <span>Rush Control</span>

@@ -124,6 +124,15 @@ class CampusApplication {
             </div>
 
             <div class="topbar-actions">
+              <!-- Emergency SOS Button -->
+              <button class="topbar-sos-btn ${appState.isSosActive ? 'sos-pulsing' : ''}" 
+                      aria-label="Emergency SOS Dispatcher" 
+                      onclick="appState.setView('emergency')" 
+                      title="${appState.isSosActive ? 'SOS ACTIVE - View Emergency Console' : 'Emergency SOS Console'}">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <span>${appState.isSosActive ? '🚨 SOS ACTIVE' : 'SOS'}</span>
+              </button>
+
               <!-- Notifications Icon -->
               <button class="topbar-icon-btn" aria-label="Notifications" onclick="appState.showToast('You are all caught up on campus announcements.', 'info')">
                 <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -143,6 +152,24 @@ class CampusApplication {
               </div>
             </div>
           </header>
+
+          <!-- ACTIVE SOS EMERGENCY BANNER -->
+          ${appState.isSosActive ? `
+            <div class="emergency-active-top-banner">
+              <div class="flex items-center gap-2" style="font-weight: 800; font-size: 0.86rem;">
+                <span class="status-dot-pulse" style="background: #ffffff; box-shadow: 0 0 10px #ffffff;"></span>
+                <span>🚨 EMERGENCY SOS ACTIVE — Security & Medical Teams Dispatched to Tapi IT Building</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="btn btn-secondary" style="padding: 0.25rem 0.65rem; font-size: 0.74rem; background: #ffffff; color: #b91c1c; font-weight: 700;" onclick="appState.setView('emergency')">
+                  Open Console
+                </button>
+                <button class="btn" style="padding: 0.25rem 0.65rem; font-size: 0.74rem; background: #7f1d1d; color: #ffffff; border: 1px solid #fca5a5; font-weight: 700;" onclick="appState.cancelSos()">
+                  Cancel SOS
+                </button>
+              </div>
+            </div>
+          ` : ''}
 
           <!-- VIEW CONTAINER -->
           <main class="dashboard-content" id="viewContainer" style="padding-top: 1.5rem;">
@@ -249,33 +276,13 @@ class CampusApplication {
         AiChatView.render(container);
         break;
 
+      case 'emergency':
+      case 'sos':
+        EmergencyView.render(container);
+        break;
+
       case 'notices':
-        container.innerHTML = `
-          <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-            <div>
-              <h2 style="font-size: 2rem; font-weight: 800; color: var(--text-primary);">Campus Notices</h2>
-              <p style="font-size: 0.9rem; color: var(--text-secondary);">Official circulars and announcements from Tapi Diploma Engineering College.</p>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-              <div class="card-editorial" style="border-left: 4px solid var(--color-accent-blue);">
-                <div class="flex items-center justify-between" style="margin-bottom: 0.35rem;">
-                  <span class="badge badge-blue">Academic Circular</span>
-                  <span style="font-size: 0.76rem; color: var(--text-muted);">Today, 9:00 AM</span>
-                </div>
-                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">GTU Mid-Term Examination Schedule Released</h3>
-                <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">All 3rd and 5th-semester diploma engineering students are required to verify their examination slots and hall ticket particulars with departmental coordinators.</p>
-              </div>
-              <div class="card-editorial" style="border-left: 4px solid var(--color-success);">
-                <div class="flex items-center justify-between" style="margin-bottom: 0.35rem;">
-                  <span class="badge badge-available">Campus Event</span>
-                  <span style="font-size: 0.76rem; color: var(--text-muted);">Yesterday</span>
-                </div>
-                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">Annual Tech Symposium "IGNITE 2026" Registrations Open</h3>
-                <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Paper presentation, robotics challenge, and coding hackathon entries are now accepted at the central auditorium lobby.</p>
-              </div>
-            </div>
-          </div>
-        `;
+        CampusApplication.renderNoticesView(container);
         break;
 
       case 'examinations':
@@ -447,6 +454,159 @@ class CampusApplication {
   static handleGlobalSearch(query) {
     if (!query || query.length < 2) return;
     // Simulated quick search
+  }
+
+  static selectedNoticeFilter = 'All';
+  static noticeSearchTerm = '';
+
+  static renderNoticesView(container) {
+    const isAdmin = appState.currentUser && appState.currentUser.role === 'ADMIN';
+    const isFaculty = appState.currentUser && appState.currentUser.role === 'FACULTY';
+    const canUpload = isAdmin || isFaculty;
+
+    let notices = CAMPUS_DATA.notices || [];
+
+    // Filter by Category
+    if (CampusApplication.selectedNoticeFilter && CampusApplication.selectedNoticeFilter !== 'All') {
+      const f = CampusApplication.selectedNoticeFilter.toLowerCase();
+      notices = notices.filter(n => {
+        const cat = (n.category || '').toLowerCase();
+        const prio = (n.priority || '').toLowerCase();
+        if (f === 'urgent') return prio === 'urgent' || prio === 'high';
+        return cat.includes(f);
+      });
+    }
+
+    // Filter by Search Query
+    if (CampusApplication.noticeSearchTerm) {
+      const q = CampusApplication.noticeSearchTerm.toLowerCase();
+      notices = notices.filter(n => 
+        (n.title && n.title.toLowerCase().includes(q)) ||
+        (n.description && n.description.toLowerCase().includes(q)) ||
+        (n.desc && n.desc.toLowerCase().includes(q)) ||
+        (n.category && n.category.toLowerCase().includes(q)) ||
+        (n.department && n.department.toLowerCase().includes(q))
+      );
+    }
+
+    const esc = window.SecurityUtils ? window.SecurityUtils.escapeHtml : (s => s);
+
+    container.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- HEADER -->
+        <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <div class="flex items-center gap-2" style="margin-bottom: 0.25rem;">
+              <span class="badge badge-blue">Official Circulars</span>
+              <span class="badge badge-green">● Real-Time Feed</span>
+            </div>
+            <h2 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin: 0;">Campus Notices & Circulars</h2>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.2rem;">
+              Authoritative announcements, GTU examination circulars, and departmental schedules.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            ${canUpload ? `
+              <button class="btn btn-primary" onclick="AdminView.openNoticeModal()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Upload Notice</span>
+              </button>
+            ` : ''}
+          </div>
+        </div>
+
+        <!-- FILTER & SEARCH BAR -->
+        <div class="card-editorial" style="padding: 1rem 1.25rem;">
+          <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              ${['All', 'Academic', 'Examination', 'Event', 'Urgent'].map(tab => {
+                const isActive = (CampusApplication.selectedNoticeFilter || 'All') === tab;
+                return `
+                  <button class="btn ${isActive ? 'btn-primary' : 'btn-secondary'}" 
+                          style="padding: 0.35rem 0.8rem; font-size: 0.78rem; border-radius: 999px; ${isActive ? 'font-weight: 700;' : ''}" 
+                          onclick="CampusApplication.setNoticeFilter('${tab}')">
+                    ${tab === 'Urgent' ? '🚨 Urgent' : tab}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+
+            <div style="flex: 1; min-width: 220px; max-width: 380px;">
+              <input type="text" class="form-input" placeholder="Search notices, exams, circulars..." 
+                     value="${esc(CampusApplication.noticeSearchTerm || '')}"
+                     oninput="CampusApplication.onNoticeSearch(this.value)">
+            </div>
+          </div>
+        </div>
+
+        <!-- NOTICES LIST -->
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          ${notices.length === 0 ? `
+            <div class="card-editorial" style="padding: 3rem 1rem; text-align: center; color: var(--text-muted);">
+              <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin: 0 auto 0.75rem; display: block; color: var(--color-accent-blue);"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+              <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.35rem;">No circulars found</h3>
+              <p style="font-size: 0.85rem; margin: 0;">No notices match the selected category or search keyword.</p>
+              ${canUpload ? `
+                <button class="btn btn-primary" style="margin-top: 1rem;" onclick="AdminView.openNoticeModal()">Upload First Notice</button>
+              ` : ''}
+            </div>
+          ` : notices.map(ntc => {
+            const isUrgent = (ntc.priority && (ntc.priority.toUpperCase() === 'URGENT' || ntc.priority.toUpperCase() === 'HIGH'));
+            return `
+              <div class="card-editorial" style="border-left: 4px solid ${isUrgent ? 'var(--color-error)' : 'var(--color-accent-blue)'}; padding: 1.5rem;">
+                <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+                  <div class="flex items-center gap-2">
+                    <span class="badge ${isUrgent ? 'badge-out-of-stock' : 'badge-blue'}">${esc(ntc.category || 'Circular')}</span>
+                    ${ntc.pinned ? '<span class="badge badge-purple">📌 Pinned</span>' : ''}
+                    <span style="font-size: 0.76rem; color: var(--text-muted);">${esc(ntc.date || 'Today')} ${ntc.time ? `• ${esc(ntc.time)}` : ''}</span>
+                  </div>
+
+                  ${isAdmin ? `
+                    <button class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.74rem; color: var(--color-error);" onclick="AdminView.deleteNotice('${esc(ntc.id)}')">
+                      Delete
+                    </button>
+                  ` : ''}
+                </div>
+
+                <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary); margin: 0.2rem 0 0.5rem;">
+                  ${esc(ntc.title)}
+                </h3>
+
+                <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; margin: 0.5rem 0 1rem;">
+                  ${esc(ntc.description || ntc.desc || '')}
+                </p>
+
+                <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color); font-size: 0.78rem; color: var(--text-muted);">
+                  <div>
+                    Department: <strong>${esc(ntc.department || 'All Departments')}</strong> • Posted by: <strong>${esc(ntc.postedBy || 'Campus Administration')}</strong>
+                  </div>
+                  ${ntc.attachmentName ? `
+                    <a href="javascript:void(0)" onclick="appState.showToast('Opening circular document: ${esc(ntc.attachmentName)}', 'info')" class="action-pill action-pill-blue" style="padding: 0.25rem 0.65rem; font-size: 0.75rem;">
+                      <span>📎 ${esc(ntc.attachmentName)}</span>
+                    </a>
+                  ` : ''}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+      </div>
+    `;
+  }
+
+  static setNoticeFilter(category) {
+    CampusApplication.selectedNoticeFilter = category;
+    const container = document.getElementById('viewContainer') || document.getElementById('view-container');
+    if (container) CampusApplication.renderNoticesView(container);
+  }
+
+  static onNoticeSearch(term) {
+    CampusApplication.noticeSearchTerm = term.trim();
+    const container = document.getElementById('viewContainer') || document.getElementById('view-container');
+    if (container) CampusApplication.renderNoticesView(container);
   }
 }
 

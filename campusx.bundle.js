@@ -1,7 +1,7 @@
 /* Campus X AI - Consolidated Application Bundle */
 
 
-/* --- File: mock-data.js (js\mock-data.js) --- */
+/* --- File: mock-data.js --- */
 /* ==========================================================
    Campus X AI - Realistic Mock Data Store
    College: Tapi Diploma Engineering College, Surat
@@ -254,36 +254,155 @@ const CAMPUS_DATA = {
     return [];
   })(),
 
-  // Campus Notices
-  notices: [
-    {
-      id: "NTC-501",
-      category: "Academic",
-      title: "GTU Mid-Semester Examination Schedule (Winter 2026)",
-      date: "11 Sep 2026",
-      audience: "All Semester 5 IT Students",
-      priority: "URGENT",
-      content: "Mid-semester theory examinations will commence from 24th September 2026. Hall tickets will be issued via the student portal."
-    },
-    {
-      id: "NTC-502",
-      category: "Campus Services",
-      title: "Stationery Requisition Guidelines for Practical Journals",
-      date: "10 Sep 2026",
-      audience: "All Departments",
-      priority: "NORMAL",
-      content: "Certified A4 engineering and programming journals are now available at the Central Stationery counter. Check real-time counter rush before visiting."
-    },
-    {
-      id: "NTC-503",
-      category: "Events",
-      title: "Annual Tech Fest 'Innovate Tapi 2026' Registrations Open",
-      date: "08 Sep 2026",
-      audience: "All Students & Faculty",
-      priority: "NORMAL",
-      content: "Participate in AI Hackathon, Web Speed Coding, and Circuit Debugging. Exciting awards and industry sponsorship."
+  // Campus Notices (Dynamic, persisted in local storage)
+  notices: (() => {
+    try {
+      const stored = localStorage.getItem('campusx_notices');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return [
+      {
+        id: "NTC-501",
+        category: "Academic Circular",
+        title: "GTU Mid-Semester Examination Schedule (Winter 2026)",
+        date: "Today",
+        time: "9:00 AM",
+        audience: "All Semester 5 IT Students",
+        department: "Information Technology",
+        priority: "High",
+        pinned: true,
+        postedBy: "Dr. A. K. Joshi (Admin)",
+        description: "All 3rd and 5th-semester diploma engineering students are required to verify their examination slots and hall ticket particulars with departmental coordinators.",
+        desc: "All 3rd and 5th-semester diploma engineering students are required to verify their examination slots and hall ticket particulars with departmental coordinators."
+      },
+      {
+        id: "NTC-502",
+        category: "Campus Event",
+        title: "Annual Tech Symposium \"IGNITE 2026\" Registrations Open",
+        date: "Yesterday",
+        time: "2:30 PM",
+        audience: "All Students & Faculty",
+        department: "All Departments",
+        priority: "Normal",
+        pinned: false,
+        postedBy: "Prof. S. R. Patel (Faculty)",
+        description: "Paper presentation, robotics challenge, and coding hackathon entries are now accepted at the central auditorium lobby.",
+        desc: "Paper presentation, robotics challenge, and coding hackathon entries are now accepted at the central auditorium lobby."
+      },
+      {
+        id: "NTC-503",
+        category: "Campus Services",
+        title: "Stationery Requisition Guidelines for Practical Journals",
+        date: "10 Sep 2026",
+        time: "11:00 AM",
+        audience: "All Departments",
+        department: "Campus Support Services",
+        priority: "Normal",
+        pinned: false,
+        postedBy: "Ramesh Bhai Patel (Stationery)",
+        description: "Certified A4 engineering and programming journals are now available at the Central Stationery counter. Check real-time counter rush before visiting.",
+        desc: "Certified A4 engineering and programming journals are now available at the Central Stationery counter. Check real-time counter rush before visiting."
+      }
+    ];
+  })(),
+
+  // Real-Time Student Attendance Calculation Engine
+  getStudentAttendance(studentIdentifier) {
+    let recs = [];
+    try {
+      recs = JSON.parse(localStorage.getItem('campusx_attendance_records') || '[]');
+    } catch(e) {}
+    if (!Array.isArray(recs) || recs.length === 0) {
+      return { totalHeld: 0, totalAttended: 0, percentage: null, percentageStr: "--%", compliant: true, statusText: "Awaiting Markings" };
     }
-  ]
+    const cleanId = String(studentIdentifier || '').trim().toLowerCase();
+    let attended = 0;
+    recs.forEach(r => {
+      if (Array.isArray(r.records)) {
+        const match = r.records.find(s => 
+          (s.enrollment && s.enrollment.toLowerCase() === cleanId) ||
+          (s.rollNo && s.rollNo.toLowerCase() === cleanId) ||
+          (s.name && s.name.toLowerCase() === cleanId)
+        );
+        if (match && match.present) attended++;
+      } else {
+        attended++;
+      }
+    });
+    const pct = Number(((attended / recs.length) * 100).toFixed(1));
+    const compliant = pct >= 75;
+    return {
+      totalHeld: recs.length,
+      totalAttended: attended,
+      percentage: pct,
+      percentageStr: `${pct}%`,
+      compliant,
+      statusText: compliant ? "GTU Compliant" : "Low Attendance"
+    };
+  },
+
+  // Emergency Hotlines & Campus Safety Hotlines
+  emergencyContacts: [
+    { 
+      id: 'SEC-1', 
+      title: 'Campus Security Control Room', 
+      phone: '+91 261 2345678', 
+      type: 'Security', 
+      location: 'Gate 1 Main Guard Command Station', 
+      available: '24/7 Priority Line' 
+    },
+    { 
+      id: 'MED-1', 
+      title: 'Medical First Aid & Doctor on Call', 
+      phone: '+91 261 2345679', 
+      type: 'Medical', 
+      location: 'Campus Health Clinic, Ground Floor Room 102', 
+      available: '24/7 On-Duty Medical' 
+    },
+    { 
+      id: 'FIRE-1', 
+      title: 'Campus Fire & Safety Officer', 
+      phone: '+91 94280 12345', 
+      type: 'Fire Safety', 
+      location: 'Central Disaster Response Post, Block B', 
+      available: '24/7 Emergency Response' 
+    },
+    { 
+      id: 'WARD-1', 
+      title: 'Hostel Chief Warden Office', 
+      phone: '+91 261 2345680', 
+      type: 'Hostel Care', 
+      location: 'Hostel Administrative Office', 
+      available: '8:00 AM - 10:00 PM' 
+    }
+  ],
+
+  // Emergency Alert Broadcast Feed
+  emergencyBroadcasts: (() => {
+    try {
+      const stored = localStorage.getItem('campusx_emergency_broadcasts');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return [
+      { 
+        id: 1, 
+        text: 'ALERT: Electrical maintenance near Computer Lab 4 tomorrow 10 AM. Stay alert around ground transformers.', 
+        sender: 'Admin Office', 
+        time: 'Yesterday',
+        priority: 'Notice'
+      },
+      { 
+        id: 2, 
+        text: 'CAMPUS ADVISORY: Heavy rainfall alert in Surat region. Please keep to designated covered corridors.', 
+        sender: 'Campus Security', 
+        time: '2 days ago',
+        priority: 'Advisory'
+      }
+    ];
+  })()
 };
 
 // Hydrate any registered institutional accounts from persistent local storage
@@ -296,7 +415,7 @@ window.CAMPUS_DATA = CAMPUS_DATA;
 
 
 
-/* --- File: security.js (js\security.js) --- */
+/* --- File: security.js --- */
 /* ==========================================================
    Campus X AI - Client-Side Security Utilities & API Client
    Tapi Diploma Engineering College, Surat
@@ -573,11 +692,80 @@ window.SecurityUtils = SecurityUtils;
 window.ApiClient = ApiClient;
 
 
-/* --- File: state.js (js\state.js) --- */
+/* --- File: state.js --- */
 /* ==========================================================
    Campus X AI - Central State & Reactive Event Manager
    Hardened RBAC, Secure Session Tracking & Audit Integration
    ========================================================== */
+
+class SosAudioEngine {
+  static audioCtx = null;
+  static osc = null;
+  static gainNode = null;
+  static intervalId = null;
+  static isPlaying = false;
+
+  static playSiren() {
+    try {
+      if (this.isPlaying) return;
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      
+      this.audioCtx = new AudioCtx();
+      if (this.audioCtx.state === 'suspended') {
+        this.audioCtx.resume();
+      }
+
+      this.osc = this.audioCtx.createOscillator();
+      this.gainNode = this.audioCtx.createGain();
+
+      this.osc.type = 'sawtooth';
+      this.gainNode.gain.setValueAtTime(0.08, this.audioCtx.currentTime);
+
+      this.osc.connect(this.gainNode);
+      this.gainNode.connect(this.audioCtx.destination);
+      this.osc.start();
+      this.isPlaying = true;
+
+      let highTone = false;
+      this.intervalId = setInterval(() => {
+        if (!this.audioCtx || !this.osc) return;
+        const now = this.audioCtx.currentTime;
+        const freq = highTone ? 880 : 660;
+        this.osc.frequency.setValueAtTime(freq, now);
+        highTone = !highTone;
+      }, 350);
+    } catch (e) {
+      console.warn("Audio Context unavailable:", e);
+    }
+  }
+
+  static stopSiren() {
+    try {
+      if (this.intervalId) {
+        clearInterval(this.intervalId);
+        this.intervalId = null;
+      }
+      if (this.osc) {
+        this.osc.stop();
+        this.osc.disconnect();
+        this.osc = null;
+      }
+      if (this.gainNode) {
+        this.gainNode.disconnect();
+        this.gainNode = null;
+      }
+      if (this.audioCtx) {
+        this.audioCtx.close();
+        this.audioCtx = null;
+      }
+      this.isPlaying = false;
+    } catch (e) {
+      this.isPlaying = false;
+    }
+  }
+}
+window.SosAudioEngine = SosAudioEngine;
 
 class CampusState {
   constructor() {
@@ -595,6 +783,8 @@ class CampusState {
     this.activeView = this.currentUser ? 'dashboard' : 'landing';
     this.stationeryRush = false;
     this.rushStartTime = null;
+    this.isSosActive = false;
+    this.isSosSoundEnabled = true;
     this.toasts = [];
     this.listeners = [];
 
@@ -604,6 +794,14 @@ class CampusState {
       if (savedRush === 'true') {
         this.stationeryRush = true;
         this.rushStartTime = localStorage.getItem('campusx_rush_time') || "11:42 AM";
+      }
+    } catch (e) {}
+
+    // Load persisted SOS state
+    try {
+      const savedSos = localStorage.getItem('campusx_sos_active');
+      if (savedSos === 'true') {
+        this.isSosActive = true;
       }
     } catch (e) {}
   }
@@ -758,6 +956,80 @@ class CampusState {
     this.notify('RUSH_CHANGED');
   }
 
+  triggerSos() {
+    this.isSosActive = true;
+    try {
+      localStorage.setItem('campusx_sos_active', 'true');
+    } catch (e) {}
+
+    if (this.isSosSoundEnabled) {
+      SosAudioEngine.playSiren();
+    }
+
+    this.showToast('🚨 EMERGENCY SOS ACTIVATED! Campus Security & Medical notified.', 'error');
+    this.notify('SOS_CHANGED');
+  }
+
+  cancelSos() {
+    this.isSosActive = false;
+    try {
+      localStorage.setItem('campusx_sos_active', 'false');
+    } catch (e) {}
+
+    SosAudioEngine.stopSiren();
+    this.showToast('Emergency SOS cancelled. Stand down confirmed.', 'info');
+    this.notify('SOS_CHANGED');
+  }
+
+  toggleSos() {
+    if (this.isSosActive) {
+      this.cancelSos();
+    } else {
+      this.triggerSos();
+    }
+  }
+
+  toggleSosSound() {
+    this.isSosSoundEnabled = !this.isSosSoundEnabled;
+    if (!this.isSosSoundEnabled) {
+      SosAudioEngine.stopSiren();
+      this.showToast('Emergency siren sound muted.', 'info');
+    } else {
+      if (this.isSosActive) {
+        SosAudioEngine.playSiren();
+      }
+      this.showToast('Emergency siren sound enabled.', 'info');
+    }
+    this.notify('SOS_CHANGED');
+  }
+
+  addEmergencyBroadcast(text) {
+    if (!text || !text.trim()) return false;
+    const cleanText = (window.SecurityUtils && window.SecurityUtils.sanitizeInput)
+      ? window.SecurityUtils.sanitizeInput(text, 300)
+      : text.trim().slice(0, 300);
+
+    const senderName = this.currentUser ? this.currentUser.name : 'Tapi Control Room';
+    const newBroadcast = {
+      id: Date.now(),
+      text: cleanText,
+      sender: senderName,
+      time: 'Just now',
+      priority: 'Alert'
+    };
+
+    if (typeof CAMPUS_DATA !== 'undefined' && Array.isArray(CAMPUS_DATA.emergencyBroadcasts)) {
+      CAMPUS_DATA.emergencyBroadcasts.unshift(newBroadcast);
+      try {
+        localStorage.setItem('campusx_emergency_broadcasts', JSON.stringify(CAMPUS_DATA.emergencyBroadcasts));
+      } catch (e) {}
+    }
+
+    this.showToast('Emergency broadcast alert published.', 'success');
+    this.notify('BROADCAST_ADDED');
+    return true;
+  }
+
   showToast(message, type = 'info') {
     // Ensure message string is sanitized
     const safeMessage = (window.SecurityUtils && window.SecurityUtils.escapeHtml) 
@@ -843,34 +1115,155 @@ class CampusState {
     this.notify('INVENTORY_CHANGED');
   }
 
-  saveAttendance(classId, subject, records = []) {
+  saveAttendance(classId, subject, records = [], date = null) {
     // RBAC Guard: Only FACULTY or ADMIN
     if (!this.currentUser || (this.currentUser.role !== 'FACULTY' && this.currentUser.role !== 'ADMIN')) {
-      this.showToast('Access denied: Only faculty members can record attendance.', 'error');
+      this.showToast('Access denied: Only faculty members or administrators can record attendance.', 'error');
       return;
     }
 
+    const sessionDate = date || new Date().toISOString().slice(0, 10);
+    const sessionObj = {
+      id: `ATT-${Date.now()}`,
+      classId,
+      subject,
+      date: sessionDate,
+      records,
+      recordedBy: this.currentUser.name,
+      recordedById: this.currentUser.id,
+      timestamp: new Date().toISOString()
+    };
+
     try {
       const localRecords = JSON.parse(localStorage.getItem('campusx_attendance_records') || '[]');
-      localRecords.push({
-        classId,
-        subject,
-        records,
-        recordedBy: this.currentUser.name,
-        timestamp: new Date().toISOString()
-      });
+      localRecords.unshift(sessionObj);
       localStorage.setItem('campusx_attendance_records', JSON.stringify(localRecords));
     } catch (e) {}
 
     if (window.ApiClient && !ApiClient.isStaticDeployment()) {
       ApiClient.request('/api/faculty/attendance', {
         method: 'POST',
-        body: JSON.stringify({ classId, subject, records })
+        body: JSON.stringify({ classId, subject, records, date: sessionDate })
       }).catch(err => console.warn('Attendance server sync:', err.message));
     }
 
-    this.showToast(`Attendance saved for ${classId} (${subject}). Synced to Supabase.`, "success");
+    this.showToast(`Attendance saved for ${classId} (${subject}). Synced in real time.`, "success");
     this.notify('ATTENDANCE_SAVED');
+  }
+
+  addNotice(notice) {
+    // RBAC Guard: Only ADMIN or FACULTY
+    if (!this.currentUser || (this.currentUser.role !== 'ADMIN' && this.currentUser.role !== 'FACULTY')) {
+      this.showToast('Access denied: Only administrators or faculty can upload notices.', 'error');
+      return false;
+    }
+
+    // Sanitize user inputs
+    if (window.SecurityUtils) {
+      notice.title = window.SecurityUtils.sanitizeInput(notice.title, 150);
+      notice.category = window.SecurityUtils.sanitizeInput(notice.category || 'Academic Circular', 50);
+      notice.department = window.SecurityUtils.sanitizeInput(notice.department || 'All Departments', 60);
+      notice.description = window.SecurityUtils.sanitizeInput(notice.description || notice.desc || '', 3000);
+      notice.desc = notice.description;
+    }
+
+    const now = new Date();
+    const newNotice = {
+      id: notice.id || `NTC-${Date.now().toString().slice(-4)}`,
+      title: notice.title,
+      category: notice.category || 'Academic Circular',
+      description: notice.description,
+      desc: notice.description,
+      priority: notice.priority || 'Normal',
+      department: notice.department || 'All Departments',
+      pinned: Boolean(notice.pinned),
+      attachmentName: notice.attachmentName || null,
+      attachmentUrl: notice.attachmentUrl || null,
+      date: 'Today',
+      time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      postedBy: this.currentUser.name,
+      postedByRole: this.currentUser.role,
+      timestamp: now.toISOString()
+    };
+
+    if (typeof CAMPUS_DATA !== 'undefined' && Array.isArray(CAMPUS_DATA.notices)) {
+      if (newNotice.pinned) {
+        CAMPUS_DATA.notices.unshift(newNotice);
+      } else {
+        const firstUnpinned = CAMPUS_DATA.notices.findIndex(n => !n.pinned);
+        if (firstUnpinned === -1) CAMPUS_DATA.notices.push(newNotice);
+        else CAMPUS_DATA.notices.splice(firstUnpinned, 0, newNotice);
+      }
+      try {
+        localStorage.setItem('campusx_notices', JSON.stringify(CAMPUS_DATA.notices));
+      } catch (e) {}
+
+      // Add attention alert for students
+      if (Array.isArray(CAMPUS_DATA.attentionItems)) {
+        CAMPUS_DATA.attentionItems.unshift({
+          id: `ATT-NTC-${Date.now()}`,
+          title: `New Circular: ${newNotice.title}`,
+          desc: `${newNotice.category} • Posted by ${newNotice.postedBy}`,
+          time: 'Just now',
+          bg: 'var(--tint-soft-peach)',
+          color: 'var(--color-peach)'
+        });
+        try {
+          localStorage.setItem('campusx_attention', JSON.stringify(CAMPUS_DATA.attentionItems));
+        } catch (e) {}
+      }
+    }
+
+    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+      ApiClient.request('/api/notices', {
+        method: 'POST',
+        body: JSON.stringify(newNotice)
+      }).catch(err => console.warn('Notice API sync:', err.message));
+    } else if (window.supabaseClient) {
+      window.supabaseClient.from('notices').insert([{
+        id: newNotice.id,
+        title: newNotice.title,
+        category: newNotice.category,
+        description: newNotice.description,
+        priority: newNotice.priority,
+        posted_by: newNotice.postedBy,
+        pinned: newNotice.pinned
+      }]).then(({ error }) => {
+        if (error) console.warn('Supabase notice insert:', error.message);
+      });
+    }
+
+    this.showToast(`Notice "${newNotice.title}" published to Campus Board!`, "success");
+    this.notify('NOTICES_CHANGED');
+    return true;
+  }
+
+  deleteNotice(noticeId) {
+    if (!this.currentUser || this.currentUser.role !== 'ADMIN') {
+      this.showToast('Access denied: Only administrators can delete circulars.', 'error');
+      return false;
+    }
+
+    if (typeof CAMPUS_DATA !== 'undefined' && Array.isArray(CAMPUS_DATA.notices)) {
+      CAMPUS_DATA.notices = CAMPUS_DATA.notices.filter(n => n.id !== noticeId);
+      try {
+        localStorage.setItem('campusx_notices', JSON.stringify(CAMPUS_DATA.notices));
+      } catch (e) {}
+    }
+
+    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+      ApiClient.request(`/api/notices/${noticeId}`, {
+        method: 'DELETE'
+      }).catch(err => console.warn('Notice delete API:', err.message));
+    } else if (window.supabaseClient) {
+      window.supabaseClient.from('notices').delete().eq('id', noticeId).then(({ error }) => {
+        if (error) console.warn('Supabase notice delete:', error.message);
+      });
+    }
+
+    this.showToast('Notice removed from Campus Board.', 'info');
+    this.notify('NOTICES_CHANGED');
+    return true;
   }
 
   createComplaint(complaint) {
@@ -953,13 +1346,31 @@ class CampusState {
   async fetchRemoteData() {
     if (window.ApiClient && !ApiClient.isStaticDeployment()) {
       try {
-        const cRes = await ApiClient.request('/api/complaints');
-        if (cRes && Array.isArray(cRes.complaints)) {
-          CAMPUS_DATA.complaints = cRes.complaints;
+        const [cRes, lfRes, attRes, ntcRes] = await Promise.allSettled([
+          ApiClient.request('/api/complaints'),
+          ApiClient.request('/api/lost-found'),
+          ApiClient.request('/api/attendance'),
+          ApiClient.request('/api/notices')
+        ]);
+
+        if (cRes.status === 'fulfilled' && cRes.value && Array.isArray(cRes.value.complaints)) {
+          CAMPUS_DATA.complaints = cRes.value.complaints;
         }
-        const lfRes = await ApiClient.request('/api/lost-found');
-        if (lfRes && Array.isArray(lfRes.items)) {
-          CAMPUS_DATA.lostAndFound = lfRes.items;
+        if (lfRes.status === 'fulfilled' && lfRes.value && Array.isArray(lfRes.value.items)) {
+          CAMPUS_DATA.lostAndFound = lfRes.value.items;
+        }
+        if (attRes.status === 'fulfilled' && attRes.value && Array.isArray(attRes.value.attendance)) {
+          try {
+            localStorage.setItem('campusx_attendance_records', JSON.stringify(attRes.value.attendance));
+            this.notify('ATTENDANCE_SAVED');
+          } catch(e) {}
+        }
+        if (ntcRes.status === 'fulfilled' && ntcRes.value && Array.isArray(ntcRes.value.notices)) {
+          CAMPUS_DATA.notices = ntcRes.value.notices;
+          try {
+            localStorage.setItem('campusx_notices', JSON.stringify(ntcRes.value.notices));
+            this.notify('NOTICES_CHANGED');
+          } catch(e) {}
         }
         this.notify('DATA_SYNCED');
         return;
@@ -1004,6 +1415,25 @@ class CampusState {
             contact: lf.contact
           }));
         }
+
+        const { data: ntcData, error: ntcErr } = await window.supabaseClient.from('notices').select('*').order('created_at', { ascending: false });
+        if (!ntcErr && Array.isArray(ntcData) && ntcData.length > 0) {
+          CAMPUS_DATA.notices = ntcData.map(n => ({
+            id: n.id,
+            title: n.title,
+            category: n.category,
+            description: n.description,
+            desc: n.description,
+            priority: n.priority || 'Normal',
+            postedBy: n.posted_by || 'Administration',
+            pinned: Boolean(n.pinned),
+            date: n.created_at ? new Date(n.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Today',
+            time: '9:00 AM'
+          }));
+          localStorage.setItem('campusx_notices', JSON.stringify(CAMPUS_DATA.notices));
+          this.notify('NOTICES_CHANGED');
+        }
+
         this.notify('DATA_SYNCED');
       } catch (err) {
         console.warn('Direct Supabase fetch:', err.message);
@@ -1023,8 +1453,38 @@ if (typeof window !== 'undefined' && window.supabase && !window.supabaseClient) 
 
 window.appState = new CampusState();
 
+// Real-Time Cross-Tab Event Bus & Background Heartbeat Polling
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'campusx_attendance_records') {
+      window.appState.notify('ATTENDANCE_SAVED');
+    } else if (e.key === 'campusx_notices') {
+      try {
+        const parsed = JSON.parse(e.newValue || '[]');
+        if (Array.isArray(parsed) && typeof CAMPUS_DATA !== 'undefined') {
+          CAMPUS_DATA.notices = parsed;
+        }
+      } catch (err) {}
+      window.appState.notify('NOTICES_CHANGED');
+    } else if (e.key === 'campusx_rush') {
+      window.appState.stationeryRush = e.newValue === 'true';
+      window.appState.notify('RUSH_CHANGED');
+    } else if (e.key === 'campusx_sos_active') {
+      window.appState.isSosActive = e.newValue === 'true';
+      window.appState.notify('SOS_CHANGED');
+    }
+  });
 
-/* --- File: navigation.js (js\navigation.js) --- */
+  // Background real-time sync polling every 6 seconds when user is authenticated
+  setInterval(() => {
+    if (window.appState && window.appState.currentUser) {
+      window.appState.fetchRemoteData();
+    }
+  }, 6000);
+}
+
+
+/* --- File: navigation.js --- */
 /* ==========================================================
    Campus X AI - Navigation & State Management
    Step 2: Component & Layout Handlers
@@ -1128,7 +1588,8 @@ class NavigationController {
       'inventory': { title: 'Stationery & Inventory ERP', desc: 'Automated predictive stocking for college resources' },
       'complaints': { title: 'Grievance & Complaint Portal', desc: 'Transparent ticket tracking for campus maintenance' },
       'lost-found': { title: 'Lost & Found Hub', desc: 'Digital community bulletin for displaced campus items' },
-      'ai-chat': { title: 'Campus X AI Virtual Assistant', desc: '24/7 Generative AI assistant for students & faculty' }
+      'ai-chat': { title: 'Campus X AI Virtual Assistant', desc: '24/7 Generative AI assistant for students & faculty' },
+      'emergency': { title: 'Campus Emergency SOS', desc: 'Emergency dispatch, security sirens, 24/7 hotlines & live broadcast' }
     };
 
     if (titles[viewName]) {
@@ -1139,7 +1600,7 @@ class NavigationController {
 }
 
 
-/* --- File: motion.js (js\motion.js) --- */
+/* --- File: motion.js --- */
 /* ==========================================================
    Campus X AI - Premium Motion System
    Linear / Raycast / Arc / Vercel Motion Standard
@@ -1347,7 +1808,7 @@ window.CampusMotion = {
 };
 
 
-/* --- File: auth-view.js (js\views\auth-view.js) --- */
+/* --- File: auth-view.js --- */
 /* ==========================================================
    Campus X AI - Pre-Login & Authentication View
    Security Hardened: Generic Errors, Client Validation UX,
@@ -2375,7 +2836,7 @@ class AuthView {
 }
 
 
-/* --- File: student-view.js (js\views\student-view.js) --- */
+/* --- File: student-view.js --- */
 /* ==========================================================
    Campus X AI - Student Workspace View
    Dedicated Student Sidebar & Student Dashboard
@@ -2448,6 +2909,11 @@ class StudentView {
           </a>
 
           <div class="sidebar-category-label">Communication</div>
+          <a href="javascript:void(0)" onclick="appState.setView('emergency')" class="sidebar-item-link ${activeTab === 'emergency' ? 'active' : ''} ${appState.isSosActive ? 'sidebar-item-sos-active' : ''}">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span style="font-weight: 700; color: #dc2626;">Emergency SOS</span>
+            <span class="badge ${appState.isSosActive ? 'badge-out-of-stock' : 'badge-low-stock'}" style="margin-left: auto;">${appState.isSosActive ? 'ALERT' : '24/7'}</span>
+          </a>
           <a href="javascript:void(0)" onclick="appState.setView('notices')" class="sidebar-item-link ${activeTab === 'notices' ? 'active' : ''}">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
             <span>Notices</span>
@@ -2506,26 +2972,13 @@ class StudentView {
             <div class="mobile-summary-card">
               <div class="mobile-summary-label">Attendance</div>
               ${(() => {
-                try {
-                  const recs = JSON.parse(localStorage.getItem('campusx_attendance_records') || '[]');
-                  if (recs.length > 0) {
-                    const userRoll = (appState.currentUser && appState.currentUser.rollNo) || "07";
-                    let attended = 0;
-                    recs.forEach(r => {
-                      if (r.records && Array.isArray(r.records)) {
-                        const m = r.records.find(s => s.rollNo === userRoll);
-                        if (m && m.present) attended++;
-                      } else {
-                        attended++;
-                      }
-                    });
-                    const pctVal = Math.round((attended / recs.length) * 100);
-                    return `
-                      <div class="mobile-summary-value" style="color: ${pctVal >= 75 ? 'var(--color-success)' : 'var(--color-error)'};">${pctVal}%</div>
-                      <div class="mobile-summary-sub">${pctVal >= 75 ? 'GTU Compliant' : 'Low Attendance'}</div>
-                    `;
-                  }
-                } catch(e) {}
+                const attStats = CAMPUS_DATA.getStudentAttendance(appState.currentUser ? (appState.currentUser.id || appState.currentUser.rollNo || appState.currentUser.name) : '07');
+                if (attStats.totalHeld > 0) {
+                  return `
+                    <div class="mobile-summary-value" style="color: ${attStats.compliant ? 'var(--color-success)' : 'var(--color-error)'};">${attStats.percentageStr}</div>
+                    <div class="mobile-summary-sub">${attStats.compliant ? 'GTU Compliant' : 'Low Attendance'} (${attStats.totalAttended}/${attStats.totalHeld})</div>
+                  `;
+                }
                 return `
                   <div class="mobile-summary-value" style="color: var(--text-primary);">--%</div>
                   <div class="mobile-summary-sub">Pending Records</div>
@@ -2613,7 +3066,58 @@ class StudentView {
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"></path></svg>
             <span>Ask Campus X</span>
           </a>
+
+          <a href="javascript:void(0)" onclick="appState.setView('emergency')" class="action-pill action-pill-red">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span>Emergency SOS</span>
+          </a>
         </section>
+
+        <!-- REAL-TIME LIVE ATTENDANCE SNAPSHOT BANNER -->
+        ${(() => {
+          const attStats = CAMPUS_DATA.getStudentAttendance(appState.currentUser ? (appState.currentUser.id || appState.currentUser.rollNo || appState.currentUser.name) : '07');
+          const hasRecords = attStats.totalHeld > 0;
+          return `
+            <div class="card-editorial" style="padding: 1.25rem 1.5rem; background: ${hasRecords ? (attStats.compliant ? 'var(--tint-soft-green)' : '#FEF2F2') : 'var(--bg-surface)'}; border-left: 4px solid ${hasRecords ? (attStats.compliant ? 'var(--color-success)' : 'var(--color-error)') : 'var(--color-accent-blue)'};">
+              <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 1rem;">
+                <div style="flex: 1; min-width: 220px;">
+                  <div class="flex items-center gap-2" style="margin-bottom: 0.25rem;">
+                    <span class="badge ${hasRecords ? (attStats.compliant ? 'badge-available' : 'badge-out-of-stock') : 'badge-blue'}">
+                      ● LIVE ATTENDANCE
+                    </span>
+                    <span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 600;">GTU 75% Rule Compliance</span>
+                  </div>
+                  <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0.2rem 0;">
+                    ${hasRecords 
+                      ? `Your Overall Attendance: <span style="color: ${attStats.compliant ? 'var(--color-success)' : 'var(--color-error)'};">${attStats.percentageStr}</span> (${attStats.totalAttended} of ${attStats.totalHeld} Sessions Attended)` 
+                      : 'Awaiting Faculty Attendance Submissions for Term 2026'}
+                  </div>
+                  <div style="font-size: 0.82rem; color: var(--text-secondary);">
+                    ${hasRecords 
+                      ? (attStats.compliant 
+                          ? '✓ Academic standing compliant with university examination eligibility requirements.' 
+                          : '⚠️ Attendance below statutory 75% limit. Attend next scheduled theory & lab sessions.') 
+                      : 'Real-time GTU tracking will automatically calculate as faculty record daily lecture rosters.'}
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                  <div style="text-align: right;">
+                    <div style="font-size: 1.6rem; font-weight: 900; color: ${hasRecords ? (attStats.compliant ? 'var(--color-success)' : 'var(--color-error)') : 'var(--text-muted)'}; line-height: 1;">
+                      ${attStats.percentageStr}
+                    </div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">
+                      ${attStats.statusText}
+                    </div>
+                  </div>
+                  <button class="btn btn-secondary" onclick="appState.setView('attendance')" style="padding: 0.45rem 0.9rem; font-size: 0.8rem; white-space: nowrap;">
+                    View Analytics &rarr;
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        })()}
 
         <!-- 2-COLUMN SPLIT: SCHEDULE & ATTENTION FEED -->
         <div class="middle-split-grid">
@@ -2766,7 +3270,7 @@ class StudentView {
 
 
 
-/* --- File: faculty-view.js (js\views\faculty-view.js) --- */
+/* --- File: faculty-view.js --- */
 /* ==========================================================
    Campus X AI - Faculty Workspace View
    Dedicated Faculty Sidebar, Dashboard & Interactive Attendance
@@ -2828,6 +3332,11 @@ class FacultyView {
           </a>
 
           <div class="sidebar-category-label">Communication</div>
+          <a href="javascript:void(0)" onclick="appState.setView('emergency')" class="sidebar-item-link ${activeTab === 'emergency' ? 'active' : ''} ${appState.isSosActive ? 'sidebar-item-sos-active' : ''}">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span style="font-weight: 700; color: #dc2626;">Emergency SOS</span>
+            <span class="badge ${appState.isSosActive ? 'badge-out-of-stock' : 'badge-low-stock'}" style="margin-left: auto;">${appState.isSosActive ? 'ALERT' : '24/7'}</span>
+          </a>
           <a href="javascript:void(0)" onclick="appState.setView('notices')" class="sidebar-item-link ${activeTab === 'notices' ? 'active' : ''}">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
             <span>Notices</span>
@@ -3208,7 +3717,7 @@ class FacultyView {
 
 
 
-/* --- File: admin-view.js (js\views\admin-view.js) --- */
+/* --- File: admin-view.js --- */
 /* ==========================================================
    Campus X AI - Administrator Workspace View
    Centralized Operational Dashboard & Support Dispatch
@@ -3274,6 +3783,11 @@ class AdminView {
           </a>
 
           <div class="sidebar-category-label">Support</div>
+          <a href="javascript:void(0)" onclick="appState.setView('emergency')" class="sidebar-item-link ${activeTab === 'emergency' ? 'active' : ''} ${appState.isSosActive ? 'sidebar-item-sos-active' : ''}">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span style="font-weight: 700; color: #dc2626;">Emergency SOS</span>
+            <span class="badge ${appState.isSosActive ? 'badge-out-of-stock' : 'badge-low-stock'}" style="margin-left: auto;">${appState.isSosActive ? 'ALERT' : '24/7'}</span>
+          </a>
           <a href="javascript:void(0)" onclick="appState.setView('complaints')" class="sidebar-item-link ${activeTab === 'complaints' ? 'active' : ''}">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
             <span>Complaints</span>
@@ -3318,11 +3832,25 @@ class AdminView {
 
         <!-- ADMIN HEADER (Section 23) -->
         <div class="card-editorial" style="padding: 2rem;">
-          <span class="sidebar-role-indicator" style="color: var(--color-accent-blue); background: var(--tint-soft-blue); margin-bottom: 0.5rem;">
-            Tapi Central Admin Hub
-          </span>
-          <h2 style="font-size: 2.2rem; font-weight: 800; color: var(--text-primary); margin: 0.25rem 0;">Campus overview</h2>
-          <p style="font-size: 0.95rem; color: var(--text-secondary);">Real-time operations, facilities status, and support tracking.</p>
+          <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <span class="sidebar-role-indicator" style="color: var(--color-accent-blue); background: var(--tint-soft-blue); margin-bottom: 0.5rem;">
+                Tapi Central Admin Hub
+              </span>
+              <h2 style="font-size: 2.2rem; font-weight: 800; color: var(--text-primary); margin: 0.25rem 0;">Campus overview</h2>
+              <p style="font-size: 0.95rem; color: var(--text-secondary); margin: 0;">Real-time operations, facilities status, attendance tracking, and support dispatch.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="btn btn-primary" onclick="AdminView.openNoticeModal()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Upload Notice</span>
+              </button>
+              <button class="btn btn-secondary" onclick="appState.setView('attendance-overview')">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span>Attendance Overview</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- 6 KEY METRICS (Section 23) -->
@@ -3356,6 +3884,12 @@ class AdminView {
           </div>
 
           <div class="card-editorial" style="padding: 1.25rem;">
+            <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Campus Notices</span>
+            <div style="font-size: 1.75rem; font-weight: 800; color: var(--color-accent-blue); margin-top: 0.2rem;">${(CAMPUS_DATA.notices || []).length}</div>
+            <div style="font-size: 0.75rem; color: var(--color-accent-blue); font-weight: 600;">Active circulars posted</div>
+          </div>
+
+          <div class="card-editorial" style="padding: 1.25rem;">
             <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Low Stock Items</span>
             <div style="font-size: 1.75rem; font-weight: 800; color: ${lowStockItems.length > 0 ? 'var(--color-error)' : 'var(--color-success)'}; margin-top: 0.2rem;">
               ${lowStockItems.length}
@@ -3363,12 +3897,6 @@ class AdminView {
             <div style="font-size: 0.75rem; color: ${lowStockItems.length > 0 ? 'var(--color-error)' : 'var(--color-success)'}; font-weight: 600;">
               ${lowStockItems.length > 0 ? 'Requires store replenishment' : 'Store adequately stocked'}
             </div>
-          </div>
-
-          <div class="card-editorial" style="padding: 1.25rem;">
-            <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Campus Infrastructure</span>
-            <div style="font-size: 1.75rem; font-weight: 800; color: var(--color-success); margin-top: 0.2rem;">99.4%</div>
-            <div style="font-size: 0.75rem; color: var(--color-success); font-weight: 600;">All facilities active</div>
           </div>
         </div>
 
@@ -3452,13 +3980,210 @@ class AdminView {
 
         </div>
 
+        <!-- CAMPUS NOTICES & CIRCULARS MANAGEMENT (Section 25) -->
+        <div class="card-editorial" style="padding: 1.75rem;">
+          <div class="flex items-center justify-between" style="margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 style="font-size: 1.25rem; font-weight: 800; margin: 0;">Campus Notice Board & Circulars</h3>
+                <span class="badge badge-blue">${(CAMPUS_DATA.notices || []).length} Active</span>
+              </div>
+              <p style="font-size: 0.84rem; color: var(--text-secondary); margin-top: 0.2rem;">
+                Official institutional circulars published to student, faculty, and operator dashboards.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="btn btn-primary" onclick="AdminView.openNoticeModal()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Upload Notice</span>
+              </button>
+              <button class="btn btn-secondary" onclick="appState.setView('notices')">
+                <span>View Public Board &rarr;</span>
+              </button>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+            ${(!CAMPUS_DATA.notices || CAMPUS_DATA.notices.length === 0) ? `
+              <div style="padding: 2.5rem 1rem; text-align: center; color: var(--text-muted);">
+                <div style="font-weight: 700; font-size: 1rem; color: var(--text-primary);">No active circulars</div>
+                <div style="font-size: 0.85rem; margin-top: 0.25rem;">Click "Upload Notice" above to publish institutional announcements.</div>
+              </div>
+            ` : CAMPUS_DATA.notices.map(ntc => {
+              const esc = window.SecurityUtils ? window.SecurityUtils.escapeHtml : (s => s);
+              const isUrgent = (ntc.priority && (ntc.priority.toUpperCase() === 'URGENT' || ntc.priority.toUpperCase() === 'HIGH'));
+              return `
+                <div style="padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: var(--bg-surface-subtle); display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+                  <div style="flex: 1; min-width: 250px;">
+                    <div class="flex items-center gap-2" style="margin-bottom: 0.35rem;">
+                      <span class="badge ${isUrgent ? 'badge-out-of-stock' : 'badge-blue'}">${esc(ntc.category || 'Circular')}</span>
+                      ${ntc.pinned ? '<span class="badge badge-purple">📌 Pinned</span>' : ''}
+                      <span style="font-size: 0.76rem; color: var(--text-muted);">${esc(ntc.date || 'Today')} ${ntc.time ? `• ${esc(ntc.time)}` : ''}</span>
+                    </div>
+                    <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0.2rem 0; color: var(--text-primary);">${esc(ntc.title)}</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin: 0.35rem 0;">${esc(ntc.description || ntc.desc || '')}</p>
+                    <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 0.4rem;">
+                      Posted by: <strong>${esc(ntc.postedBy || 'Admin')}</strong> • Dept: <strong>${esc(ntc.department || 'All Departments')}</strong>
+                      ${ntc.attachmentName ? ` • Attachment: <strong style="color: var(--color-accent-blue);">📎 ${esc(ntc.attachmentName)}</strong>` : ''}
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; color: var(--color-error);" onclick="AdminView.deleteNotice('${esc(ntc.id)}')">
+                      Delete Notice
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
       </div>
     `;
+  }
+
+  // MODAL: UPLOAD CAMPUS NOTICE & CIRCULAR
+  static openNoticeModal() {
+    AppModal.show({
+      title: "Upload Campus Notice & Official Circular",
+      content: `
+        <form id="adminNoticeForm" onsubmit="event.preventDefault(); AdminView.submitNotice();" style="display: flex; flex-direction: column; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Notice Title <span style="color: var(--color-error);">*</span></label>
+            <input type="text" class="form-input" id="modalNoticeTitle" placeholder="e.g. GTU Mid-Term Examination Form Submission" required maxlength="150">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select class="form-input" id="modalNoticeCategory">
+                <option value="Academic Circular">Academic Circular</option>
+                <option value="GTU Examination">GTU Examination</option>
+                <option value="Campus Event">Campus Event / Symposium</option>
+                <option value="Placement & Training">Placement & Career</option>
+                <option value="Emergency Advisory">Emergency Advisory</option>
+                <option value="Hostel & Facilities">Hostel & Facilities</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Priority</label>
+              <select class="form-input" id="modalNoticePriority">
+                <option value="Normal">Normal</option>
+                <option value="High">High (Highlighted)</option>
+                <option value="Urgent">Urgent / Critical Alert</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Target Department</label>
+            <select class="form-input" id="modalNoticeDept">
+              <option value="All Departments">All Departments (College-Wide)</option>
+              <option value="Information Technology">Information Technology (IT Dept [16])</option>
+              <option value="Computer Engineering">Computer Engineering</option>
+              <option value="Mechanical Engineering">Mechanical Engineering</option>
+              <option value="Electrical Engineering">Electrical Engineering</option>
+              <option value="Civil Engineering">Civil Engineering</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notice Body / Circular Details <span style="color: var(--color-error);">*</span></label>
+            <textarea class="form-input" id="modalNoticeBody" rows="4" placeholder="Enter the official circular particulars, instructions, and deadlines for students and staff..." required maxlength="2500"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Document Attachment (Optional)</label>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <input type="text" class="form-input" id="modalNoticeAttachment" placeholder="e.g. gtu_circular_sem5_winter2026.pdf" maxlength="100">
+            </div>
+            <span style="font-size: 0.74rem; color: var(--text-muted); margin-top: 0.2rem; display: block;">
+              Name of official PDF circular or link to downloadable institutional file.
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2" style="margin-top: 0.25rem;">
+            <input type="checkbox" id="modalNoticePinned" style="width: 16px; height: 16px; accent-color: var(--color-primary); cursor: pointer;">
+            <label for="modalNoticePinned" style="font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--text-primary);">
+              Pin this notice to the top of the Notice Board
+            </label>
+          </div>
+        </form>
+      `,
+      confirmText: "Publish Notice",
+      confirmClass: "btn-primary",
+      onConfirm: () => {
+        AdminView.submitNotice();
+      }
+    });
+  }
+
+  static submitNotice() {
+    const titleEl = document.getElementById('modalNoticeTitle');
+    const bodyEl = document.getElementById('modalNoticeBody');
+    const categoryEl = document.getElementById('modalNoticeCategory');
+    const priorityEl = document.getElementById('modalNoticePriority');
+    const deptEl = document.getElementById('modalNoticeDept');
+    const attachEl = document.getElementById('modalNoticeAttachment');
+    const pinnedEl = document.getElementById('modalNoticePinned');
+
+    if (!titleEl || !bodyEl) return;
+
+    const title = titleEl.value.trim();
+    const description = bodyEl.value.trim();
+
+    if (!title) {
+      appState.showToast('Please provide a notice title.', 'error');
+      return;
+    }
+    if (!description) {
+      appState.showToast('Please provide notice circular particulars.', 'error');
+      return;
+    }
+
+    const category = categoryEl ? categoryEl.value : 'Academic Circular';
+    const priority = priorityEl ? priorityEl.value : 'Normal';
+    const department = deptEl ? deptEl.value : 'All Departments';
+    const attachmentName = attachEl && attachEl.value.trim() ? attachEl.value.trim() : null;
+    const pinned = pinnedEl ? pinnedEl.checked : false;
+
+    appState.addNotice({
+      title,
+      category,
+      priority,
+      department,
+      description,
+      desc: description,
+      attachmentName,
+      pinned
+    });
+
+    // Re-render current view if on admin dashboard
+    const container = document.getElementById('viewContainer') || document.getElementById('view-container');
+    if (container && appState.activeView === 'dashboard') {
+      AdminView.renderDashboard(container);
+    } else if (container && appState.activeView === 'notices') {
+      CampusApplication.renderNoticesView(container);
+    }
+  }
+
+  static deleteNotice(noticeId) {
+    if (!confirm('Are you sure you want to remove this notice from the campus board?')) {
+      return;
+    }
+    appState.deleteNotice(noticeId);
+    const container = document.getElementById('viewContainer') || document.getElementById('view-container');
+    if (container && appState.activeView === 'dashboard') {
+      AdminView.renderDashboard(container);
+    } else if (container && appState.activeView === 'notices') {
+      CampusApplication.renderNoticesView(container);
+    }
   }
 }
 
 
-/* --- File: stationery-view.js (js\views\stationery-view.js) --- */
+/* --- File: stationery-view.js --- */
 /* ==========================================================
    Campus X AI - Stationery Module & Operator Workspace
    Sections 16, 17, 18, 19, 20, 21, 22, 33
@@ -3503,6 +4228,11 @@ class StationeryView {
           </a>
 
           <div class="sidebar-category-label">Counter Operations</div>
+          <a href="javascript:void(0)" onclick="appState.setView('emergency')" class="sidebar-item-link ${activeTab === 'emergency' ? 'active' : ''} ${appState.isSosActive ? 'sidebar-item-sos-active' : ''}">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span style="font-weight: 700; color: #dc2626;">Emergency SOS</span>
+            <span class="badge ${appState.isSosActive ? 'badge-out-of-stock' : 'badge-low-stock'}" style="margin-left: auto;">${appState.isSosActive ? 'ALERT' : '24/7'}</span>
+          </a>
           <a href="javascript:void(0)" onclick="StationeryView.openRushModal()" class="sidebar-item-link">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             <span>Rush Control</span>
@@ -4010,7 +4740,7 @@ class StationeryView {
 }
 
 
-/* --- File: academics-view.js (js\views\academics-view.js) --- */
+/* --- File: academics-view.js --- */
 /* ==========================================================
    Campus X AI - Academics, Timetable & AI Risk View
    Official Tapi Diploma Engineering College 5th Sem IT Timetable
@@ -4386,7 +5116,6 @@ class AcademicsView {
   }
 
   static renderAttendance(container) {
-    // Dynamic attendance reading - NO PRE-FILLED / HARDCODED NUMBERS
     let localRecords = [];
     try {
       localRecords = JSON.parse(localStorage.getItem('campusx_attendance_records') || '[]');
@@ -4403,57 +5132,148 @@ class AcademicsView {
       { code: "DI05000341", name: "Minor Project", faculty: "Mrs. Aesha Virani / Miss Nikita Patel" }
     ];
 
-    // Compute stats per subject if records exist
+    const isStudent = appState.currentUser && appState.currentUser.role === 'STUDENT';
+    const isAdmin = appState.currentUser && appState.currentUser.role === 'ADMIN';
+    const isFaculty = appState.currentUser && appState.currentUser.role === 'FACULTY';
+    const userIdentifier = appState.currentUser ? (appState.currentUser.id || appState.currentUser.rollNo || appState.currentUser.name) : '07';
+
     const totalSessions = localRecords.length;
     let attendedSessions = 0;
 
     const subjectsData = officialSubjects.map(sub => {
-      const subRecords = localRecords.filter(r => r.subject && r.subject.toUpperCase().includes(sub.code.substring(0, 4)) || (r.subject && sub.name.toUpperCase().includes(r.subject.toUpperCase())));
+      const subRecords = localRecords.filter(r => 
+        (r.subject && r.subject.toUpperCase().includes(sub.code.substring(0, 4))) || 
+        (r.subject && sub.name.toUpperCase().includes(r.subject.toUpperCase())) ||
+        (r.subject && r.subject.toUpperCase().includes(sub.name.split(' ')[0].toUpperCase()))
+      );
       const held = subRecords.length;
-      // In student view, check if student was present
-      const attended = subRecords.filter(r => {
-        if (r.records && Array.isArray(r.records)) {
-          const userRoll = (appState.currentUser && appState.currentUser.rollNo) || "07";
-          const match = r.records.find(s => s.rollNo === userRoll);
-          return match ? match.present === true : false;
-        }
-        return true;
-      }).length;
-      attendedSessions += attended;
-      const pct = held > 0 ? ((attended / held) * 100).toFixed(1) + "%" : "--%";
+
+      let attended = 0;
+      if (isStudent) {
+        attended = subRecords.filter(r => {
+          if (r.records && Array.isArray(r.records)) {
+            const cleanId = String(userIdentifier).toLowerCase();
+            const match = r.records.find(s => 
+              (s.enrollment && s.enrollment.toLowerCase() === cleanId) ||
+              (s.rollNo && s.rollNo.toLowerCase() === cleanId) ||
+              (s.name && s.name.toLowerCase() === cleanId)
+            );
+            return match ? match.present === true : false;
+          }
+          return true;
+        }).length;
+        attendedSessions += attended;
+      } else {
+        // Average attendance for class
+        let totalPresentCount = 0;
+        let totalStudentCount = 0;
+        subRecords.forEach(r => {
+          if (Array.isArray(r.records)) {
+            totalPresentCount += r.records.filter(s => s.present === true).length;
+            totalStudentCount += r.records.length;
+          }
+        });
+        attended = held > 0 && totalStudentCount > 0 ? (totalPresentCount / subRecords.length).toFixed(0) : 0;
+      }
+
+      const pct = held > 0 
+        ? (isStudent ? ((attended / held) * 100).toFixed(1) + "%" : "Active Tracking") 
+        : "--%";
+
       return {
         ...sub,
         held,
         attended,
         pct,
-        status: held === 0 ? "Pending Marking" : (attended / held >= 0.75 ? "Eligible" : "Attendance Low")
+        status: held === 0 ? "Pending Marking" : (isStudent ? (attended / held >= 0.75 ? "Eligible" : "Attendance Low") : "Logged")
       };
     });
 
+    // Student stats
+    const studentStats = CAMPUS_DATA.getStudentAttendance(userIdentifier);
     const hasRecords = totalSessions > 0;
-    const overallPct = hasRecords ? ((attendedSessions / totalSessions) * 100).toFixed(1) + "%" : "--%";
+
+    // Class roster stats for Admin & Faculty
+    const rosterStats = (CAMPUS_DATA.studentRoster || []).map(student => {
+      const stats = CAMPUS_DATA.getStudentAttendance(student.enrollment);
+      return {
+        ...student,
+        stats
+      };
+    });
+
+    const atRiskCount = rosterStats.filter(s => s.stats.totalHeld > 0 && !s.stats.compliant).length;
 
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- HEADER -->
         <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 1rem;">
           <div>
-            <h2 style="font-size: 2rem; font-weight: 800;">Attendance Analytics</h2>
-            <p style="font-size: 0.9rem; color: var(--text-secondary);">
-              Tapi Diploma Engineering College • Class 2452 - IT (Semester 5)
+            <div class="flex items-center gap-2" style="margin-bottom: 0.25rem;">
+              <span class="badge badge-blue">Class 2452 - IT (Semester 5)</span>
+              <span class="badge badge-green">● LIVE REAL-TIME</span>
+            </div>
+            <h2 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin: 0;">Attendance Analytics & Tracking</h2>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.2rem;">
+              Tapi Diploma Engineering College • Real-time statutory GTU 75% compliance tracking.
             </p>
           </div>
-          <span class="badge ${hasRecords ? 'badge-available' : 'badge-secondary'}" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
-            Overall: ${overallPct} ${hasRecords ? '' : '(No Records Marked Yet)'}
-          </span>
+
+          <div class="flex items-center gap-2">
+            ${(isAdmin || isFaculty) ? `
+              <button class="btn btn-primary" onclick="appState.setView('attendance-mark')">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Take Attendance</span>
+              </button>
+            ` : ''}
+            <span class="badge ${hasRecords ? (isStudent ? (studentStats.compliant ? 'badge-available' : 'badge-out-of-stock') : 'badge-available') : 'badge-secondary'}" style="font-size: 0.85rem; padding: 0.4rem 0.85rem;">
+              ${isStudent ? `Overall: ${studentStats.percentageStr}` : `Total Sessions: ${totalSessions}`}
+            </span>
+          </div>
         </div>
 
-        <!-- AI RISK ASSESSMENT -->
-        <div class="card-editorial" style="background: ${hasRecords ? 'var(--tint-soft-green)' : 'var(--bg-surface-subtle)'}; border-color: ${hasRecords ? '#A7F3D0' : 'var(--border-color)'};">
-          <div class="flex justify-between items-center" style="margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+        <!-- SUMMARY STATS TILES -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+          <div class="card-editorial" style="padding: 1.25rem;">
+            <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Total Lectures Logged</span>
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--text-primary); margin-top: 0.2rem;">${totalSessions}</div>
+            <div style="font-size: 0.76rem; color: var(--color-accent-blue); font-weight: 600;">Across 6 IT subjects</div>
+          </div>
+
+          <div class="card-editorial" style="padding: 1.25rem;">
+            <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">${isStudent ? 'Your Attended Sessions' : 'Enrolled Students'}</span>
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-success); margin-top: 0.2rem;">${isStudent ? studentStats.totalAttended : '10'}</div>
+            <div style="font-size: 0.76rem; color: var(--text-muted); font-weight: 600;">${isStudent ? `Out of ${totalSessions} held` : 'Class 2452 - IT'}</div>
+          </div>
+
+          <div class="card-editorial" style="padding: 1.25rem;">
+            <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">${isStudent ? 'Your Attendance Rate' : 'GTU 75% Rule Compliance'}</span>
+            <div style="font-size: 1.8rem; font-weight: 800; color: ${isStudent ? (studentStats.compliant ? 'var(--color-success)' : 'var(--color-error)') : (atRiskCount > 0 ? 'var(--color-warning)' : 'var(--color-success)')}; margin-top: 0.2rem;">
+              ${isStudent ? studentStats.percentageStr : (hasRecords ? `${10 - atRiskCount} of 10 Eligible` : 'Awaiting Records')}
+            </div>
+            <div style="font-size: 0.76rem; color: ${isStudent ? (studentStats.compliant ? 'var(--color-success)' : 'var(--color-error)') : 'var(--text-muted)'}; font-weight: 600;">
+              ${isStudent ? (studentStats.compliant ? '✓ University Eligible' : '⚠️ Risk of Detention') : `${atRiskCount} at risk (<75%)`}
+            </div>
+          </div>
+
+          <div class="card-editorial" style="padding: 1.25rem;">
+            <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Term Duration</span>
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-accent-blue); margin-top: 0.2rem;">Term '26</div>
+            <div style="font-size: 0.76rem; color: var(--text-muted); font-weight: 600;">15/06/2026 To 30/10/2026</div>
+          </div>
+        </div>
+
+        <!-- AI RISK COMPLIANCE BANNER -->
+        <div class="card-editorial" style="background: ${hasRecords ? (isStudent && !studentStats.compliant ? '#FEF2F2' : 'var(--tint-soft-green)') : 'var(--bg-surface-subtle)'}; border-left: 4px solid ${hasRecords ? (isStudent && !studentStats.compliant ? 'var(--color-error)' : 'var(--color-success)') : 'var(--color-accent-blue)'};">
+          <div class="flex justify-between items-center" style="margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.5rem;">
             <div class="flex items-center gap-2">
-              <span class="badge ${hasRecords ? 'badge-available' : 'badge-blue'}">AI Risk Assessment</span>
-              <strong style="color: ${hasRecords ? 'var(--color-success)' : 'var(--text-primary)'}; font-size: 1rem;">
-                Academic Standing: ${hasRecords ? 'Active Tracking' : 'Awaiting Faculty Attendance Submissions'}
+              <span class="badge ${hasRecords ? 'badge-available' : 'badge-blue'}">AI Statutory Compliance Engine</span>
+              <strong style="color: ${hasRecords ? (isStudent && !studentStats.compliant ? '#991B1B' : 'var(--color-success)') : 'var(--text-primary)'}; font-size: 0.95rem;">
+                ${isStudent 
+                  ? (hasRecords ? `Academic Standing: ${studentStats.statusText}` : 'Awaiting Faculty Lecture Submissions')
+                  : `Class Performance: ${totalSessions} sessions recorded across IT department`
+                }
               </strong>
             </div>
             <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">
@@ -4462,107 +5282,222 @@ class AcademicsView {
           </div>
           <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
             ${hasRecords 
-              ? `Real-time attendance recorded across ${totalSessions} sessions. Keep attending all theory and lab practicals to maintain university clearance.`
-              : `All pre-filled mock attendance has been cleared for the new term (15/06/2026 - 30/10/2026). As faculty mark sessions in the Faculty Portal, live attendance calculations and GTU statutory compliance will dynamically update here.`
+              ? (isStudent 
+                  ? `Your personal attendance is logged in real-time. You have attended ${studentStats.totalAttended} of ${totalSessions} sessions (${studentStats.percentageStr}). Maintain regular attendance to qualify for GTU winter examination hall tickets.`
+                  : `Automated GTU statutory tracking is active for Class 2452 - IT. Faculty attendance submissions automatically synchronize across student portals, administrator dashboards, and institutional reports.`
+                )
+              : `All pre-filled mock attendance has been cleared for the new term. As faculty take roll calls in the Faculty Portal, live calculations will update here instantly in real time.`
             }
           </p>
         </div>
 
         <!-- SUBJECT BREAKDOWN TABLE -->
-        <div class="table-responsive-card">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Subject Code & Name</th>
-                <th>Assigned Faculty</th>
-                <th>Lectures Attended</th>
-                <th>Total Held</th>
-                <th>Attendance %</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${subjectsData.map(s => `
+        <div class="card-editorial" style="padding: 1.5rem;">
+          <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem;">Subject-Wise Attendance Breakdown</h3>
+          <div class="table-responsive-card">
+            <table class="data-table">
+              <thead>
                 <tr>
-                  <td>
-                    <strong>${s.name}</strong><br>
-                    <span style="font-size: 0.72rem; font-family: monospace; color: var(--text-muted);">${s.code}</span>
-                  </td>
-                  <td>${s.faculty}</td>
-                  <td style="font-weight: 600;">${s.held > 0 ? s.attended : 0}</td>
-                  <td>${s.held}</td>
-                  <td style="font-weight: 700;">${s.pct}</td>
-                  <td>
-                    <span class="badge ${s.held === 0 ? 'badge-secondary' : (s.attended / s.held >= 0.75 ? 'badge-available' : 'badge-error')}">
-                      ${s.status}
-                    </span>
-                  </td>
+                  <th>Subject Code & Name</th>
+                  <th>Faculty</th>
+                  <th>${isStudent ? 'Your Attended' : 'Avg Students/Class'}</th>
+                  <th>Sessions Held</th>
+                  <th>Attendance %</th>
+                  <th>Compliance Status</th>
                 </tr>
-              `).join('')}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                ${subjectsData.map(s => `
+                  <tr>
+                    <td>
+                      <strong>${s.name}</strong><br>
+                      <span style="font-size: 0.72rem; font-family: monospace; color: var(--text-muted);">${s.code}</span>
+                    </td>
+                    <td>${s.faculty}</td>
+                    <td style="font-weight: 600;">${s.held > 0 ? s.attended : 0}</td>
+                    <td>${s.held}</td>
+                    <td style="font-weight: 700;">${s.pct}</td>
+                    <td>
+                      <span class="badge ${s.held === 0 ? 'badge-secondary' : (s.status === 'Eligible' ? 'badge-available' : (s.status === 'Logged' ? 'badge-blue' : 'badge-out-of-stock'))}">
+                        ${s.status}
+                      </span>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <!-- QUICK HELPER -->
-        <div style="font-size: 0.8rem; color: var(--text-muted); text-align: right;">
-          Faculty can record new class attendance anytime from the <a href="javascript:void(0)" onclick="appState.setView('attendance-mark')" style="color: var(--color-accent-blue); text-decoration: underline; font-weight: 600;">Faculty Portal &rarr;</a>
+        <!-- ADMIN & FACULTY ONLY: CLASS 2452 STUDENT ROSTER COMPLIANCE TABLE -->
+        ${(isAdmin || isFaculty) ? `
+          <div class="card-editorial" style="padding: 1.5rem;">
+            <div class="flex items-center justify-between" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+              <div>
+                <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0;">Class 2452 IT Student Roster Compliance</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Live individual student attendance tracking and GTU detention eligibility.</p>
+              </div>
+              <span class="badge badge-purple">10 Students Enrolled</span>
+            </div>
+
+            <div class="table-responsive-card">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Roll No</th>
+                    <th>Enrollment ID</th>
+                    <th>Student Name</th>
+                    <th>Attended / Total</th>
+                    <th>Attendance %</th>
+                    <th>GTU Eligibility</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rosterStats.map(s => `
+                    <tr>
+                      <td style="font-weight: 700;">#${s.rollNo}</td>
+                      <td style="font-family: monospace; color: var(--color-accent-blue);">${s.enrollment}</td>
+                      <td style="font-weight: 600;">${s.name}</td>
+                      <td>${s.stats.totalHeld > 0 ? `${s.stats.totalAttended} / ${s.stats.totalHeld}` : '0 / 0'}</td>
+                      <td style="font-weight: 700; color: ${s.stats.totalHeld > 0 ? (s.stats.compliant ? 'var(--color-success)' : 'var(--color-error)') : 'var(--text-muted)'};">
+                        ${s.stats.percentageStr}
+                      </td>
+                      <td>
+                        <span class="badge ${s.stats.totalHeld === 0 ? 'badge-secondary' : (s.stats.compliant ? 'badge-available' : 'badge-out-of-stock')}">
+                          ${s.stats.statusText}
+                        </span>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- RECENT ATTENDANCE SESSIONS LOG -->
+        <div class="card-editorial" style="padding: 1.5rem;">
+          <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem;">Recent Class Sessions Log</h3>
+          ${localRecords.length === 0 ? `
+            <div style="padding: 2rem 1rem; text-align: center; color: var(--text-muted);">
+              <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin: 0 auto 0.5rem; display: block; color: var(--color-accent-blue);"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">No Recorded Sessions Yet</div>
+              <div style="font-size: 0.8rem; margin-top: 0.2rem;">When faculty mark attendance from the Faculty Portal, sessions appear here in real time.</div>
+            </div>
+          ` : `
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              ${localRecords.slice(0, 8).map(sess => {
+                const esc = window.SecurityUtils ? window.SecurityUtils.escapeHtml : (s => s);
+                const presentCount = Array.isArray(sess.records) ? sess.records.filter(r => r.present === true).length : 0;
+                const totalCount = Array.isArray(sess.records) ? sess.records.length : 0;
+                return `
+                  <div style="padding: 0.85rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: var(--bg-surface-subtle); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <strong style="font-size: 0.92rem;">${esc(sess.subject)}</strong>
+                        <span class="badge badge-blue" style="font-size: 0.7rem;">${esc(sess.classId || 'Class 2452 - IT')}</span>
+                      </div>
+                      <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">
+                        Date: <strong>${esc(sess.date || 'Today')}</strong> • Marked by: <strong>${esc(sess.recordedBy || 'Faculty')}</strong>
+                      </div>
+                    </div>
+                    <div style="text-align: right;">
+                      <span class="badge badge-available">${presentCount} / ${totalCount} Present</span>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `}
         </div>
+
       </div>
     `;
   }
 }
 
 
-/* --- File: ai-chat-view.js (js\views\ai-chat-view.js) --- */
+/* --- File: ai-chat-view.js --- */
 /* ==========================================================
    Campus X AI - Conversational Assistant View ("Ask Campus X.")
-   Section 44: Clean conversational shortcut, no sci-fi orbs/robots
+   Real-Time Campus Intelligence grounded in live academic records,
+   notices, timetable, inventory, and GTU statutory compliance.
    ========================================================== */
 
 class AiChatView {
   static chatHistory = [
     {
       sender: "ai",
-      text: "Hello! I'm Campus X, your campus shortcut for Tapi Diploma Engineering College. How can I assist you today?"
+      text: "Hello! I'm **Campus X**, your real-time intelligent assistant for Tapi Diploma Engineering College. How can I help you right now?",
+      time: "Just now"
     }
   ];
 
   static render(container) {
+    const role = appState.currentUser ? appState.currentUser.role : 'STUDENT';
+    const esc = window.SecurityUtils ? window.SecurityUtils.escapeHtml : (s => s);
+
     container.innerHTML = `
-      <div style="max-width: 840px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
-        <div>
-          <h2 style="font-size: 2rem; font-weight: 800;">Ask Campus X.</h2>
-          <p style="font-size: 0.9rem; color: var(--text-secondary);">Your campus shortcut. Classes, exams, services and queries answered instantly.</p>
+      <div style="max-width: 880px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- HEADER -->
+        <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <div class="flex items-center gap-2" style="margin-bottom: 0.25rem;">
+              <span class="badge badge-purple">AI Conversational Engine</span>
+              <span class="badge badge-green">● Real-Time Connected</span>
+            </div>
+            <h2 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin: 0;">Ask Campus X.</h2>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.2rem;">
+              Instant, authoritative answers grounded in your live attendance, today's timetable, circulars, and campus ERP.
+            </p>
+          </div>
+
+          <button class="btn btn-secondary" onclick="AiChatView.clearHistory()" style="font-size: 0.78rem; padding: 0.35rem 0.75rem;">
+            Clear Chat
+          </button>
         </div>
 
         <!-- Chat Conversation Card -->
-        <div class="card-editorial" style="padding: 1.5rem; display: flex; flex-direction: column; height: 480px;">
+        <div class="card-editorial" style="padding: 1.5rem; display: flex; flex-direction: column; height: 520px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
           
-          <div id="chatMessageLog" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.85rem; padding-right: 0.5rem; margin-bottom: 1rem;">
+          <div id="chatMessageLog" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; padding-right: 0.5rem; margin-bottom: 1.25rem;">
             ${AiChatView.chatHistory.map(msg => `
-              <div style="align-self: ${msg.sender === 'user' ? 'flex-end' : 'flex-start'}; 
-                          background: ${msg.sender === 'user' ? 'var(--sidebar-bg)' : 'var(--bg-surface-subtle)'}; 
-                          color: ${msg.sender === 'user' ? '#ffffff' : 'var(--text-primary)'}; 
-                          border: ${msg.sender === 'user' ? 'none' : '1px solid var(--border-color)'}; 
-                          padding: 0.75rem 1rem; border-radius: var(--radius-md); font-size: 0.86rem; max-width: 80%;">
-                ${AiChatView.formatMessageText(msg.text)}
+              <div style="align-self: ${msg.sender === 'user' ? 'flex-end' : 'flex-start'}; max-width: 82%;">
+                <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.2rem; justify-content: ${msg.sender === 'user' ? 'flex-end' : 'flex-start'};">
+                  <span style="font-size: 0.72rem; font-weight: 700; color: ${msg.sender === 'user' ? 'var(--color-accent-blue)' : 'var(--color-primary)'};">
+                    ${msg.sender === 'user' ? (appState.currentUser ? esc(appState.currentUser.name) : 'You') : 'Campus X AI'}
+                  </span>
+                  <span style="font-size: 0.68rem; color: var(--text-muted);">${msg.time || 'Just now'}</span>
+                </div>
+                <div style="background: ${msg.sender === 'user' ? 'var(--sidebar-bg)' : 'var(--bg-surface-subtle)'}; 
+                            color: ${msg.sender === 'user' ? '#ffffff' : 'var(--text-primary)'}; 
+                            border: ${msg.sender === 'user' ? 'none' : '1px solid var(--border-color)'}; 
+                            padding: 0.85rem 1.15rem; border-radius: var(--radius-md); font-size: 0.88rem; line-height: 1.55; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+                  ${AiChatView.formatMessageText(msg.text)}
+                </div>
               </div>
             `).join('')}
           </div>
 
           <!-- Prompt Input Bar -->
           <div class="flex items-center gap-2">
-            <input type="text" id="aiPageInput" class="form-input" placeholder="Ask about attendance, timetable, exams, stationery..." onkeydown="if(event.key==='Enter') AiChatView.sendQuery()" maxlength="250">
-            <button class="btn btn-primary" onclick="AiChatView.sendQuery()">Send</button>
+            <input type="text" id="aiPageInput" class="form-input" 
+                   placeholder="Ask about your live attendance, next class, notices, stationery rush..." 
+                   onkeydown="if(event.key==='Enter') AiChatView.sendQuery()" maxlength="250" autocomplete="off">
+            <button class="btn btn-primary" onclick="AiChatView.sendQuery()" style="display: flex; align-items: center; gap: 0.35rem;">
+              <span>Send</span>
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
           </div>
 
-          <!-- Quick Suggested Chips (Section 44) -->
+          <!-- Quick Suggested Chips Grounded in Role -->
           <div class="flex flex-wrap gap-2" style="margin-top: 1rem;">
-            <button class="ask-ai-chip" onclick="AiChatView.askSuggested('What\'s my attendance?')">What's my attendance?</button>
-            <button class="ask-ai-chip" onclick="AiChatView.askSuggested('What\'s my exam schedule?')">What's my exam schedule?</button>
-            <button class="ask-ai-chip" onclick="AiChatView.askSuggested('Where is today\'s class?')">Where is today's class?</button>
-            <button class="ask-ai-chip" onclick="AiChatView.askSuggested('Is the stationery counter busy?')">Is the stationery counter busy?</button>
-            <button class="ask-ai-chip" onclick="AiChatView.askSuggested('Where can I report a lost item?')">Report lost item</button>
+            ${AiChatView.getSuggestionsForRole(role).map(chip => `
+              <button class="ask-ai-chip" onclick="AiChatView.askSuggested('${chip.query.replace(/'/g, "\\'")}')" ${chip.danger ? 'style="border-color: rgba(220, 38, 38, 0.4); color: #dc2626;"' : ''}>
+                ${chip.label}
+              </button>
+            `).join('')}
           </div>
 
         </div>
@@ -4570,10 +5505,44 @@ class AiChatView {
     `;
   }
 
+  static getSuggestionsForRole(role) {
+    if (role === 'ADMIN') {
+      return [
+        { label: "College Attendance Overview", query: "What is today's college attendance rate?" },
+        { label: "Active Circulars & Notices", query: "Show active notices on campus board" },
+        { label: "Pending Maintenance Tickets", query: "How many complaints are open?" },
+        { label: "Stationery Inventory Thresholds", query: "Show low stock stationery items" },
+        { label: "🚨 Emergency SOS", query: "Emergency contacts & SOS procedure", danger: true }
+      ];
+    } else if (role === 'FACULTY') {
+      return [
+        { label: "Attendance Roster Status", query: "How many attendance sessions have been logged?" },
+        { label: "Today's Teaching Schedule", query: "What is today's faculty timetable?" },
+        { label: "Latest Notices", query: "What circulars were posted recently?" },
+        { label: "Stationery Rush Status", query: "Is the stationery counter busy?" },
+        { label: "🚨 Emergency SOS", query: "Emergency contacts & SOS procedure", danger: true }
+      ];
+    } else {
+      // Default: Student
+      return [
+        { label: "What's my attendance?", query: "What is my live attendance percentage and GTU compliance?" },
+        { label: "Where is my class today?", query: "What is my next class and schedule today?" },
+        { label: "Any new notices?", query: "Show recent campus notices and circulars" },
+        { label: "Is stationery busy?", query: "Is the stationery counter currently busy?" },
+        { label: "Exam Timetable", query: "When is my next GTU exam?" },
+        { label: "🚨 Emergency SOS", query: "Emergency contacts & SOS procedure", danger: true }
+      ];
+    }
+  }
+
   static formatMessageText(text) {
     const esc = window.SecurityUtils ? window.SecurityUtils.escapeHtml : (s => s);
-    const safe = esc(text);
-    return safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    let safe = esc(text);
+    // Bold markdown formatting
+    safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Line breaks
+    safe = safe.replace(/\n/g, '<br>');
+    return safe;
   }
 
   static askSuggested(prompt) {
@@ -4582,20 +5551,31 @@ class AiChatView {
     AiChatView.sendQuery();
   }
 
-  static sendQuery() {
+  static clearHistory() {
+    AiChatView.chatHistory = [
+      {
+        sender: "ai",
+        text: "Chat cleared! How can I assist you with your campus schedule or services?",
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+    ];
+    const container = document.getElementById('viewContainer') || document.getElementById('view-container');
+    if (container) AiChatView.render(container);
+  }
+
+  static async sendQuery() {
     const input = document.getElementById('aiPageInput');
     if (!input) return;
     const rawQ = input.value.trim();
     if (!rawQ) return;
 
-    // Sanitize user query length & content
     const q = window.SecurityUtils ? window.SecurityUtils.sanitizeInput(rawQ, 250) : rawQ.slice(0, 250);
+    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    AiChatView.chatHistory.push({ sender: 'user', text: q });
+    AiChatView.chatHistory.push({ sender: 'user', text: q, time: nowTime });
     input.value = '';
 
-    // Render immediately with user message + thinking indicator
-    const container = document.getElementById('viewContainer');
+    const container = document.getElementById('viewContainer') || document.getElementById('view-container');
     if (container) {
       AiChatView.render(container);
       const log = document.getElementById('chatMessageLog');
@@ -4605,7 +5585,7 @@ class AiChatView {
         thinking.id = 'aiThinkingIndicator';
         thinking.innerHTML = `
           <span style="font-weight: 700; color: var(--color-primary); font-size: 0.82rem;">Campus X AI</span>
-          <span style="font-size: 0.8rem; color: var(--text-muted);">Thinking</span>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Consulting Real-Time Records</span>
           <div class="ai-thinking-dots">
             <span class="ai-thinking-dot"></span>
             <span class="ai-thinking-dot"></span>
@@ -4617,38 +5597,122 @@ class AiChatView {
       }
     }
 
-    // Generate responsive realistic answer grounded in state
-    let reply = "I've checked the campus records for Tapi Diploma Engineering College.";
+    // Attempt Server API first, fallback to intelligent client-side grounded response
+    let reply = "";
+    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+      try {
+        const res = await ApiClient.request('/api/chat', {
+          method: 'POST',
+          body: JSON.stringify({ message: q })
+        });
+        if (res && res.reply) {
+          reply = res.reply;
+        }
+      } catch (e) {
+        // Fall back to client generator
+      }
+    }
 
-    if (q.toLowerCase().includes("attendance")) {
-      reply = "Your overall attendance across all subjects is **88.5%** (Class 2452 IT). In AIPD Theory, you are at 91.4% with zero detention risks.";
-    } else if (q.toLowerCase().includes("exam")) {
-      reply = "GTU Mid-Semester Winter examinations begin on **24th September 2026**. First paper is System Programming & Compiler (SPC) at 10:30 AM in Hall 2.";
-    } else if (q.toLowerCase().includes("class") || q.toLowerCase().includes("schedule")) {
-      reply = "Your next class today is **EIDW (Lab) at 11:00 AM** in Lab-3 with Prof. Sharma. Followed by Lunch Break at 1:00 PM.";
-    } else if (q.toLowerCase().includes("stationery") || q.toLowerCase().includes("busy") || q.toLowerCase().includes("rush")) {
-      reply = appState.stationeryRush 
-        ? "🚨 The Central Stationery counter is currently **BUSY** with high student footfall. Waiting time is approx 10-15 minutes."
-        : "● The Central Stationery counter is **NORMAL**. Average service time is under 2 minutes.";
-    } else if (q.toLowerCase().includes("lost") || q.toLowerCase().includes("found")) {
-      reply = "You can report or browse lost belongings directly in the **Lost & Found Hub**. A black leather wallet was recently matched!";
-    } else {
-      reply = `Regarding "${q}": All academic schedules and college services for Tapi Diploma Engineering College are updated in real-time. Feel free to navigate using the sidebar.`;
+    if (!reply) {
+      reply = AiChatView.generateLocalRealTimeResponse(q);
     }
 
     setTimeout(() => {
-      AiChatView.chatHistory.push({ sender: 'ai', text: reply });
+      AiChatView.chatHistory.push({ 
+        sender: 'ai', 
+        text: reply, 
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+      });
       if (container) {
         AiChatView.render(container);
         const log = document.getElementById('chatMessageLog');
         if (log) log.scrollTop = log.scrollHeight;
       }
-    }, 550);
+    }, 450);
   }
+
+  static generateLocalRealTimeResponse(query) {
+    const q = query.toLowerCase();
+    const user = appState.currentUser || { name: 'Student', role: 'STUDENT', id: '246470316113' };
+    const userIdentifier = user.id || user.rollNo || user.name || '07';
+
+    // 1. REAL-TIME ATTENDANCE
+    if (q.includes('attendance') || q.includes('absent') || q.includes('present') || q.includes('gtu rule') || q.includes('detention') || q.includes('compliance')) {
+      const stats = CAMPUS_DATA.getStudentAttendance(userIdentifier);
+      if (stats.totalHeld === 0) {
+        return `Hello **${user.name}**! No lecture attendance records have been marked by faculty for Term 2026 yet. As your professors record daily theory and lab rolls in the Faculty Portal, live calculations will update here automatically.`;
+      }
+      return `Hello **${user.name}**! Your real-time attendance across **Class 2452 - IT** is **${stats.percentageStr}** (${stats.totalAttended} of ${stats.totalHeld} sessions attended).\n\n${
+        stats.compliant 
+          ? "🎉 **GTU Status: Compliant & Eligible.** Your attendance meets statutory GTU 75% examination guidelines."
+          : "⚠️ **GTU Status: Low Attendance Risk.** Your attendance is below 75%. Please attend upcoming theory and lab sessions to avoid hall ticket detention."
+      }\n\nYou can inspect individual subject breakdowns on the **Attendance tab**.`;
+    }
+
+    // 2. REAL-TIME TIMETABLE & TODAY'S CLASSES
+    if (q.includes('class') || q.includes('schedule') || q.includes('lecture') || q.includes('period') || q.includes('lab') || q.includes('timetable') || q.includes('today')) {
+      const day = new Date().getDay();
+      const schedule = CAMPUS_DATA.getTodaySchedule(day);
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+      if (day === 0 || schedule.length === 0) {
+        return `Today is **${dayNames[day]}**. Campus academic blocks are currently closed. Regular classes resume Monday at 10:00 AM with **SPC Theory** in Room S-21.`;
+      }
+
+      const list = schedule.map(s => `• **${s.time}**: ${s.subject} (${s.room} • ${s.faculty})`).join('\n');
+      return `Here is today's live schedule (**${dayNames[day]}** for Class 2452 - IT):\n\n${list}\n\nPracticals take place in Labs T-13, T-14, T-15, and T-16.`;
+    }
+
+    // 3. REAL-TIME NOTICES & CIRCULARS
+    if (q.includes('notice') || q.includes('circular') || q.includes('announcement') || q.includes('news')) {
+      const notices = CAMPUS_DATA.notices || [];
+      if (notices.length === 0) {
+        return "There are currently no active announcements on the campus board. Check back soon for circulars.";
+      }
+      const top = notices.slice(0, 3);
+      const list = top.map(n => `• **[${n.category || 'Circular'}]** ${n.title} (${n.date || 'Today'})\n  _${n.description || n.desc || ''}_`).join('\n\n');
+      return `Here are the latest official campus notices:\n\n${list}\n\nAdministrators can upload new circulars anytime from the **Notices tab**.`;
+    }
+
+    // 4. REAL-TIME STATIONERY & RUSH STATUS
+    if (q.includes('stationery') || q.includes('rush') || q.includes('counter') || q.includes('queue') || q.includes('pen') || q.includes('journal') || q.includes('calculator') || q.includes('drawing')) {
+      const isRush = appState.stationeryRush;
+      const rushMsg = isRush 
+        ? `🚨 **Stationery Rush is ACTIVE**: The counter is experiencing high traffic (average wait time: 10-15 minutes).` 
+        : `● **Stationery Counter is NORMAL**: Minimal waiting time (under 2 minutes).`;
+      return `${rushMsg}\n\nStore location: Ground floor opposite Auditorium A. Operating hours: 9:00 AM – 5:30 PM. All A4 lab journals, engineering sheets, and Casio fx-991EX calculators are available.`;
+    }
+
+    // 5. EXAMINATIONS
+    if (q.includes('exam') || q.includes('mid-term') || q.includes('gtu') || q.includes('test') || q.includes('hall ticket')) {
+      return `GTU Winter Mid-Term Examinations begin on **24th September 2026** for 5th Semester IT.\n\n• **SPC (DI05016061)**: 24 Sep • 10:30 AM\n• **AIPD (DI05016021)**: 26 Sep • 10:30 AM\n• **CDCT (DI05016031)**: 28 Sep • 10:30 AM\n\nVerified hall tickets will be dispatched to departmental coordinators.`;
+    }
+
+    // 6. COMPLAINTS & GRIEVANCES
+    if (q.includes('complaint') || q.includes('repair') || q.includes('broken') || q.includes('grievance') || q.includes('fan') || q.includes('pc')) {
+      const open = (CAMPUS_DATA.complaints || []).filter(c => c.status !== 'RESOLVED');
+      return `The campus maintenance system currently tracks **${open.length} active grievance ticket${open.length === 1 ? '' : 's'}**. You can log facility repairs or equipment faults directly in the **Complaints & Maintenance** module.`;
+    }
+
+    // 7. LOST & FOUND
+    if (q.includes('lost') || q.includes('found') || q.includes('wallet') || q.includes('keys') || q.includes('bag') || q.includes('card')) {
+      const count = (CAMPUS_DATA.lostAndFound || []).length;
+      return `The **Lost & Found Hub** currently lists **${count} active report${count === 1 ? '' : 's'}**. You can submit found items or search matching reports in the **Lost & Found** section.`;
+    }
+
+    // 8. EMERGENCY & SOS
+    if (q.includes('emergency') || q.includes('sos') || q.includes('doctor') || q.includes('security') || q.includes('ambulance') || q.includes('fire')) {
+      return `🚨 **EMERGENCY ASSISTANCE PROTOCOL**:\n\n• **Campus Security Command**: +91 261 2345678 (Gate 1, 24/7)\n• **Medical Health Clinic**: +91 261 2345679 (Room 102)\n• **Fire & Disaster Officer**: +91 94280 12345\n\nYou can also tap the red **Emergency SOS** button in the top navigation bar to trigger immediate campus dispatch.`;
+    }
+
+    // DEFAULT GROUNDED ANSWER
+    return `Regarding "${query}": Campus X AI is continuously synchronized with Tapi Diploma Engineering College. You can ask me about your **live attendance percentage**, **today's lecture timetable**, **campus notices**, **stationery rush**, or **emergency assistance**.`;
+  }
+}
 }
 
 
-/* --- File: complaints-view.js (js\views\complaints-view.js) --- */
+/* --- File: complaints-view.js --- */
 /* ==========================================================
    Campus X AI - Complaints & Grievance Module View
    Section 40: "Need something fixed?", Ticket Tracking & Admin Resolution
@@ -4827,7 +5891,7 @@ class ComplaintsView {
 }
 
 
-/* --- File: lost-found-view.js (js\views\lost-found-view.js) --- */
+/* --- File: lost-found-view.js --- */
 /* ==========================================================
    Campus X AI - Lost & Found Module View
    Sections 23, 24, 25, 26, 34
@@ -5236,7 +6300,233 @@ class LostFoundView {
 
 
 
-/* --- File: app.js (js\app.js) --- */
+/* --- File: emergency-view.js --- */
+/* ==========================================================
+   Campus X AI - Emergency SOS & Panic Dispatch View
+   Restoring full high-priority emergency console, hotlines,
+   live audio siren and broadcast management
+   ========================================================== */
+
+class EmergencyView {
+  static render(container) {
+    if (!container) return;
+
+    const isSos = appState.isSosActive;
+    const isSound = appState.isSosSoundEnabled;
+    const broadcasts = (typeof CAMPUS_DATA !== 'undefined' && Array.isArray(CAMPUS_DATA.emergencyBroadcasts))
+      ? CAMPUS_DATA.emergencyBroadcasts
+      : [];
+    const contacts = (typeof CAMPUS_DATA !== 'undefined' && Array.isArray(CAMPUS_DATA.emergencyContacts))
+      ? CAMPUS_DATA.emergencyContacts
+      : [];
+
+    container.innerHTML = `
+      <div style="max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.75rem;">
+        
+        <!-- Header Section -->
+        <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.65rem;">
+              <span style="color: #dc2626;">🚨</span>
+              <span>Emergency SOS Console</span>
+            </h2>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">
+              Instant panic dispatcher, 24/7 campus hotlines, and security broadcast system.
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="btn btn-secondary" onclick="EmergencyView.toggleSound()" style="font-size: 0.8rem; padding: 0.45rem 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
+              <span>${isSound ? '🔊 Siren: ON' : '🔇 Siren: MUTED'}</span>
+            </button>
+            <button class="btn btn-primary" onclick="appState.setView('dashboard')" style="font-size: 0.8rem; padding: 0.45rem 0.85rem;">
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
+
+        <!-- Giant Interactive Panic Button Container -->
+        <div class="sos-panic-container ${isSos ? 'sos-active' : ''}">
+          <div class="sos-panic-badge ${isSos ? 'sos-badge-active' : ''}">
+            ${isSos ? '🚨 SOS SIREN ACTIVE • EMERGENCY DISPATCHED' : '🛡️ TAP TO DISPATCH EMERGENCY'}
+          </div>
+
+          <h3 style="font-size: 1.6rem; font-weight: 800; color: #ffffff; margin-bottom: 0.35rem;">
+            ${isSos ? 'SECURITY & MEDICAL SERVICES NOTIFIED' : 'Campus Panic Dispatcher'}
+          </h3>
+          <p style="font-size: 0.88rem; color: #e2e8f0; max-width: 520px; margin: 0 auto;">
+            ${isSos 
+              ? 'Live GPS beacon active. Security Patrol Team & Medical Clinic dispatched to your current building.' 
+              : 'Press the SOS button below for immediate emergency assistance, medical distress, or campus threats.'}
+          </p>
+
+          <!-- Interactive Center SOS Button -->
+          <div class="sos-button-wrapper">
+            ${isSos ? `
+              <div class="sos-pulse-ring"></div>
+              <div class="sos-pulse-ring"></div>
+              <div class="sos-pulse-ring"></div>
+            ` : ''}
+            <button 
+              class="sos-panic-circle ${isSos ? 'is-triggered' : ''}" 
+              id="sosPanicButton" 
+              onclick="EmergencyView.handleToggleSos()" 
+              aria-label="Toggle Emergency SOS Panic"
+            >
+              <svg width="44" height="44" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" style="margin-bottom: 4px;">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span style="font-size: 0.95rem; font-weight: 900; letter-spacing: 0.08em;">
+                ${isSos ? 'CANCEL SOS' : 'PRESS SOS'}
+              </span>
+            </button>
+          </div>
+
+          <!-- Live GPS & Telemetry Card -->
+          <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.15); padding: 0.5rem 1.1rem; border-radius: var(--radius-full); font-size: 0.78rem; color: #f1f5f9; backdrop-blur: 8px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: ${isSos ? '#ef4444' : '#10b981'}; display: inline-block;"></span>
+            <span><strong>Location:</strong> Tapi Diploma IT Building • 2nd Floor (Lat 21.1702° N, Lon 72.8311° E)</span>
+          </div>
+        </div>
+
+        <!-- 24/7 Emergency Hotlines Grid -->
+        <div class="card-editorial" style="padding: 1.5rem;">
+          <div class="flex items-center justify-between" style="margin-bottom: 1.25rem;">
+            <div>
+              <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="18" height="18" fill="none" stroke="#dc2626" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                <span>Instant Emergency Hotlines</span>
+              </h3>
+              <p style="font-size: 0.8rem; color: var(--text-secondary);">Direct phone contact with campus security control, on-site medics, and administrative wardens.</p>
+            </div>
+            <span class="badge badge-low-stock">Verified 24/7 Lines</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+            ${contacts.map(c => `
+              <div class="emergency-hotline-card">
+                <div>
+                  <h4 style="font-size: 0.92rem; font-weight: 700; margin-bottom: 0.2rem; color: var(--text-primary);">${c.title}</h4>
+                  <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.25rem;">📍 ${c.location}</div>
+                  <div style="font-size: 0.75rem; font-weight: 600; color: #16a34a;">● ${c.available}</div>
+                </div>
+                <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem;">
+                  <span style="font-size: 0.8rem; font-family: monospace; font-weight: 700; color: var(--text-primary);">${c.phone}</span>
+                  <a href="tel:${c.phone.replace(/[^0-9+]/g, '')}" class="emergency-call-btn">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    <span>Call Now</span>
+                  </a>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Campus Alert Broadcast Channel -->
+        <div class="card-editorial" style="padding: 1.5rem;">
+          <div class="flex items-center justify-between" style="margin-bottom: 1.25rem;">
+            <div>
+              <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"></circle><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"></path></svg>
+                <span>Campus Alert Broadcast</span>
+              </h3>
+              <p style="font-size: 0.8rem; color: var(--text-secondary);">Real-time broadcast bulletins issued for safety incidents, maintenance, or evacuations.</p>
+            </div>
+            <span class="badge badge-blue">Official Alerts</span>
+          </div>
+
+          <!-- Broadcast Publisher Form -->
+          <div style="display: flex; gap: 0.65rem; margin-bottom: 1.25rem;">
+            <input 
+              type="text" 
+              id="sosBroadcastInput" 
+              class="form-input" 
+              placeholder="Post a campus emergency announcement or security advisory..." 
+              maxlength="280"
+              onkeydown="if(event.key==='Enter') EmergencyView.postBroadcast()"
+            >
+            <button class="btn btn-primary" onclick="EmergencyView.postBroadcast()" style="white-space: nowrap;">
+              Broadcast
+            </button>
+          </div>
+
+          <!-- Broadcast Feed Stream -->
+          <div style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 280px; overflow-y: auto;">
+            ${broadcasts.map(b => `
+              <div style="padding: 0.85rem 1rem; border-radius: var(--radius-md); background: var(--bg-surface-subtle); border-left: 3px solid #dc2626; display: flex; flex-direction: column; gap: 0.3rem;">
+                <div class="flex items-center justify-between">
+                  <span style="font-size: 0.8rem; font-weight: 700; color: #dc2626;">📢 ${b.sender}</span>
+                  <span style="font-size: 0.74rem; color: var(--text-muted);">${b.time}</span>
+                </div>
+                <p style="font-size: 0.84rem; color: var(--text-primary); line-height: 1.45; margin: 0;">
+                  ${(window.SecurityUtils && window.SecurityUtils.escapeHtml) ? window.SecurityUtils.escapeHtml(b.text) : b.text}
+                </p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Emergency Protocols Guide -->
+        <div class="card-editorial" style="padding: 1.5rem;">
+          <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary);">
+            Campus Emergency Response Protocols
+          </h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
+            <div style="padding: 1rem; background: var(--bg-surface-subtle); border-radius: var(--radius-md);">
+              <div style="font-weight: 700; font-size: 0.88rem; color: #dc2626; margin-bottom: 0.35rem;">🩺 Medical Emergency</div>
+              <p style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.45;">Keep calm, do not move injured persons unless immediate hazard is present. Dispatch SOS and call Campus Health Room.</p>
+            </div>
+            <div style="padding: 1rem; background: var(--bg-surface-subtle); border-radius: var(--radius-md);">
+              <div style="font-weight: 700; font-size: 0.88rem; color: #dc2626; margin-bottom: 0.35rem;">🔥 Fire & Hazard Outbreak</div>
+              <p style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.45;">Trigger manual fire alarms, evacuate using secondary staircases, assemble at the central sports ground. Never use elevators.</p>
+            </div>
+            <div style="padding: 1rem; background: var(--bg-surface-subtle); border-radius: var(--radius-md);">
+              <div style="font-weight: 700; font-size: 0.88rem; color: #dc2626; margin-bottom: 0.35rem;">🛡️ Security or Threat</div>
+              <p style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.45;">Report suspicious activities immediately to Gate 1 security guards. Stay in staffed offices until all-clear is broadcasted.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    `;
+  }
+
+  static handleToggleSos() {
+    appState.toggleSos();
+    const container = document.getElementById('viewContainer');
+    if (container && appState.activeView === 'emergency') {
+      EmergencyView.render(container);
+    }
+  }
+
+  static toggleSound() {
+    appState.toggleSosSound();
+    const container = document.getElementById('viewContainer');
+    if (container && appState.activeView === 'emergency') {
+      EmergencyView.render(container);
+    }
+  }
+
+  static postBroadcast() {
+    const input = document.getElementById('sosBroadcastInput');
+    if (!input) return;
+    const val = input.value.trim();
+    if (!val) return;
+
+    appState.addEmergencyBroadcast(val);
+    input.value = '';
+    const container = document.getElementById('viewContainer');
+    if (container && appState.activeView === 'emergency') {
+      EmergencyView.render(container);
+    }
+  }
+}
+
+window.EmergencyView = EmergencyView;
+
+
+/* --- File: app.js --- */
 /* ==========================================================
    Campus X AI - Master Application Orchestrator
    Role Dispatcher, Modal Engine, Navigation & Responsive Router
@@ -5363,6 +6653,15 @@ class CampusApplication {
             </div>
 
             <div class="topbar-actions">
+              <!-- Emergency SOS Button -->
+              <button class="topbar-sos-btn ${appState.isSosActive ? 'sos-pulsing' : ''}" 
+                      aria-label="Emergency SOS Dispatcher" 
+                      onclick="appState.setView('emergency')" 
+                      title="${appState.isSosActive ? 'SOS ACTIVE - View Emergency Console' : 'Emergency SOS Console'}">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <span>${appState.isSosActive ? '🚨 SOS ACTIVE' : 'SOS'}</span>
+              </button>
+
               <!-- Notifications Icon -->
               <button class="topbar-icon-btn" aria-label="Notifications" onclick="appState.showToast('You are all caught up on campus announcements.', 'info')">
                 <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -5382,6 +6681,24 @@ class CampusApplication {
               </div>
             </div>
           </header>
+
+          <!-- ACTIVE SOS EMERGENCY BANNER -->
+          ${appState.isSosActive ? `
+            <div class="emergency-active-top-banner">
+              <div class="flex items-center gap-2" style="font-weight: 800; font-size: 0.86rem;">
+                <span class="status-dot-pulse" style="background: #ffffff; box-shadow: 0 0 10px #ffffff;"></span>
+                <span>🚨 EMERGENCY SOS ACTIVE — Security & Medical Teams Dispatched to Tapi IT Building</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="btn btn-secondary" style="padding: 0.25rem 0.65rem; font-size: 0.74rem; background: #ffffff; color: #b91c1c; font-weight: 700;" onclick="appState.setView('emergency')">
+                  Open Console
+                </button>
+                <button class="btn" style="padding: 0.25rem 0.65rem; font-size: 0.74rem; background: #7f1d1d; color: #ffffff; border: 1px solid #fca5a5; font-weight: 700;" onclick="appState.cancelSos()">
+                  Cancel SOS
+                </button>
+              </div>
+            </div>
+          ` : ''}
 
           <!-- VIEW CONTAINER -->
           <main class="dashboard-content" id="viewContainer" style="padding-top: 1.5rem;">
@@ -5488,33 +6805,13 @@ class CampusApplication {
         AiChatView.render(container);
         break;
 
+      case 'emergency':
+      case 'sos':
+        EmergencyView.render(container);
+        break;
+
       case 'notices':
-        container.innerHTML = `
-          <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-            <div>
-              <h2 style="font-size: 2rem; font-weight: 800; color: var(--text-primary);">Campus Notices</h2>
-              <p style="font-size: 0.9rem; color: var(--text-secondary);">Official circulars and announcements from Tapi Diploma Engineering College.</p>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-              <div class="card-editorial" style="border-left: 4px solid var(--color-accent-blue);">
-                <div class="flex items-center justify-between" style="margin-bottom: 0.35rem;">
-                  <span class="badge badge-blue">Academic Circular</span>
-                  <span style="font-size: 0.76rem; color: var(--text-muted);">Today, 9:00 AM</span>
-                </div>
-                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">GTU Mid-Term Examination Schedule Released</h3>
-                <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">All 3rd and 5th-semester diploma engineering students are required to verify their examination slots and hall ticket particulars with departmental coordinators.</p>
-              </div>
-              <div class="card-editorial" style="border-left: 4px solid var(--color-success);">
-                <div class="flex items-center justify-between" style="margin-bottom: 0.35rem;">
-                  <span class="badge badge-available">Campus Event</span>
-                  <span style="font-size: 0.76rem; color: var(--text-muted);">Yesterday</span>
-                </div>
-                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">Annual Tech Symposium "IGNITE 2026" Registrations Open</h3>
-                <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Paper presentation, robotics challenge, and coding hackathon entries are now accepted at the central auditorium lobby.</p>
-              </div>
-            </div>
-          </div>
-        `;
+        CampusApplication.renderNoticesView(container);
         break;
 
       case 'examinations':
@@ -5686,6 +6983,159 @@ class CampusApplication {
   static handleGlobalSearch(query) {
     if (!query || query.length < 2) return;
     // Simulated quick search
+  }
+
+  static selectedNoticeFilter = 'All';
+  static noticeSearchTerm = '';
+
+  static renderNoticesView(container) {
+    const isAdmin = appState.currentUser && appState.currentUser.role === 'ADMIN';
+    const isFaculty = appState.currentUser && appState.currentUser.role === 'FACULTY';
+    const canUpload = isAdmin || isFaculty;
+
+    let notices = CAMPUS_DATA.notices || [];
+
+    // Filter by Category
+    if (CampusApplication.selectedNoticeFilter && CampusApplication.selectedNoticeFilter !== 'All') {
+      const f = CampusApplication.selectedNoticeFilter.toLowerCase();
+      notices = notices.filter(n => {
+        const cat = (n.category || '').toLowerCase();
+        const prio = (n.priority || '').toLowerCase();
+        if (f === 'urgent') return prio === 'urgent' || prio === 'high';
+        return cat.includes(f);
+      });
+    }
+
+    // Filter by Search Query
+    if (CampusApplication.noticeSearchTerm) {
+      const q = CampusApplication.noticeSearchTerm.toLowerCase();
+      notices = notices.filter(n => 
+        (n.title && n.title.toLowerCase().includes(q)) ||
+        (n.description && n.description.toLowerCase().includes(q)) ||
+        (n.desc && n.desc.toLowerCase().includes(q)) ||
+        (n.category && n.category.toLowerCase().includes(q)) ||
+        (n.department && n.department.toLowerCase().includes(q))
+      );
+    }
+
+    const esc = window.SecurityUtils ? window.SecurityUtils.escapeHtml : (s => s);
+
+    container.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- HEADER -->
+        <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <div class="flex items-center gap-2" style="margin-bottom: 0.25rem;">
+              <span class="badge badge-blue">Official Circulars</span>
+              <span class="badge badge-green">● Real-Time Feed</span>
+            </div>
+            <h2 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin: 0;">Campus Notices & Circulars</h2>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.2rem;">
+              Authoritative announcements, GTU examination circulars, and departmental schedules.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            ${canUpload ? `
+              <button class="btn btn-primary" onclick="AdminView.openNoticeModal()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Upload Notice</span>
+              </button>
+            ` : ''}
+          </div>
+        </div>
+
+        <!-- FILTER & SEARCH BAR -->
+        <div class="card-editorial" style="padding: 1rem 1.25rem;">
+          <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              ${['All', 'Academic', 'Examination', 'Event', 'Urgent'].map(tab => {
+                const isActive = (CampusApplication.selectedNoticeFilter || 'All') === tab;
+                return `
+                  <button class="btn ${isActive ? 'btn-primary' : 'btn-secondary'}" 
+                          style="padding: 0.35rem 0.8rem; font-size: 0.78rem; border-radius: 999px; ${isActive ? 'font-weight: 700;' : ''}" 
+                          onclick="CampusApplication.setNoticeFilter('${tab}')">
+                    ${tab === 'Urgent' ? '🚨 Urgent' : tab}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+
+            <div style="flex: 1; min-width: 220px; max-width: 380px;">
+              <input type="text" class="form-input" placeholder="Search notices, exams, circulars..." 
+                     value="${esc(CampusApplication.noticeSearchTerm || '')}"
+                     oninput="CampusApplication.onNoticeSearch(this.value)">
+            </div>
+          </div>
+        </div>
+
+        <!-- NOTICES LIST -->
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          ${notices.length === 0 ? `
+            <div class="card-editorial" style="padding: 3rem 1rem; text-align: center; color: var(--text-muted);">
+              <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin: 0 auto 0.75rem; display: block; color: var(--color-accent-blue);"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+              <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.35rem;">No circulars found</h3>
+              <p style="font-size: 0.85rem; margin: 0;">No notices match the selected category or search keyword.</p>
+              ${canUpload ? `
+                <button class="btn btn-primary" style="margin-top: 1rem;" onclick="AdminView.openNoticeModal()">Upload First Notice</button>
+              ` : ''}
+            </div>
+          ` : notices.map(ntc => {
+            const isUrgent = (ntc.priority && (ntc.priority.toUpperCase() === 'URGENT' || ntc.priority.toUpperCase() === 'HIGH'));
+            return `
+              <div class="card-editorial" style="border-left: 4px solid ${isUrgent ? 'var(--color-error)' : 'var(--color-accent-blue)'}; padding: 1.5rem;">
+                <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+                  <div class="flex items-center gap-2">
+                    <span class="badge ${isUrgent ? 'badge-out-of-stock' : 'badge-blue'}">${esc(ntc.category || 'Circular')}</span>
+                    ${ntc.pinned ? '<span class="badge badge-purple">📌 Pinned</span>' : ''}
+                    <span style="font-size: 0.76rem; color: var(--text-muted);">${esc(ntc.date || 'Today')} ${ntc.time ? `• ${esc(ntc.time)}` : ''}</span>
+                  </div>
+
+                  ${isAdmin ? `
+                    <button class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.74rem; color: var(--color-error);" onclick="AdminView.deleteNotice('${esc(ntc.id)}')">
+                      Delete
+                    </button>
+                  ` : ''}
+                </div>
+
+                <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary); margin: 0.2rem 0 0.5rem;">
+                  ${esc(ntc.title)}
+                </h3>
+
+                <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; margin: 0.5rem 0 1rem;">
+                  ${esc(ntc.description || ntc.desc || '')}
+                </p>
+
+                <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color); font-size: 0.78rem; color: var(--text-muted);">
+                  <div>
+                    Department: <strong>${esc(ntc.department || 'All Departments')}</strong> • Posted by: <strong>${esc(ntc.postedBy || 'Campus Administration')}</strong>
+                  </div>
+                  ${ntc.attachmentName ? `
+                    <a href="javascript:void(0)" onclick="appState.showToast('Opening circular document: ${esc(ntc.attachmentName)}', 'info')" class="action-pill action-pill-blue" style="padding: 0.25rem 0.65rem; font-size: 0.75rem;">
+                      <span>📎 ${esc(ntc.attachmentName)}</span>
+                    </a>
+                  ` : ''}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+      </div>
+    `;
+  }
+
+  static setNoticeFilter(category) {
+    CampusApplication.selectedNoticeFilter = category;
+    const container = document.getElementById('viewContainer') || document.getElementById('view-container');
+    if (container) CampusApplication.renderNoticesView(container);
+  }
+
+  static onNoticeSearch(term) {
+    CampusApplication.noticeSearchTerm = term.trim();
+    const container = document.getElementById('viewContainer') || document.getElementById('view-container');
+    if (container) CampusApplication.renderNoticesView(container);
   }
 }
 

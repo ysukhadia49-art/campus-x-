@@ -210,8 +210,8 @@ class RateLimiter {
   }
 }
 
-// 15 failed login attempts per 15 minutes (with rate limit reset on successful login)
-const loginRateLimiter = new RateLimiter(15, 15 * 60 * 1000, 'Too many login attempts. Please wait 15 minutes before trying again.');
+// 5 failed login attempts per 15 minutes (with rate limit reset on successful login)
+const loginRateLimiter = new RateLimiter(5, 15 * 60 * 1000, 'Too many login attempts. Please wait 15 minutes before trying again.');
 // 5 password reset requests per 15 minutes
 const passwordResetRateLimiter = new RateLimiter(5, 15 * 60 * 1000, 'Too many password reset requests. Please wait 15 minutes before trying again.');
 // 10 registration attempts per hour per IP
@@ -290,6 +290,35 @@ const DB = {
 
   complaints: [],
   lostAndFound: [],
+  attendance: [],
+  notices: [
+    {
+      id: "NTC-501",
+      title: "GTU Mid-Term Examination Schedule Released",
+      category: "Academic Circular",
+      date: "Today",
+      time: "9:00 AM",
+      desc: "All 3rd and 5th-semester diploma engineering students are required to verify their examination slots and hall ticket particulars with departmental coordinators.",
+      description: "All 3rd and 5th-semester diploma engineering students are required to verify their examination slots and hall ticket particulars with departmental coordinators.",
+      priority: "High",
+      pinned: true,
+      postedBy: "Dr. A. K. Joshi (Admin)",
+      department: "Information Technology"
+    },
+    {
+      id: "NTC-502",
+      title: "Annual Tech Symposium \"IGNITE 2026\" Registrations Open",
+      category: "Campus Event",
+      date: "Yesterday",
+      time: "2:30 PM",
+      desc: "Paper presentation, robotics challenge, and coding hackathon entries are now accepted at the central auditorium lobby.",
+      description: "Paper presentation, robotics challenge, and coding hackathon entries are now accepted at the central auditorium lobby.",
+      priority: "Normal",
+      pinned: false,
+      postedBy: "Prof. S. R. Patel (Faculty)",
+      department: "All Departments"
+    }
+  ],
 
   // High-entropy password reset tokens & OTP verification digests
   resetTokens: new Map(),
@@ -310,7 +339,9 @@ function saveDatabaseToFile() {
     const payload = {
       accounts: DB.accounts,
       complaints: DB.complaints || [],
-      lostAndFound: DB.lostAndFound || []
+      lostAndFound: DB.lostAndFound || [],
+      attendance: DB.attendance || [],
+      notices: DB.notices || []
     };
     fs.writeFileSync(DB_FILE, JSON.stringify(payload, null, 2), 'utf8');
   } catch (err) {
@@ -327,6 +358,8 @@ function loadDatabaseFromFile() {
       if (data.accounts) Object.assign(DB.accounts, data.accounts);
       if (Array.isArray(data.complaints)) DB.complaints = data.complaints;
       if (Array.isArray(data.lostAndFound)) DB.lostAndFound = data.lostAndFound;
+      if (Array.isArray(data.attendance)) DB.attendance = data.attendance;
+      if (Array.isArray(data.notices) && data.notices.length > 0) DB.notices = data.notices;
     }
     // Then check /tmp override if in serverless
     if (DB_FILE !== LOCAL_DB_FILE && fs.existsSync(DB_FILE)) {
@@ -335,6 +368,8 @@ function loadDatabaseFromFile() {
       if (data.accounts) Object.assign(DB.accounts, data.accounts);
       if (Array.isArray(data.complaints)) DB.complaints = data.complaints;
       if (Array.isArray(data.lostAndFound)) DB.lostAndFound = data.lostAndFound;
+      if (Array.isArray(data.attendance)) DB.attendance = data.attendance;
+      if (Array.isArray(data.notices) && data.notices.length > 0) DB.notices = data.notices;
     }
   } catch (err) {
     console.warn('[DB WARNING] Could not read existing database file:', err.message);
@@ -1048,26 +1083,42 @@ app.get('/api/admin/overview', authenticateToken, requireRole(['ADMIN']), (req, 
   });
 });
 
-// Faculty Endpoint: Restricted to FACULTY & ADMIN
+// Faculty Endpoint: Restricted to FACULTY & ADMIN (Record Attendance)
 app.post('/api/faculty/attendance', authenticateToken, requireRole(['FACULTY', 'ADMIN']), (req, res) => {
-  const { classId, subject, records } = req.body || {};
+  const { classId, subject, records, date } = req.body || {};
   if (!classId || !subject) {
     return res.status(400).json({ error: 'Class ID and Subject are required.' });
   }
+
+  const sessionDate = date || new Date().toISOString().slice(0, 10);
+  const sessionRecord = {
+    id: `ATT-${Date.now()}`,
+    classId: String(classId).slice(0, 80),
+    subject: String(subject).slice(0, 100),
+    date: sessionDate,
+    timestamp: new Date().toISOString(),
+    recordedBy: req.user.name,
+    recordedById: req.user.id,
+    records: Array.isArray(records) ? records : []
+  };
+
+  if (!DB.attendance) DB.attendance = [];
+  DB.attendance.unshift(sessionRecord);
+  saveDatabaseToFile();
 
   SecurityLogger.log('ATTENDANCE_RECORDED', {
     facultyId: req.user.id,
     classId,
     subject,
-    studentCount: Array.isArray(records) ? records.length : 0
+    date: sessionDate,
+    studentCount: sessionRecord.records.length
   });
 
-  if (supabase && Array.isArray(records) && records.length > 0) {
-    const today = new Date().toISOString().slice(0, 10);
-    const rows = records.map(r => ({
+  if (supabase && sessionRecord.records.length > 0) {
+    const rows = sessionRecord.records.map(r => ({
       subject,
-      date: today,
-      student_id: r.studentId || r.id || '246470316113',
+      date: sessionDate,
+      student_id: r.studentId || r.enrollment || r.id || '246470316113',
       status: r.status || (r.present === false ? 'Absent' : 'Present'),
       marked_by: req.user.name || req.user.id
     }));
@@ -1079,7 +1130,96 @@ app.post('/api/faculty/attendance', authenticateToken, requireRole(['FACULTY', '
 
   return res.json({
     status: 'success',
-    message: `Attendance synchronized for ${classId} (${subject}).`
+    message: `Attendance synchronized for ${classId} (${subject}).`,
+    session: sessionRecord,
+    totalSessions: DB.attendance.length
+  });
+});
+
+// GET /api/attendance - Retrieve real-time attendance records
+app.get('/api/attendance', authenticateToken, (req, res) => {
+  const { classId, subject, studentId } = req.query || {};
+  let list = DB.attendance || [];
+
+  if (classId) {
+    list = list.filter(s => s.classId && s.classId.toLowerCase().includes(classId.toLowerCase()));
+  }
+  if (subject) {
+    list = list.filter(s => s.subject && s.subject.toLowerCase().includes(subject.toLowerCase()));
+  }
+
+  // If a student queries, sanitize or calculate student-specific attendance
+  return res.json({
+    status: 'success',
+    totalSessions: list.length,
+    attendance: list
+  });
+});
+
+// GET /api/student/:studentId/attendance - Student-specific calculated attendance
+app.get('/api/student/:studentId/attendance', authenticateToken, (req, res) => {
+  const { studentId } = req.params;
+
+  // IDOR Protection: Student can only view their own attendance
+  if (req.user.role === 'STUDENT' && req.user.id !== studentId) {
+    SecurityLogger.log('IDOR_VIOLATION_ATTEMPT', {
+      requestedStudentId: studentId,
+      authenticatedUserId: req.user.id,
+      endpoint: '/api/student/:studentId/attendance',
+      ip: req.ip
+    });
+    return res.status(403).json({
+      error: 'Access denied: You are not authorized to view another student\'s attendance.'
+    });
+  }
+
+  const allSessions = DB.attendance || [];
+  let totalHeld = allSessions.length;
+  let totalAttended = 0;
+  const subjectsMap = {};
+
+  for (const session of allSessions) {
+    const subName = session.subject || 'General';
+    if (!subjectsMap[subName]) {
+      subjectsMap[subName] = { held: 0, attended: 0 };
+    }
+    subjectsMap[subName].held++;
+
+    let isPresent = false;
+    if (Array.isArray(session.records)) {
+      const match = session.records.find(r => 
+        (r.enrollment && r.enrollment === studentId) ||
+        (r.studentId && r.studentId === studentId) ||
+        (r.id && r.id === studentId) ||
+        (req.user.rollNo && r.rollNo === req.user.rollNo)
+      );
+      if (match && match.present) {
+        isPresent = true;
+      }
+    }
+    if (isPresent) {
+      totalAttended++;
+      subjectsMap[subName].attended++;
+    }
+  }
+
+  const percentage = totalHeld > 0 ? Number(((totalAttended / totalHeld) * 100).toFixed(1)) : null;
+  const gtuCompliant = percentage !== null ? percentage >= 75 : true;
+
+  return res.json({
+    status: 'success',
+    studentId,
+    totalHeld,
+    totalAttended,
+    percentage: percentage !== null ? `${percentage}%` : '--%',
+    gtuCompliant,
+    riskLevel: percentage === null ? 'Pending Data' : (gtuCompliant ? 'Low Risk' : 'Detention Risk (<75%)'),
+    subjects: Object.entries(subjectsMap).map(([subject, stats]) => ({
+      subject,
+      held: stats.held,
+      attended: stats.attended,
+      percentage: stats.held > 0 ? `${((stats.attended / stats.held) * 100).toFixed(1)}%` : '--%'
+    }))
   });
 });
 
@@ -1308,6 +1448,219 @@ app.patch('/api/lost-found/:id', authenticateToken, requireRole(['ADMIN', 'FACUL
   }
 
   return res.json({ status: 'success', item });
+});
+
+// ==========================================================
+// 10. Notices & Circulars Endpoints (Admin & Faculty Upload)
+// ==========================================================
+
+// GET /api/notices - List all campus notices
+app.get('/api/notices', (req, res) => {
+  const notices = DB.notices || [];
+  return res.json({ status: 'success', count: notices.length, notices });
+});
+
+// POST /api/notices - Restricted to ADMIN & FACULTY
+app.post('/api/notices', authenticateToken, requireRole(['ADMIN', 'FACULTY']), async (req, res) => {
+  const { title, category, description, desc, content, priority, department, pinned, isPinned, attachmentName, attachmentUrl } = req.body || {};
+  
+  const noticeTitle = (title && typeof title === 'string') ? title.trim().slice(0, 150) : '';
+  const noticeBody = (description || desc || content || '').trim().slice(0, 3000);
+
+  if (!noticeTitle) {
+    return res.status(400).json({ error: 'Notice title is required.' });
+  }
+  if (!noticeBody) {
+    return res.status(400).json({ error: 'Notice content / description is required.' });
+  }
+
+  const now = new Date();
+  const newNotice = {
+    id: `NTC-${Date.now().toString().slice(-4)}`,
+    title: noticeTitle,
+    category: category || 'Academic Circular',
+    description: noticeBody,
+    desc: noticeBody,
+    priority: priority || 'Normal',
+    department: department || 'All Departments',
+    pinned: Boolean(pinned || isPinned),
+    attachmentName: attachmentName ? String(attachmentName).slice(0, 100) : null,
+    attachmentUrl: attachmentUrl ? String(attachmentUrl).slice(0, 300) : null,
+    date: 'Today',
+    time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    timestamp: now.toISOString(),
+    postedBy: req.user.name,
+    postedById: req.user.id,
+    postedByRole: req.user.role
+  };
+
+  if (!DB.notices) DB.notices = [];
+  if (newNotice.pinned) {
+    DB.notices.unshift(newNotice);
+  } else {
+    const firstUnpinnedIndex = DB.notices.findIndex(n => !n.pinned);
+    if (firstUnpinnedIndex === -1) {
+      DB.notices.push(newNotice);
+    } else {
+      DB.notices.splice(firstUnpinnedIndex, 0, newNotice);
+    }
+  }
+  saveDatabaseToFile();
+
+  SecurityLogger.log('NOTICE_PUBLISHED', {
+    adminId: req.user.id,
+    noticeId: newNotice.id,
+    title: newNotice.title,
+    category: newNotice.category,
+    priority: newNotice.priority
+  });
+
+  if (supabase) {
+    supabase.from('notices').insert([{
+      id: newNotice.id,
+      title: newNotice.title,
+      category: newNotice.category,
+      description: newNotice.description,
+      priority: newNotice.priority,
+      posted_by: newNotice.postedBy,
+      pinned: newNotice.pinned
+    }]).then(({ error }) => {
+      if (error) console.warn('[SUPABASE NOTICE INSERT ERROR]', error.message);
+      else console.log('[SUPABASE] Stored notice in Supabase:', newNotice.id);
+    });
+  }
+
+  return res.status(201).json({
+    status: 'success',
+    message: 'Notice successfully published to Campus Notice Board.',
+    notice: newNotice
+  });
+});
+
+// DELETE /api/notices/:id - Restricted to ADMIN
+app.delete('/api/notices/:id', authenticateToken, requireRole(['ADMIN']), (req, res) => {
+  const { id } = req.params;
+  if (!DB.notices) DB.notices = [];
+  const idx = DB.notices.findIndex(n => n.id === id);
+  if (idx === -1) {
+    return res.status(404).json({ error: 'Notice not found.' });
+  }
+
+  const deleted = DB.notices.splice(idx, 1)[0];
+  saveDatabaseToFile();
+
+  SecurityLogger.log('NOTICE_DELETED', { adminId: req.user.id, noticeId: id });
+
+  if (supabase) {
+    supabase.from('notices').delete().eq('id', id).then(({ error }) => {
+      if (error) console.warn('[SUPABASE NOTICE DELETE ERROR]', error.message);
+    });
+  }
+
+  return res.json({ status: 'success', message: 'Notice removed successfully.', deleted });
+});
+
+// ==========================================================
+// 11. Real-Time Conversational AI Assistant (/api/chat)
+// ==========================================================
+app.post('/api/chat', authenticateToken, (req, res) => {
+  const { message } = req.body || {};
+  if (!message || typeof message !== 'string') {
+    return res.status(400).json({ error: 'Message query is required.' });
+  }
+
+  const q = message.trim().toLowerCase();
+  const user = req.user;
+  let reply = "";
+
+  // 1. Real-Time Attendance Query
+  if (q.includes('attendance') || q.includes('absent') || q.includes('present') || q.includes('gtu rule') || q.includes('detention')) {
+    const allSessions = DB.attendance || [];
+    if (allSessions.length === 0) {
+      reply = `Hello **${user.name}**! No class attendance sessions have been logged by faculty for Term 2026 yet. As faculty conduct lectures and submit rolls, your live attendance and GTU 75% compliance will calculate in real time.`;
+    } else {
+      let attended = 0;
+      allSessions.forEach(s => {
+        if (Array.isArray(s.records)) {
+          const match = s.records.find(r => 
+            (r.enrollment && r.enrollment === user.id) ||
+            (r.studentId && r.studentId === user.id) ||
+            (r.id && r.id === user.id) ||
+            (user.rollNo && r.rollNo === user.rollNo)
+          );
+          if (match && match.present) attended++;
+        }
+      });
+      const pct = ((attended / allSessions.length) * 100).toFixed(1);
+      const isCompliant = Number(pct) >= 75;
+      reply = `Hello **${user.name}**! Your real-time attendance for **Class 2452 - IT** is **${pct}%** (${attended} of ${allSessions.length} sessions attended). ${
+        isCompliant 
+          ? 'You are currently **GTU Compliant (Eligible)** with optimal academic standing! 🎉' 
+          : '⚠️ Your attendance is below the mandatory GTU 75% threshold. Please attend upcoming lectures to avoid exam detention.'
+      }`;
+    }
+  }
+  // 2. Real-Time Notices & Circulars Query
+  else if (q.includes('notice') || q.includes('circular') || q.includes('announcement') || q.includes('news')) {
+    const notices = DB.notices || [];
+    if (notices.length === 0) {
+      reply = "There are currently no active circulars on the campus board. Check back soon for institutional announcements.";
+    } else {
+      const top = notices.slice(0, 3);
+      const list = top.map(n => `• **[${n.category}]** ${n.title} (${n.date})`).join('\n');
+      reply = `Here are the latest official campus notices:\n\n${list}\n\nYou can view and download complete circulars on the **Notices tab**.`;
+    }
+  }
+  // 3. Real-Time Timetable & Classes
+  else if (q.includes('class') || q.includes('schedule') || q.includes('lecture') || q.includes('period') || q.includes('lab') || q.includes('timetable')) {
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const currentDay = new Date().getDay();
+    const dayName = dayNames[currentDay];
+    if (currentDay === 0) {
+      reply = "Today is **Sunday**. Campus academic blocks are closed. Next instructional day begins Monday at 10:00 AM with **SPC Theory** in Room S-21.";
+    } else {
+      reply = `Today is **${dayName}** for Class 2452 - IT. Today's academic schedule includes lectures in **Room S-21 / S-25** and practicals in **Labs T-13, T-14, T-15, and T-16**. Check the **Timetable** view for your complete weekly period allocation.`;
+    }
+  }
+  // 4. Real-Time Complaints / Maintenance
+  else if (q.includes('complaint') || q.includes('repair') || q.includes('broken') || q.includes('grievance') || q.includes('fan') || q.includes('pc')) {
+    const openComplaints = (DB.complaints || []).filter(c => c.status !== 'RESOLVED');
+    reply = `The campus maintenance system currently has **${openComplaints.length} active ticket${openComplaints.length === 1 ? '' : 's'}**. You can submit an issue in **Complaints & Maintenance**, and our facility dispatch team will address it promptly.`;
+  }
+  // 5. Lost & Found
+  else if (q.includes('lost') || q.includes('found') || q.includes('wallet') || q.includes('keys') || q.includes('bag') || q.includes('id card')) {
+    const count = (DB.lostAndFound || []).length;
+    reply = `The **Lost & Found Hub** currently lists **${count} active report${count === 1 ? '' : 's'}**. Browse the directory or submit a lost item report to notify campus security.`;
+  }
+  // 6. Emergency & SOS
+  else if (q.includes('emergency') || q.includes('sos') || q.includes('doctor') || q.includes('security') || q.includes('ambulance') || q.includes('police')) {
+    reply = "🚨 **EMERGENCY ASSISTANCE**: For medical emergencies or safety incidents, dial campus security at **+91 261 2345678** (24/7) or tap the **Emergency SOS button** in the top navigation bar.";
+  }
+  // 7. Stationery
+  else if (q.includes('stationery') || q.includes('rush') || q.includes('calculator') || q.includes('pen') || q.includes('journal') || q.includes('print')) {
+    reply = "The Central Stationery store is located on the Ground Floor next to Auditorium A. Operating hours: 9:00 AM – 5:30 PM. Check the **Stationery** view for live inventory and rush status.";
+  }
+  // General response
+  else {
+    reply = `Regarding "${message}": Campus X AI is continuously synchronized with Tapi Diploma Engineering College. You can ask about **your attendance**, **exam schedules**, **notices**, **today's timetable**, or **emergency assistance**.`;
+  }
+
+  return res.json({
+    status: 'success',
+    reply,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// GET /api/sync - Lightweight Real-Time Heartbeat Synchronization
+app.get('/api/sync', (req, res) => {
+  return res.json({
+    timestamp: Date.now(),
+    attendanceCount: (DB.attendance || []).length,
+    noticesCount: (DB.notices || []).length,
+    complaintsCount: (DB.complaints || []).length,
+    lostFoundCount: (DB.lostAndFound || []).length
+  });
 });
 
 const ROOT_DIR = fs.existsSync(path.join(__dirname, 'index.html'))
