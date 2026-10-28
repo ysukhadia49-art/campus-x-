@@ -1022,6 +1022,56 @@
   gap: 0.75rem;
 }
 
+/* File Upload & Drop Zone */
+.file-drop-zone {
+  border: 2px dashed var(--border-card, #BAC7D5);
+  border-radius: var(--radius-md, 8px);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  background: var(--bg-surface-subtle, #F8FAFC);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.file-drop-zone:hover, .file-drop-zone.dragover {
+  border-color: var(--color-accent-blue, #2563EB);
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.file-drop-zone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.file-preview-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #ffffff;
+  border: 1px solid var(--border-card, #E2E8F0);
+  border-radius: var(--radius-md, 8px);
+  margin-top: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.timetable-selector-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.25rem;
+  background: #ffffff;
+  border: 1px solid var(--border-card, #E2E8F0);
+  border-radius: var(--radius-md, 8px);
+  flex-wrap: wrap;
+}
+
 /* 11. "ASK CAMPUS X" CONVERSATIONAL COMPONENT */
 .ask-ai-widget {
   background: var(--bg-surface);

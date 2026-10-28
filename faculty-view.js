@@ -138,10 +138,13 @@ class FacultyView {
             <button class="action-pill action-pill-green" onclick="appState.setView('timetable')">
               <span>View Timetable</span>
             </button>
-            <button class="action-pill action-pill-peach" onclick="appState.setView('notices')">
+            <button class="action-pill action-pill-purple" onclick="AcademicsView.openTimetableUploadModal()">
+              <span>Upload Timetable</span>
+            </button>
+            <button class="action-pill action-pill-peach" onclick="AdminView.openNoticeModal()">
               <span>Post Notice</span>
             </button>
-            <button class="action-pill action-pill-purple" onclick="appState.setView('performance')">
+            <button class="action-pill action-pill-blue" onclick="appState.setView('performance')">
               <span>View Reports</span>
             </button>
           </div>

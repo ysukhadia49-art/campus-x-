@@ -6,14 +6,14 @@
 class AppModal {
   static activeModal = null;
 
-  static show({ title, content, confirmText = "Confirm", confirmClass = "btn-primary", onConfirm = null }) {
+  static show({ title, content, confirmText = "Confirm", confirmClass = "btn-primary", onConfirm = null, maxWidth = null }) {
     AppModal.close();
 
     const backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop';
     backdrop.id = 'appModalBackdrop';
     backdrop.innerHTML = `
-      <div class="modal-dialog">
+      <div class="modal-dialog" ${maxWidth ? `style="max-width: ${maxWidth}; width: 100%;"` : ''}>
         <div class="modal-header-bar">
           <h4>${title}</h4>
           <button style="font-size: 1.25rem; color: var(--text-muted); background: none; border: none; cursor: pointer;" onclick="AppModal.close()">✕</button>

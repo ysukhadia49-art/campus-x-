@@ -398,6 +398,35 @@ const CAMPUS_DATA = {
         priority: 'Advisory'
       }
     ];
+  })(),
+  uploadedTimetables: (() => {
+    try {
+      const stored = localStorage.getItem('campusx_uploaded_timetables');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return [
+      {
+        id: "TT-2452-BASE",
+        classId: "Class 2452 - IT",
+        className: "Class 2452 - IT (Room S-21 / S-25)",
+        semester: "5th Semester",
+        department: "Information Technology [16]",
+        room: "S-21 / S-25 (Second Floor)",
+        term: "15/06/2026 To 30/10/2026",
+        effectiveDate: "2026-06-15",
+        title: "Official 5th Sem IT Weekly Time Table",
+        uploadedBy: "Mrs. Binita B. Acharya (H.O.D.)",
+        uploadedByRole: "FACULTY",
+        uploadedAt: "2026-06-15T09:00:00.000Z",
+        attachmentName: "Official_5th_Sem_IT_Timetable_TDEC.pdf",
+        attachmentSize: "184 KB",
+        attachmentUrl: null,
+        attachmentType: "application/pdf",
+        description: "Official statutory teaching and practical allocation for 5th Semester Information Technology, Approved by GTU & Academic Council.",
+        isDefault: true,
+        totalHours: 40
+      }
+    ];
   })()
 };
 

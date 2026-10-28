@@ -109,6 +109,17 @@ class CampusState {
         this.isSosActive = true;
       }
     } catch (e) {}
+
+    // Load persisted uploaded timetables
+    try {
+      const savedTT = localStorage.getItem('campusx_uploaded_timetables');
+      if (savedTT) {
+        const parsed = JSON.parse(savedTT);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          CAMPUS_DATA.uploadedTimetables = parsed;
+        }
+      }
+    } catch (e) {}
   }
 
   subscribe(listener) {
@@ -571,6 +582,123 @@ class CampusState {
     return true;
   }
 
+  // ==========================================================
+  // TIMETABLE MANAGEMENT & UPLOAD (Section 21)
+  // ==========================================================
+  uploadTimetable(timetableData) {
+    if (this.currentUser && this.currentUser.role !== 'ADMIN' && this.currentUser.role !== 'FACULTY') {
+      this.showToast('Access restricted: Only administrators or faculty can upload official timetables.', 'error');
+      return false;
+    }
+
+    const esc = window.SecurityUtils ? window.SecurityUtils.sanitizeInput : (s => s);
+    const cleanClassId = esc(timetableData.classId || 'Class 2452 - IT', 60);
+    const cleanTitle = esc(timetableData.title || `Time Table - ${cleanClassId}`, 150);
+    const cleanSem = esc(timetableData.semester || '5th Semester', 50);
+    const cleanDept = esc(timetableData.department || 'Information Technology [16]', 80);
+    const cleanRoom = esc(timetableData.room || 'S-21 / S-25', 60);
+    const cleanTerm = esc(timetableData.term || 'Academic Term 2026-2027', 80);
+    const cleanDesc = esc(timetableData.description || '', 2000);
+
+    const now = new Date();
+    const newId = `TT-${Date.now().toString().slice(-4)}`;
+    const creatorName = this.currentUser ? this.currentUser.name : 'Faculty Administrator';
+    const creatorRole = this.currentUser ? this.currentUser.role : 'FACULTY';
+
+    const newRecord = {
+      id: newId,
+      classId: cleanClassId,
+      className: `${cleanClassId} (${cleanRoom})`,
+      semester: cleanSem,
+      department: cleanDept,
+      room: cleanRoom,
+      term: cleanTerm,
+      effectiveDate: timetableData.effectiveDate || now.toISOString().split('T')[0],
+      title: cleanTitle,
+      uploadedBy: creatorName,
+      uploadedByRole: creatorRole,
+      uploadedAt: now.toISOString(),
+      attachmentName: timetableData.attachmentName || null,
+      attachmentSize: timetableData.attachmentSize || null,
+      attachmentData: timetableData.attachmentData || null,
+      attachmentType: timetableData.attachmentType || null,
+      attachmentUrl: timetableData.attachmentUrl || null,
+      description: cleanDesc,
+      isDefault: Boolean(timetableData.isDefault),
+      totalHours: timetableData.totalHours || 40,
+      scheduleMatrix: timetableData.scheduleMatrix || null
+    };
+
+    if (!CAMPUS_DATA.uploadedTimetables) {
+      CAMPUS_DATA.uploadedTimetables = [];
+    }
+
+    // If marked as default, unmark others for the same class
+    if (newRecord.isDefault) {
+      CAMPUS_DATA.uploadedTimetables.forEach(t => {
+        if (t.classId === cleanClassId) t.isDefault = false;
+      });
+    }
+
+    CAMPUS_DATA.uploadedTimetables.unshift(newRecord);
+
+    try {
+      localStorage.setItem('campusx_uploaded_timetables', JSON.stringify(CAMPUS_DATA.uploadedTimetables));
+    } catch (e) {
+      console.warn('LocalStorage quota or write issue:', e.message);
+    }
+
+    // Add alert into attention items
+    if (Array.isArray(CAMPUS_DATA.attentionItems)) {
+      CAMPUS_DATA.attentionItems.unshift({
+        id: `ATT-TT-${Date.now()}`,
+        title: `New Timetable: ${cleanTitle}`,
+        desc: `${cleanClassId} (${cleanSem}) • Uploaded by ${creatorName}`,
+        time: 'Just now',
+        bg: 'var(--tint-soft-blue)',
+        color: 'var(--color-accent-blue)'
+      });
+      try {
+        localStorage.setItem('campusx_attention', JSON.stringify(CAMPUS_DATA.attentionItems));
+      } catch (e) {}
+    }
+
+    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+      ApiClient.request('/api/timetable', {
+        method: 'POST',
+        body: JSON.stringify(newRecord)
+      }).catch(err => console.warn('Timetable server sync notice:', err.message));
+    }
+
+    this.showToast(`Timetable "${cleanTitle}" published successfully!`, 'success');
+    this.notify('TIMETABLE_UPLOADED');
+    return newRecord;
+  }
+
+  deleteTimetable(id) {
+    if (this.currentUser && this.currentUser.role !== 'ADMIN' && this.currentUser.role !== 'FACULTY') {
+      this.showToast('Access denied: Administrator or Faculty privileges required.', 'error');
+      return false;
+    }
+
+    if (!CAMPUS_DATA.uploadedTimetables) return false;
+    CAMPUS_DATA.uploadedTimetables = CAMPUS_DATA.uploadedTimetables.filter(t => t.id !== id);
+
+    try {
+      localStorage.setItem('campusx_uploaded_timetables', JSON.stringify(CAMPUS_DATA.uploadedTimetables));
+    } catch (e) {}
+
+    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+      ApiClient.request(`/api/timetable/${encodeURIComponent(id)}`, {
+        method: 'DELETE'
+      }).catch(err => console.warn('Timetable delete API notice:', err.message));
+    }
+
+    this.showToast('Timetable removed successfully.', 'info');
+    this.notify('TIMETABLE_DELETED');
+    return true;
+  }
+
   createComplaint(complaint) {
     // Sanitize user-provided fields
     if (window.SecurityUtils) {
@@ -652,7 +780,10 @@ class CampusState {
     if (window.ApiClient && !ApiClient.isStaticDeployment()) {
       try {
         const token = localStorage.getItem('campusx_auth_token') || (this.currentUser && this.currentUser.token);
-        const promises = [ApiClient.request('/api/notices')];
+        const promises = [
+          ApiClient.request('/api/notices'),
+          ApiClient.request('/api/timetable')
+        ];
         if (token) {
           promises.push(
             ApiClient.request('/api/complaints'),
@@ -663,6 +794,7 @@ class CampusState {
 
         const results = await Promise.allSettled(promises);
         const ntcRes = results[0];
+        const ttRes = results[1];
         if (ntcRes && ntcRes.status === 'fulfilled' && ntcRes.value && Array.isArray(ntcRes.value.notices)) {
           CAMPUS_DATA.notices = ntcRes.value.notices;
           try {
@@ -670,11 +802,18 @@ class CampusState {
             this.notify('NOTICES_CHANGED');
           } catch(e) {}
         }
+        if (ttRes && ttRes.status === 'fulfilled' && ttRes.value && Array.isArray(ttRes.value.timetables)) {
+          CAMPUS_DATA.uploadedTimetables = ttRes.value.timetables;
+          try {
+            localStorage.setItem('campusx_uploaded_timetables', JSON.stringify(ttRes.value.timetables));
+            this.notify('TIMETABLE_UPLOADED');
+          } catch(e) {}
+        }
 
-        if (token && results.length > 1) {
-          const cRes = results[1];
-          const lfRes = results[2];
-          const attRes = results[3];
+        if (token && results.length > 2) {
+          const cRes = results[2];
+          const lfRes = results[3];
+          const attRes = results[4];
           if (cRes && cRes.status === 'fulfilled' && cRes.value && Array.isArray(cRes.value.complaints)) {
             CAMPUS_DATA.complaints = cRes.value.complaints;
           }

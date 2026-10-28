@@ -4,29 +4,166 @@
    ========================================================== */
 
 class AcademicsView {
+  static selectedTimetableId = 'default';
+  static pendingUploadFile = null;
+
+  static selectTimetable(id) {
+    AcademicsView.selectedTimetableId = id;
+    const container = document.getElementById('viewContainer');
+    if (container) AcademicsView.renderTimetable(container);
+  }
+
+  static onClassSelectChange(val) {
+    const customWrap = document.getElementById('modalTtCustomClassWrap');
+    if (customWrap) {
+      customWrap.style.display = val === '__custom__' ? 'block' : 'none';
+    }
+  }
+
   static renderTimetable(container) {
+    const timetables = (typeof CAMPUS_DATA !== 'undefined' && Array.isArray(CAMPUS_DATA.uploadedTimetables)) 
+      ? CAMPUS_DATA.uploadedTimetables 
+      : [];
+
+    let current = null;
+    if (AcademicsView.selectedTimetableId && AcademicsView.selectedTimetableId !== 'default') {
+      current = timetables.find(t => t.id === AcademicsView.selectedTimetableId);
+    }
+    if (!current && timetables.length > 0) {
+      current = timetables.find(t => t.isDefault) || timetables[0];
+    }
+
+    const isCustomSelected = current && current.id !== 'TT-2452-BASE';
+    const displayClass = current ? current.classId : 'Class 2452 - IT';
+    const displayRoom = current ? current.room : 'S-21 / S-25 (Second Floor)';
+    const displayTerm = current ? current.term : '15/06/2026 To 30/10/2026';
+    const displayTitle = current ? current.title : 'Updated Time Table: 5th Semester';
+    const displayDept = current ? current.department : 'Tapi Diploma Engineering College [647] • IT Dept [16]';
+    const canManage = appState.currentUser && (appState.currentUser.role === 'ADMIN' || appState.currentUser.role === 'FACULTY');
+
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-        <!-- INSTITUTION HEADER -->
+        
+        <!-- INSTITUTION HEADER & ACTIONS STRIP -->
         <div class="card-editorial" style="padding: 1.5rem; border-left: 4px solid var(--color-accent-blue);">
           <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 1rem;">
             <div>
               <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--color-accent-blue); text-transform: uppercase;">
-                Tapi Diploma Engineering College [647] • IT Dept [16]
+                ${displayDept}
               </div>
-              <h2 style="font-size: 1.75rem; font-weight: 800; margin: 0.25rem 0;">Updated Time Table: 5th Semester</h2>
+              <h2 style="font-size: 1.75rem; font-weight: 800; margin: 0.25rem 0;">${displayTitle}</h2>
               <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0;">
-                <strong>Class:</strong> 2452 - IT &nbsp;|&nbsp; 
-                <strong>Class Room:</strong> S-21 / S-25 (Second Floor) &nbsp;|&nbsp; 
-                <strong>Term Duration:</strong> 15/06/2026 To 30/10/2026
+                <strong>Class:</strong> ${displayClass} &nbsp;|&nbsp; 
+                <strong>Class Room:</strong> ${displayRoom} &nbsp;|&nbsp; 
+                <strong>Term Duration:</strong> ${displayTerm}
               </p>
             </div>
-            <div style="display: flex; gap: 0.5rem; align-items: center;">
-              <span class="badge badge-blue">Class 2452 - IT</span>
-              <span class="badge badge-purple">40 Hrs/Week</span>
+            
+            <div class="flex items-center gap-2" style="flex-wrap: wrap;">
+              <button class="btn btn-primary" onclick="AcademicsView.openTimetableUploadModal()" style="box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <span>Upload Timetable</span>
+              </button>
+              
+              <button class="btn btn-secondary" onclick="window.print()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                <span>Print / PDF</span>
+              </button>
             </div>
           </div>
         </div>
+
+        <!-- TIMETABLE SELECTOR STRIP -->
+        <div class="timetable-selector-strip">
+          <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); white-space: nowrap;">
+              Class Timetable Schedule:
+            </label>
+            <select class="form-input" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; font-weight: 600; min-width: 280px;" onchange="AcademicsView.selectTimetable(this.value)">
+              <option value="default" ${(!current || current.id === 'TT-2452-BASE') ? 'selected' : ''}>Class 2452 - IT (Official 5th Sem IT Matrix)</option>
+              ${timetables.filter(t => t.id !== 'TT-2452-BASE').map(t => `
+                <option value="${t.id}" ${current && current.id === t.id ? 'selected' : ''}>
+                  ${t.title} (${t.classId} • ${t.semester})
+                </option>
+              `).join('')}
+            </select>
+          </div>
+          <div style="display: flex; gap: 0.5rem; align-items: center; font-size: 0.8rem; color: var(--text-muted); flex-wrap: wrap;">
+            <span class="badge badge-blue">${displayClass}</span>
+            <span class="badge badge-purple">${current ? current.totalHours || 40 : 40} Hrs/Week</span>
+            ${current && current.uploadedBy ? `<span>&bull; Published by <strong>${current.uploadedBy}</strong></span>` : ''}
+          </div>
+        </div>
+
+        <!-- UPLOADED TIMETABLE HIGHLIGHT CARD (Shown when a custom uploaded schedule is selected) -->
+        ${isCustomSelected ? `
+          <div class="card-editorial" style="padding: 1.5rem; border: 1px solid var(--color-accent-blue); background: #ffffff;">
+            <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+              <div>
+                <div class="flex items-center gap-2" style="margin-bottom: 0.3rem;">
+                  <span class="badge badge-blue">${current.classId}</span>
+                  <span class="badge badge-purple">${current.semester}</span>
+                  ${current.isDefault ? '<span class="badge badge-green">Default Class Schedule</span>' : ''}
+                </div>
+                <h3 style="font-size: 1.3rem; font-weight: 800; margin: 0.2rem 0; color: var(--text-primary);">${current.title}</h3>
+                <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0;">
+                  <strong>Dept:</strong> ${current.department} &nbsp;|&nbsp; 
+                  <strong>Classroom:</strong> ${current.room} &nbsp;|&nbsp; 
+                  <strong>Duration:</strong> ${current.term}
+                </p>
+              </div>
+              <div class="flex items-center gap-2">
+                ${current.attachmentData || current.attachmentName ? `
+                  <button class="btn btn-primary" onclick="AcademicsView.downloadAttachment('${current.id}')">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    <span>Download Document</span>
+                  </button>
+                ` : ''}
+                ${current.attachmentData && current.attachmentType && current.attachmentType.startsWith('image/') ? `
+                  <button class="btn btn-secondary" onclick="AcademicsView.previewAttachment('${current.id}')">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <span>Preview Scan</span>
+                  </button>
+                ` : ''}
+                ${canManage ? `
+                  <button class="btn btn-secondary" style="color: var(--color-error); border-color: #fca5a5;" onclick="AcademicsView.confirmDelete('${current.id}')">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    <span>Delete</span>
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+
+            ${current.description ? `
+              <div style="padding: 0.75rem 1rem; background: var(--bg-surface-subtle); border-left: 3px solid var(--color-accent-blue); border-radius: 4px; font-size: 0.85rem; margin-bottom: 1rem;">
+                <strong>Academic Notice & Circular Notes:</strong> ${current.description}
+              </div>
+            ` : ''}
+
+            ${current.attachmentName ? `
+              <div class="file-preview-card">
+                <div class="flex items-center gap-3">
+                  <div style="width: 38px; height: 38px; border-radius: 6px; background: rgba(37, 99, 235, 0.1); color: var(--color-accent-blue); display: flex; align-items: center; justify-content: center;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; font-size: 0.88rem;">${current.attachmentName}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">${current.attachmentSize || 'Official PDF Document'} &bull; Published by ${current.uploadedBy || 'Faculty'}</div>
+                  </div>
+                </div>
+                <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;" onclick="AcademicsView.downloadAttachment('${current.id}')">
+                  Download
+                </button>
+              </div>
+            ` : ''}
+
+            ${current.attachmentData && current.attachmentType && current.attachmentType.startsWith('image/') ? `
+              <div style="margin-top: 1rem; text-align: center; background: #0f172a; border-radius: 8px; padding: 1rem;">
+                <img src="${current.attachmentData}" alt="Uploaded Timetable" style="max-width: 100%; max-height: 480px; object-fit: contain; border-radius: 4px;">
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
 
         <!-- WEEKLY TIMETABLE GRID -->
         <div class="table-responsive-card">
@@ -370,6 +507,310 @@ class AcademicsView {
         </div>
       </div>
     `;
+  }
+
+  // ==========================================================
+  // TIMETABLE UPLOAD MODAL & WORKFLOW (Section 21)
+  // ==========================================================
+  static openTimetableUploadModal() {
+    AcademicsView.pendingUploadFile = null;
+    const today = new Date().toISOString().split('T')[0];
+
+    AppModal.show({
+      title: "Upload Class Timetable & Schedule",
+      maxWidth: "580px",
+      confirmText: "Publish Timetable",
+      confirmClass: "btn-primary",
+      onConfirm: () => {
+        AcademicsView.submitTimetableUpload();
+      },
+      content: `
+        <form id="ttUploadForm" onsubmit="event.preventDefault(); AcademicsView.submitTimetableUpload();" style="display: flex; flex-direction: column; gap: 1rem;">
+          
+          <div class="form-group">
+            <label class="form-label">Timetable Title <span style="color: var(--color-error);">*</span></label>
+            <input type="text" class="form-input" id="modalTtTitle" placeholder="e.g. Revised 5th Sem IT Weekly Time Table" value="Revised 5th Sem IT Weekly Time Table" required maxlength="150">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div class="form-group">
+              <label class="form-label">Target Class & Sem <span style="color: var(--color-error);">*</span></label>
+              <select class="form-input" id="modalTtClass" onchange="AcademicsView.onClassSelectChange(this.value)">
+                <option value="Class 2452 - IT (5th Semester)">Class 2452 - IT (5th Sem)</option>
+                <option value="Class 2451 - IT (3rd Semester)">Class 2451 - IT (3rd Sem)</option>
+                <option value="Class 2450 - IT (1st Semester)">Class 2450 - IT (1st Sem)</option>
+                <option value="Class 2453 - Computer Eng (5th Semester)">Computer Eng (5th Sem)</option>
+                <option value="Class 2454 - Mechanical Eng (5th Semester)">Mechanical Eng (5th Sem)</option>
+                <option value="Class 2455 - Electrical Eng (5th Semester)">Electrical Eng (5th Sem)</option>
+                <option value="Class 2456 - Civil Eng (5th Semester)">Civil Eng (5th Sem)</option>
+                <option value="__custom__">+ Custom Class / Division</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Department</label>
+              <select class="form-input" id="modalTtDept">
+                <option value="Information Technology [16]">Information Technology [16]</option>
+                <option value="Computer Engineering [07]">Computer Engineering [07]</option>
+                <option value="Mechanical Engineering [19]">Mechanical Engineering [19]</option>
+                <option value="Electrical Engineering [09]">Electrical Engineering [09]</option>
+                <option value="Civil Engineering [06]">Civil Engineering [06]</option>
+                <option value="General Science & Humanities">General Science & Humanities</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" id="modalTtCustomClassWrap" style="display: none;">
+            <label class="form-label">Enter Custom Class Name</label>
+            <input type="text" class="form-input" id="modalTtCustomClass" placeholder="e.g. Class 2457 - AI & DS (Sem 5)">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div class="form-group">
+              <label class="form-label">Classroom / Lab Location</label>
+              <input type="text" class="form-input" id="modalTtRoom" placeholder="e.g. S-21 / S-25 (Second Floor)" value="S-21 / S-25 (Second Floor)">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Effective From Date</label>
+              <input type="date" class="form-input" id="modalTtEffectiveDate" value="${today}">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Term Duration</label>
+            <input type="text" class="form-input" id="modalTtTerm" placeholder="e.g. 15/06/2026 To 30/10/2026" value="15/06/2026 To 30/10/2026">
+          </div>
+
+          <!-- DRAG & DROP FILE UPLOAD AREA -->
+          <div class="form-group">
+            <label class="form-label">Official Timetable Document (PDF, Image scan, or Excel) <span style="color: var(--color-error);">*</span></label>
+            <div class="file-drop-zone" id="ttModalDropZone" 
+                 onclick="document.getElementById('modalTtFileInput').click()"
+                 ondragover="event.preventDefault(); this.classList.add('dragover');"
+                 ondragleave="this.classList.remove('dragover');"
+                 ondrop="event.preventDefault(); this.classList.remove('dragover'); AcademicsView.handleFileSelection(event, true);">
+              
+              <input type="file" id="modalTtFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.csv,.xlsx" style="display:none;" onchange="AcademicsView.handleFileSelection(event, false)">
+              
+              <div id="ttModalPrompt">
+                <div style="width: 44px; height: 44px; margin: 0 auto 0.5rem; border-radius: 50%; background: rgba(37, 99, 235, 0.1); color: var(--color-accent-blue); display: flex; align-items: center; justify-content: center;">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                </div>
+                <div style="font-weight: 700; color: var(--text-primary); font-size: 0.92rem;">Click to browse, or drag & drop timetable file here</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Supports PDF circulars, JPG/PNG timetable charts, or spreadsheets (up to 10MB)</div>
+              </div>
+
+              <div id="ttModalFileSuccess" style="display:none; text-align: left;"></div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Remarks / Special Instructions (Optional)</label>
+            <textarea class="form-input" id="modalTtNotes" rows="2" placeholder="e.g. Approved by H.O.D. & Principal. Swapped CDCT & AIPD practical lab hours."></textarea>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="modalTtIsDefault" checked style="width: 16px; height: 16px; accent-color: var(--color-primary); cursor: pointer;">
+            <label for="modalTtIsDefault" style="font-size: 0.85rem; font-weight: 600; cursor: pointer;">
+              Set as current active schedule for this class
+            </label>
+          </div>
+        </form>
+      `
+    });
+  }
+
+  static handleFileSelection(event, isDrop = false) {
+    let file = null;
+    if (isDrop && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
+      file = event.dataTransfer.files[0];
+    } else if (event.target && event.target.files && event.target.files[0]) {
+      file = event.target.files[0];
+    }
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      appState.showToast('File exceeds 10MB limit. Please upload a smaller document.', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      const sizeStr = file.size > 1024 * 1024 
+        ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+        : `${Math.round(file.size / 1024)} KB`;
+
+      AcademicsView.pendingUploadFile = {
+        name: file.name,
+        size: sizeStr,
+        type: file.type,
+        data: dataUrl
+      };
+
+      const promptEl = document.getElementById('ttModalPrompt');
+      const successEl = document.getElementById('ttModalFileSuccess');
+      if (promptEl && successEl) {
+        promptEl.style.display = 'none';
+        successEl.style.display = 'block';
+        successEl.innerHTML = `
+          <div class="file-preview-card" style="margin: 0; background: #ffffff;">
+            <div class="flex items-center gap-3">
+              <div style="width: 36px; height: 36px; border-radius: 6px; background: rgba(16, 185, 129, 0.12); color: var(--color-success); display: flex; align-items: center; justify-content: center; font-weight: 800;">
+                ✓
+              </div>
+              <div>
+                <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-primary);">${file.name}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">${sizeStr} &bull; Ready to Publish</div>
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.74rem;" onclick="event.stopPropagation(); document.getElementById('modalTtFileInput').click();">
+              Change
+            </button>
+          </div>
+        `;
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  static submitTimetableUpload() {
+    const titleEl = document.getElementById('modalTtTitle');
+    const classEl = document.getElementById('modalTtClass');
+    const customClassEl = document.getElementById('modalTtCustomClass');
+    const deptEl = document.getElementById('modalTtDept');
+    const roomEl = document.getElementById('modalTtRoom');
+    const termEl = document.getElementById('modalTtTerm');
+    const effectiveEl = document.getElementById('modalTtEffectiveDate');
+    const notesEl = document.getElementById('modalTtNotes');
+    const defaultEl = document.getElementById('modalTtIsDefault');
+
+    if (!titleEl) return;
+    const title = titleEl.value.trim();
+    if (!title) {
+      appState.showToast('Please enter a timetable title.', 'error');
+      return;
+    }
+
+    let classVal = classEl ? classEl.value : 'Class 2452 - IT (5th Semester)';
+    if (classVal === '__custom__' && customClassEl && customClassEl.value.trim()) {
+      classVal = customClassEl.value.trim();
+    }
+
+    const dept = deptEl ? deptEl.value : 'Information Technology [16]';
+    const room = roomEl ? roomEl.value.trim() : 'S-21 / S-25';
+    const term = termEl ? termEl.value.trim() : '15/06/2026 To 30/10/2026';
+    const effectiveDate = effectiveEl ? effectiveEl.value : new Date().toISOString().split('T')[0];
+    const notes = notesEl ? notesEl.value.trim() : '';
+    const isDefault = defaultEl ? defaultEl.checked : true;
+
+    const file = AcademicsView.pendingUploadFile || {
+      name: `${title.replace(/\s+/g, '_')}.pdf`,
+      size: '185 KB',
+      type: 'application/pdf',
+      data: null
+    };
+
+    const record = appState.uploadTimetable({
+      title,
+      classId: classVal.split('(')[0].trim(),
+      semester: classVal.includes('(') ? classVal.split('(')[1].replace(')', '') : '5th Semester',
+      department: dept,
+      room,
+      term,
+      effectiveDate,
+      description: notes,
+      isDefault,
+      attachmentName: file.name,
+      attachmentSize: file.size,
+      attachmentData: file.data,
+      attachmentType: file.type
+    });
+
+    if (record) {
+      AcademicsView.selectedTimetableId = record.id;
+      const container = document.getElementById('viewContainer');
+      if (container) {
+        AcademicsView.renderTimetable(container);
+      }
+    }
+  }
+
+  static downloadAttachment(id) {
+    const timetables = (typeof CAMPUS_DATA !== 'undefined' && Array.isArray(CAMPUS_DATA.uploadedTimetables)) 
+      ? CAMPUS_DATA.uploadedTimetables 
+      : [];
+    const t = timetables.find(item => item.id === id);
+    if (!t) {
+      appState.showToast('Timetable document not found.', 'error');
+      return;
+    }
+
+    if (t.attachmentData) {
+      const a = document.createElement('a');
+      a.href = t.attachmentData;
+      a.download = t.attachmentName || `Timetable_${t.classId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      appState.showToast(`Downloading ${t.attachmentName}...`, 'success');
+    } else {
+      const content = `TAPI DIPLOMA ENGINEERING COLLEGE [647]
+DEPARTMENT: ${t.department}
+CLASS: ${t.classId} (${t.room})
+TERM: ${t.term}
+EFFECTIVE DATE: ${t.effectiveDate}
+
+TITLE: ${t.title}
+PUBLISHED BY: ${t.uploadedBy} (${t.uploadedByRole})
+REMARKS: ${t.description || 'Approved official schedule.'}
+
+Weekly Lecture & Practical Allocation:
+- Monday to Friday: 10:00 AM to 05:30 PM
+- Saturday: 10:00 AM to 01:00 PM (Minor Project)
+Official GTU Statutory Compliance.`;
+
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = t.attachmentName ? t.attachmentName.replace('.pdf', '.txt') : `Timetable_${t.classId}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      appState.showToast('Downloaded official timetable particulars.', 'success');
+    }
+  }
+
+  static confirmDelete(id) {
+    if (confirm('Are you sure you want to remove this timetable?')) {
+      appState.deleteTimetable(id);
+      AcademicsView.selectedTimetableId = 'default';
+      const container = document.getElementById('viewContainer');
+      if (container) AcademicsView.renderTimetable(container);
+    }
+  }
+
+  static previewAttachment(id) {
+    const timetables = (typeof CAMPUS_DATA !== 'undefined' && Array.isArray(CAMPUS_DATA.uploadedTimetables)) 
+      ? CAMPUS_DATA.uploadedTimetables 
+      : [];
+    const t = timetables.find(item => item.id === id);
+    if (!t || !t.attachmentData) return;
+
+    AppModal.show({
+      title: `Preview: ${t.attachmentName || t.title}`,
+      maxWidth: "750px",
+      confirmText: "Download File",
+      confirmClass: "btn-primary",
+      onConfirm: () => AcademicsView.downloadAttachment(id),
+      content: `
+        <div style="text-align: center; max-height: 70vh; overflow: auto; background: #0f172a; border-radius: 8px; padding: 1rem;">
+          <img src="${t.attachmentData}" alt="${t.title}" style="max-width: 100%; height: auto; border-radius: 4px;">
+        </div>
+      `
+    });
   }
 
   static renderAttendance(container) {

@@ -1561,6 +1561,115 @@ app.delete('/api/notices/:id', authenticateToken, requireRole(['ADMIN']), (req, 
 });
 
 // ==========================================================
+// 10.1 Timetable Management API (/api/timetable)
+// ==========================================================
+
+// GET /api/timetable - Retrieve all official and uploaded timetables
+app.get('/api/timetable', (req, res) => {
+  if (!DB.timetables) {
+    DB.timetables = [
+      {
+        id: 'TT-2452-BASE',
+        classId: 'Class 2452 - IT',
+        className: 'Class 2452 - IT (Room S-21 / S-25)',
+        semester: '5th Semester',
+        department: 'Information Technology [16]',
+        room: 'S-21 / S-25 (Second Floor)',
+        term: '15/06/2026 To 30/10/2026',
+        effectiveDate: '2026-06-15',
+        title: 'Official 5th Sem IT Weekly Time Table',
+        uploadedBy: 'Mrs. Binita B. Acharya (H.O.D.)',
+        uploadedByRole: 'FACULTY',
+        uploadedAt: '2026-06-15T09:00:00.000Z',
+        attachmentName: 'Official_5th_Sem_IT_Timetable_TDEC.pdf',
+        attachmentSize: '184 KB',
+        attachmentUrl: null,
+        attachmentType: 'application/pdf',
+        description: 'Official statutory teaching and practical allocation for 5th Semester Information Technology, Approved by GTU & Academic Council.',
+        isDefault: true,
+        totalHours: 40
+      }
+    ];
+    saveDatabaseToFile();
+  }
+  return res.json({ status: 'success', count: DB.timetables.length, timetables: DB.timetables });
+});
+
+// POST /api/timetable - Restricted to ADMIN & FACULTY
+app.post('/api/timetable', authenticateToken, requireRole(['ADMIN', 'FACULTY']), async (req, res) => {
+  const { title, classId, className, semester, department, room, term, effectiveDate, description, attachmentName, attachmentSize, attachmentData, attachmentType, isDefault } = req.body || {};
+
+  const cleanTitle = (title && typeof title === 'string') ? title.trim().slice(0, 150) : '';
+  if (!cleanTitle) {
+    return res.status(400).json({ error: 'Timetable title is required.' });
+  }
+
+  const now = new Date();
+  const newTimetable = {
+    id: `TT-${Date.now().toString().slice(-4)}`,
+    title: cleanTitle,
+    classId: (classId || 'Class 2452 - IT').trim().slice(0, 60),
+    className: className || `${classId || 'Class 2452 - IT'} (${room || 'S-21'})`,
+    semester: semester || '5th Semester',
+    department: department || 'Information Technology [16]',
+    room: room || 'S-21 / S-25',
+    term: term || 'Academic Term 2026-2027',
+    effectiveDate: effectiveDate || now.toISOString().split('T')[0],
+    description: description ? String(description).slice(0, 2000) : '',
+    attachmentName: attachmentName ? String(attachmentName).slice(0, 120) : null,
+    attachmentSize: attachmentSize || null,
+    attachmentData: attachmentData || null,
+    attachmentType: attachmentType || null,
+    isDefault: Boolean(isDefault),
+    totalHours: 40,
+    uploadedBy: req.user.name,
+    uploadedById: req.user.id,
+    uploadedByRole: req.user.role,
+    uploadedAt: now.toISOString()
+  };
+
+  if (!DB.timetables) DB.timetables = [];
+
+  if (newTimetable.isDefault) {
+    DB.timetables.forEach(t => {
+      if (t.classId === newTimetable.classId) t.isDefault = false;
+    });
+  }
+
+  DB.timetables.unshift(newTimetable);
+  saveDatabaseToFile();
+
+  SecurityLogger.log('TIMETABLE_UPLOADED', {
+    uploaderId: req.user.id,
+    timetableId: newTimetable.id,
+    title: newTimetable.title,
+    classId: newTimetable.classId
+  });
+
+  return res.status(201).json({
+    status: 'success',
+    message: 'Timetable uploaded and published successfully.',
+    timetable: newTimetable
+  });
+});
+
+// DELETE /api/timetable/:id - Restricted to ADMIN & FACULTY
+app.delete('/api/timetable/:id', authenticateToken, requireRole(['ADMIN', 'FACULTY']), (req, res) => {
+  const { id } = req.params;
+  if (!DB.timetables) DB.timetables = [];
+  const idx = DB.timetables.findIndex(t => t.id === id);
+  if (idx === -1) {
+    return res.status(404).json({ error: 'Timetable record not found.' });
+  }
+
+  const deleted = DB.timetables.splice(idx, 1)[0];
+  saveDatabaseToFile();
+
+  SecurityLogger.log('TIMETABLE_DELETED', { uploaderId: req.user.id, timetableId: id });
+  return res.json({ status: 'success', message: 'Timetable deleted successfully.', deleted });
+});
+
+// ==========================================================
 // 11. Real-Time Conversational AI Assistant (/api/chat)
 // ==========================================================
 app.post('/api/chat', authenticateToken, (req, res) => {
