@@ -1,7 +1,7 @@
 /* Campus X AI - Consolidated Application Bundle */
 
 
-/* --- File: mock-data.js --- */
+/* --- File: mock-data.js (js\mock-data.js) --- */
 /* ==========================================================
    Campus X AI - Realistic Mock Data Store
    College: Tapi Diploma Engineering College, Surat
@@ -415,7 +415,7 @@ window.CAMPUS_DATA = CAMPUS_DATA;
 
 
 
-/* --- File: security.js --- */
+/* --- File: security.js (js\security.js) --- */
 /* ==========================================================
    Campus X AI - Client-Side Security Utilities & API Client
    Tapi Diploma Engineering College, Surat
@@ -692,7 +692,7 @@ window.SecurityUtils = SecurityUtils;
 window.ApiClient = ApiClient;
 
 
-/* --- File: state.js --- */
+/* --- File: state.js (js\state.js) --- */
 /* ==========================================================
    Campus X AI - Central State & Reactive Event Manager
    Hardened RBAC, Secure Session Tracking & Audit Integration
@@ -1346,31 +1346,42 @@ class CampusState {
   async fetchRemoteData() {
     if (window.ApiClient && !ApiClient.isStaticDeployment()) {
       try {
-        const [cRes, lfRes, attRes, ntcRes] = await Promise.allSettled([
-          ApiClient.request('/api/complaints'),
-          ApiClient.request('/api/lost-found'),
-          ApiClient.request('/api/attendance'),
-          ApiClient.request('/api/notices')
-        ]);
+        const token = localStorage.getItem('campusx_auth_token') || (this.currentUser && this.currentUser.token);
+        const promises = [ApiClient.request('/api/notices')];
+        if (token) {
+          promises.push(
+            ApiClient.request('/api/complaints'),
+            ApiClient.request('/api/lost-found'),
+            ApiClient.request('/api/attendance')
+          );
+        }
 
-        if (cRes.status === 'fulfilled' && cRes.value && Array.isArray(cRes.value.complaints)) {
-          CAMPUS_DATA.complaints = cRes.value.complaints;
-        }
-        if (lfRes.status === 'fulfilled' && lfRes.value && Array.isArray(lfRes.value.items)) {
-          CAMPUS_DATA.lostAndFound = lfRes.value.items;
-        }
-        if (attRes.status === 'fulfilled' && attRes.value && Array.isArray(attRes.value.attendance)) {
-          try {
-            localStorage.setItem('campusx_attendance_records', JSON.stringify(attRes.value.attendance));
-            this.notify('ATTENDANCE_SAVED');
-          } catch(e) {}
-        }
-        if (ntcRes.status === 'fulfilled' && ntcRes.value && Array.isArray(ntcRes.value.notices)) {
+        const results = await Promise.allSettled(promises);
+        const ntcRes = results[0];
+        if (ntcRes && ntcRes.status === 'fulfilled' && ntcRes.value && Array.isArray(ntcRes.value.notices)) {
           CAMPUS_DATA.notices = ntcRes.value.notices;
           try {
             localStorage.setItem('campusx_notices', JSON.stringify(ntcRes.value.notices));
             this.notify('NOTICES_CHANGED');
           } catch(e) {}
+        }
+
+        if (token && results.length > 1) {
+          const cRes = results[1];
+          const lfRes = results[2];
+          const attRes = results[3];
+          if (cRes && cRes.status === 'fulfilled' && cRes.value && Array.isArray(cRes.value.complaints)) {
+            CAMPUS_DATA.complaints = cRes.value.complaints;
+          }
+          if (lfRes && lfRes.status === 'fulfilled' && lfRes.value && Array.isArray(lfRes.value.items)) {
+            CAMPUS_DATA.lostAndFound = lfRes.value.items;
+          }
+          if (attRes && attRes.status === 'fulfilled' && attRes.value && Array.isArray(attRes.value.attendance)) {
+            try {
+              localStorage.setItem('campusx_attendance_records', JSON.stringify(attRes.value.attendance));
+              this.notify('ATTENDANCE_SAVED');
+            } catch(e) {}
+          }
         }
         this.notify('DATA_SYNCED');
         return;
@@ -1484,7 +1495,7 @@ if (typeof window !== 'undefined') {
 }
 
 
-/* --- File: navigation.js --- */
+/* --- File: navigation.js (js\navigation.js) --- */
 /* ==========================================================
    Campus X AI - Navigation & State Management
    Step 2: Component & Layout Handlers
@@ -1600,7 +1611,7 @@ class NavigationController {
 }
 
 
-/* --- File: motion.js --- */
+/* --- File: motion.js (js\motion.js) --- */
 /* ==========================================================
    Campus X AI - Premium Motion System
    Linear / Raycast / Arc / Vercel Motion Standard
@@ -1808,7 +1819,7 @@ window.CampusMotion = {
 };
 
 
-/* --- File: auth-view.js --- */
+/* --- File: auth-view.js (js\views\auth-view.js) --- */
 /* ==========================================================
    Campus X AI - Pre-Login & Authentication View
    Security Hardened: Generic Errors, Client Validation UX,
@@ -2836,7 +2847,7 @@ class AuthView {
 }
 
 
-/* --- File: student-view.js --- */
+/* --- File: student-view.js (js\views\student-view.js) --- */
 /* ==========================================================
    Campus X AI - Student Workspace View
    Dedicated Student Sidebar & Student Dashboard
@@ -3270,7 +3281,7 @@ class StudentView {
 
 
 
-/* --- File: faculty-view.js --- */
+/* --- File: faculty-view.js (js\views\faculty-view.js) --- */
 /* ==========================================================
    Campus X AI - Faculty Workspace View
    Dedicated Faculty Sidebar, Dashboard & Interactive Attendance
@@ -3717,7 +3728,7 @@ class FacultyView {
 
 
 
-/* --- File: admin-view.js --- */
+/* --- File: admin-view.js (js\views\admin-view.js) --- */
 /* ==========================================================
    Campus X AI - Administrator Workspace View
    Centralized Operational Dashboard & Support Dispatch
@@ -4183,7 +4194,7 @@ class AdminView {
 }
 
 
-/* --- File: stationery-view.js --- */
+/* --- File: stationery-view.js (js\views\stationery-view.js) --- */
 /* ==========================================================
    Campus X AI - Stationery Module & Operator Workspace
    Sections 16, 17, 18, 19, 20, 21, 22, 33
@@ -4740,7 +4751,7 @@ class StationeryView {
 }
 
 
-/* --- File: academics-view.js --- */
+/* --- File: academics-view.js (js\views\academics-view.js) --- */
 /* ==========================================================
    Campus X AI - Academics, Timetable & AI Risk View
    Official Tapi Diploma Engineering College 5th Sem IT Timetable
@@ -5417,7 +5428,7 @@ class AcademicsView {
 }
 
 
-/* --- File: ai-chat-view.js --- */
+/* --- File: ai-chat-view.js (js\views\ai-chat-view.js) --- */
 /* ==========================================================
    Campus X AI - Conversational Assistant View ("Ask Campus X.")
    Real-Time Campus Intelligence grounded in live academic records,
@@ -5709,10 +5720,9 @@ class AiChatView {
     return `Regarding "${query}": Campus X AI is continuously synchronized with Tapi Diploma Engineering College. You can ask me about your **live attendance percentage**, **today's lecture timetable**, **campus notices**, **stationery rush**, or **emergency assistance**.`;
   }
 }
-}
 
 
-/* --- File: complaints-view.js --- */
+/* --- File: complaints-view.js (js\views\complaints-view.js) --- */
 /* ==========================================================
    Campus X AI - Complaints & Grievance Module View
    Section 40: "Need something fixed?", Ticket Tracking & Admin Resolution
@@ -5891,7 +5901,7 @@ class ComplaintsView {
 }
 
 
-/* --- File: lost-found-view.js --- */
+/* --- File: lost-found-view.js (js\views\lost-found-view.js) --- */
 /* ==========================================================
    Campus X AI - Lost & Found Module View
    Sections 23, 24, 25, 26, 34
@@ -6300,7 +6310,7 @@ class LostFoundView {
 
 
 
-/* --- File: emergency-view.js --- */
+/* --- File: emergency-view.js (js\views\emergency-view.js) --- */
 /* ==========================================================
    Campus X AI - Emergency SOS & Panic Dispatch View
    Restoring full high-priority emergency console, hotlines,
@@ -6526,7 +6536,7 @@ class EmergencyView {
 window.EmergencyView = EmergencyView;
 
 
-/* --- File: app.js --- */
+/* --- File: app.js (js\app.js) --- */
 /* ==========================================================
    Campus X AI - Master Application Orchestrator
    Role Dispatcher, Modal Engine, Navigation & Responsive Router

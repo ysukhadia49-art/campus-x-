@@ -651,31 +651,42 @@ class CampusState {
   async fetchRemoteData() {
     if (window.ApiClient && !ApiClient.isStaticDeployment()) {
       try {
-        const [cRes, lfRes, attRes, ntcRes] = await Promise.allSettled([
-          ApiClient.request('/api/complaints'),
-          ApiClient.request('/api/lost-found'),
-          ApiClient.request('/api/attendance'),
-          ApiClient.request('/api/notices')
-        ]);
+        const token = localStorage.getItem('campusx_auth_token') || (this.currentUser && this.currentUser.token);
+        const promises = [ApiClient.request('/api/notices')];
+        if (token) {
+          promises.push(
+            ApiClient.request('/api/complaints'),
+            ApiClient.request('/api/lost-found'),
+            ApiClient.request('/api/attendance')
+          );
+        }
 
-        if (cRes.status === 'fulfilled' && cRes.value && Array.isArray(cRes.value.complaints)) {
-          CAMPUS_DATA.complaints = cRes.value.complaints;
-        }
-        if (lfRes.status === 'fulfilled' && lfRes.value && Array.isArray(lfRes.value.items)) {
-          CAMPUS_DATA.lostAndFound = lfRes.value.items;
-        }
-        if (attRes.status === 'fulfilled' && attRes.value && Array.isArray(attRes.value.attendance)) {
-          try {
-            localStorage.setItem('campusx_attendance_records', JSON.stringify(attRes.value.attendance));
-            this.notify('ATTENDANCE_SAVED');
-          } catch(e) {}
-        }
-        if (ntcRes.status === 'fulfilled' && ntcRes.value && Array.isArray(ntcRes.value.notices)) {
+        const results = await Promise.allSettled(promises);
+        const ntcRes = results[0];
+        if (ntcRes && ntcRes.status === 'fulfilled' && ntcRes.value && Array.isArray(ntcRes.value.notices)) {
           CAMPUS_DATA.notices = ntcRes.value.notices;
           try {
             localStorage.setItem('campusx_notices', JSON.stringify(ntcRes.value.notices));
             this.notify('NOTICES_CHANGED');
           } catch(e) {}
+        }
+
+        if (token && results.length > 1) {
+          const cRes = results[1];
+          const lfRes = results[2];
+          const attRes = results[3];
+          if (cRes && cRes.status === 'fulfilled' && cRes.value && Array.isArray(cRes.value.complaints)) {
+            CAMPUS_DATA.complaints = cRes.value.complaints;
+          }
+          if (lfRes && lfRes.status === 'fulfilled' && lfRes.value && Array.isArray(lfRes.value.items)) {
+            CAMPUS_DATA.lostAndFound = lfRes.value.items;
+          }
+          if (attRes && attRes.status === 'fulfilled' && attRes.value && Array.isArray(attRes.value.attendance)) {
+            try {
+              localStorage.setItem('campusx_attendance_records', JSON.stringify(attRes.value.attendance));
+              this.notify('ATTENDANCE_SAVED');
+            } catch(e) {}
+          }
         }
         this.notify('DATA_SYNCED');
         return;

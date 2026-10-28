@@ -289,4 +289,3 @@ class AiChatView {
     return `Regarding "${query}": Campus X AI is continuously synchronized with Tapi Diploma Engineering College. You can ask me about your **live attendance percentage**, **today's lecture timetable**, **campus notices**, **stationery rush**, or **emergency assistance**.`;
   }
 }
-}

@@ -1679,6 +1679,8 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 // Serve only safe public assets with nosniff headers and denied dotfiles
 app.use(express.static(ROOT_DIR, {
   index: 'index.html',
