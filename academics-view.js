@@ -39,7 +39,7 @@ class AcademicsView {
     const displayTerm = current ? current.term : '15/06/2026 To 30/10/2026';
     const displayTitle = current ? current.title : 'Updated Time Table: 5th Semester';
     const displayDept = current ? current.department : 'Tapi Diploma Engineering College [647] • IT Dept [16]';
-    const canManage = appState.currentUser && (appState.currentUser.role === 'ADMIN' || appState.currentUser.role === 'FACULTY');
+    const canManage = Boolean(appState.currentUser && (appState.currentUser.role === 'ADMIN' || appState.currentUser.role === 'FACULTY'));
 
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -60,10 +60,12 @@ class AcademicsView {
             </div>
             
             <div class="flex items-center gap-2" style="flex-wrap: wrap;">
-              <button class="btn btn-primary" onclick="AcademicsView.openTimetableUploadModal()" style="box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                <span>Upload Timetable</span>
-              </button>
+              ${canManage ? `
+                <button class="btn btn-primary" onclick="AcademicsView.openTimetableUploadModal()" style="box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                  <span>Upload Timetable</span>
+                </button>
+              ` : ''}
               
               <button class="btn btn-secondary" onclick="window.print()">
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -513,6 +515,10 @@ class AcademicsView {
   // TIMETABLE UPLOAD MODAL & WORKFLOW (Section 21)
   // ==========================================================
   static openTimetableUploadModal() {
+    if (!appState.currentUser || (appState.currentUser.role !== 'ADMIN' && appState.currentUser.role !== 'FACULTY')) {
+      appState.showToast('Access restricted: Only faculty members and administrators can upload official timetables.', 'error');
+      return;
+    }
     AcademicsView.pendingUploadFile = null;
     const today = new Date().toISOString().split('T')[0];
 
@@ -621,6 +627,10 @@ class AcademicsView {
   }
 
   static handleFileSelection(event, isDrop = false) {
+    if (!appState.currentUser || (appState.currentUser.role !== 'ADMIN' && appState.currentUser.role !== 'FACULTY')) {
+      appState.showToast('Access restricted: Only faculty members and administrators can upload official timetables.', 'error');
+      return;
+    }
     let file = null;
     if (isDrop && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
       file = event.dataTransfer.files[0];
@@ -675,6 +685,10 @@ class AcademicsView {
   }
 
   static submitTimetableUpload() {
+    if (!appState.currentUser || (appState.currentUser.role !== 'ADMIN' && appState.currentUser.role !== 'FACULTY')) {
+      appState.showToast('Access restricted: Only faculty members and administrators can upload official timetables.', 'error');
+      return;
+    }
     const titleEl = document.getElementById('modalTtTitle');
     const classEl = document.getElementById('modalTtClass');
     const customClassEl = document.getElementById('modalTtCustomClass');
@@ -784,6 +798,10 @@ Official GTU Statutory Compliance.`;
   }
 
   static confirmDelete(id) {
+    if (!appState.currentUser || (appState.currentUser.role !== 'ADMIN' && appState.currentUser.role !== 'FACULTY')) {
+      appState.showToast('Access restricted: Only faculty members and administrators can delete timetables.', 'error');
+      return;
+    }
     if (confirm('Are you sure you want to remove this timetable?')) {
       appState.deleteTimetable(id);
       AcademicsView.selectedTimetableId = 'default';

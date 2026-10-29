@@ -456,8 +456,8 @@ class CampusState {
       localStorage.setItem('campusx_attendance_records', JSON.stringify(localRecords));
     } catch (e) {}
 
-    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
-      ApiClient.request('/api/faculty/attendance', {
+    if (window.ApiClient && !window.ApiClient.isStaticDeployment()) {
+      window.ApiClient.request('/api/faculty/attendance', {
         method: 'POST',
         body: JSON.stringify({ classId, subject, records, date: sessionDate })
       }).catch(err => console.warn('Attendance server sync:', err.message));
@@ -530,8 +530,8 @@ class CampusState {
       }
     }
 
-    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
-      ApiClient.request('/api/notices', {
+    if (window.ApiClient && !window.ApiClient.isStaticDeployment()) {
+      window.ApiClient.request('/api/notices', {
         method: 'POST',
         body: JSON.stringify(newNotice)
       }).catch(err => console.warn('Notice API sync:', err.message));
@@ -567,8 +567,8 @@ class CampusState {
       } catch (e) {}
     }
 
-    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
-      ApiClient.request(`/api/notices/${noticeId}`, {
+    if (window.ApiClient && !window.ApiClient.isStaticDeployment()) {
+      window.ApiClient.request(`/api/notices/${noticeId}`, {
         method: 'DELETE'
       }).catch(err => console.warn('Notice delete API:', err.message));
     } else if (window.supabaseClient) {
@@ -586,8 +586,8 @@ class CampusState {
   // TIMETABLE MANAGEMENT & UPLOAD (Section 21)
   // ==========================================================
   uploadTimetable(timetableData) {
-    if (this.currentUser && this.currentUser.role !== 'ADMIN' && this.currentUser.role !== 'FACULTY') {
-      this.showToast('Access restricted: Only administrators or faculty can upload official timetables.', 'error');
+    if (!this.currentUser || (this.currentUser.role !== 'ADMIN' && this.currentUser.role !== 'FACULTY')) {
+      this.showToast('Access restricted: Only faculty members and administrators can upload official timetables.', 'error');
       return false;
     }
 
@@ -663,8 +663,8 @@ class CampusState {
       } catch (e) {}
     }
 
-    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
-      ApiClient.request('/api/timetable', {
+    if (window.ApiClient && !window.ApiClient.isStaticDeployment()) {
+      window.ApiClient.request('/api/timetable', {
         method: 'POST',
         body: JSON.stringify(newRecord)
       }).catch(err => console.warn('Timetable server sync notice:', err.message));
@@ -676,8 +676,8 @@ class CampusState {
   }
 
   deleteTimetable(id) {
-    if (this.currentUser && this.currentUser.role !== 'ADMIN' && this.currentUser.role !== 'FACULTY') {
-      this.showToast('Access denied: Administrator or Faculty privileges required.', 'error');
+    if (!this.currentUser || (this.currentUser.role !== 'ADMIN' && this.currentUser.role !== 'FACULTY')) {
+      this.showToast('Access denied: Administrator or Faculty privileges required to remove timetables.', 'error');
       return false;
     }
 
@@ -688,8 +688,8 @@ class CampusState {
       localStorage.setItem('campusx_uploaded_timetables', JSON.stringify(CAMPUS_DATA.uploadedTimetables));
     } catch (e) {}
 
-    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
-      ApiClient.request(`/api/timetable/${encodeURIComponent(id)}`, {
+    if (window.ApiClient && !window.ApiClient.isStaticDeployment()) {
+      window.ApiClient.request(`/api/timetable/${encodeURIComponent(id)}`, {
         method: 'DELETE'
       }).catch(err => console.warn('Timetable delete API notice:', err.message));
     }
@@ -712,8 +712,8 @@ class CampusState {
       localStorage.setItem('campusx_complaints', JSON.stringify(CAMPUS_DATA.complaints));
     } catch (e) {}
 
-    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
-      ApiClient.request('/api/complaints', {
+    if (window.ApiClient && !window.ApiClient.isStaticDeployment()) {
+      window.ApiClient.request('/api/complaints', {
         method: 'POST',
         body: JSON.stringify(complaint)
       }).catch(err => console.warn('Complaint API sync:', err.message));
@@ -750,8 +750,8 @@ class CampusState {
       localStorage.setItem('campusx_lost_found', JSON.stringify(CAMPUS_DATA.lostAndFound));
     } catch (e) {}
 
-    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
-      ApiClient.request('/api/lost-found', {
+    if (window.ApiClient && !window.ApiClient.isStaticDeployment()) {
+      window.ApiClient.request('/api/lost-found', {
         method: 'POST',
         body: JSON.stringify(item)
       }).catch(err => console.warn('Lost & Found API sync:', err.message));
@@ -777,18 +777,18 @@ class CampusState {
   }
 
   async fetchRemoteData() {
-    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+    if (window.ApiClient && !window.ApiClient.isStaticDeployment()) {
       try {
         const token = localStorage.getItem('campusx_auth_token') || (this.currentUser && this.currentUser.token);
         const promises = [
-          ApiClient.request('/api/notices'),
-          ApiClient.request('/api/timetable')
+          window.ApiClient.request('/api/notices'),
+          window.ApiClient.request('/api/timetable')
         ];
         if (token) {
           promises.push(
-            ApiClient.request('/api/complaints'),
-            ApiClient.request('/api/lost-found'),
-            ApiClient.request('/api/attendance')
+            window.ApiClient.request('/api/complaints'),
+            window.ApiClient.request('/api/lost-found'),
+            window.ApiClient.request('/api/attendance')
           );
         }
 

@@ -1,7 +1,7 @@
 /* Campus X AI - Consolidated Application Bundle */
 
 
-/* --- File: mock-data.js (js\mock-data.js) --- */
+/* --- File: mock-data.js --- */
 /* ==========================================================
    Campus X AI - Realistic Mock Data Store
    College: Tapi Diploma Engineering College, Surat
@@ -444,7 +444,7 @@ window.CAMPUS_DATA = CAMPUS_DATA;
 
 
 
-/* --- File: security.js (js\security.js) --- */
+/* --- File: security.js --- */
 /* ==========================================================
    Campus X AI - Client-Side Security Utilities & API Client
    Tapi Diploma Engineering College, Surat
@@ -721,7 +721,7 @@ window.SecurityUtils = SecurityUtils;
 window.ApiClient = ApiClient;
 
 
-/* --- File: state.js (js\state.js) --- */
+/* --- File: state.js --- */
 /* ==========================================================
    Campus X AI - Central State & Reactive Event Manager
    Hardened RBAC, Secure Session Tracking & Audit Integration
@@ -1180,8 +1180,8 @@ class CampusState {
       localStorage.setItem('campusx_attendance_records', JSON.stringify(localRecords));
     } catch (e) {}
 
-    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
-      ApiClient.request('/api/faculty/attendance', {
+    if (window.ApiClient && !window.ApiClient.isStaticDeployment()) {
+      window.ApiClient.request('/api/faculty/attendance', {
         method: 'POST',
         body: JSON.stringify({ classId, subject, records, date: sessionDate })
       }).catch(err => console.warn('Attendance server sync:', err.message));
@@ -1254,8 +1254,8 @@ class CampusState {
       }
     }
 
-    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
-      ApiClient.request('/api/notices', {
+    if (window.ApiClient && !window.ApiClient.isStaticDeployment()) {
+      window.ApiClient.request('/api/notices', {
         method: 'POST',
         body: JSON.stringify(newNotice)
       }).catch(err => console.warn('Notice API sync:', err.message));
@@ -1291,8 +1291,8 @@ class CampusState {
       } catch (e) {}
     }
 
-    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
-      ApiClient.request(`/api/notices/${noticeId}`, {
+    if (window.ApiClient && !window.ApiClient.isStaticDeployment()) {
+      window.ApiClient.request(`/api/notices/${noticeId}`, {
         method: 'DELETE'
       }).catch(err => console.warn('Notice delete API:', err.message));
     } else if (window.supabaseClient) {
@@ -1310,8 +1310,8 @@ class CampusState {
   // TIMETABLE MANAGEMENT & UPLOAD (Section 21)
   // ==========================================================
   uploadTimetable(timetableData) {
-    if (this.currentUser && this.currentUser.role !== 'ADMIN' && this.currentUser.role !== 'FACULTY') {
-      this.showToast('Access restricted: Only administrators or faculty can upload official timetables.', 'error');
+    if (!this.currentUser || (this.currentUser.role !== 'ADMIN' && this.currentUser.role !== 'FACULTY')) {
+      this.showToast('Access restricted: Only faculty members and administrators can upload official timetables.', 'error');
       return false;
     }
 
@@ -1387,8 +1387,8 @@ class CampusState {
       } catch (e) {}
     }
 
-    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
-      ApiClient.request('/api/timetable', {
+    if (window.ApiClient && !window.ApiClient.isStaticDeployment()) {
+      window.ApiClient.request('/api/timetable', {
         method: 'POST',
         body: JSON.stringify(newRecord)
       }).catch(err => console.warn('Timetable server sync notice:', err.message));
@@ -1400,8 +1400,8 @@ class CampusState {
   }
 
   deleteTimetable(id) {
-    if (this.currentUser && this.currentUser.role !== 'ADMIN' && this.currentUser.role !== 'FACULTY') {
-      this.showToast('Access denied: Administrator or Faculty privileges required.', 'error');
+    if (!this.currentUser || (this.currentUser.role !== 'ADMIN' && this.currentUser.role !== 'FACULTY')) {
+      this.showToast('Access denied: Administrator or Faculty privileges required to remove timetables.', 'error');
       return false;
     }
 
@@ -1412,8 +1412,8 @@ class CampusState {
       localStorage.setItem('campusx_uploaded_timetables', JSON.stringify(CAMPUS_DATA.uploadedTimetables));
     } catch (e) {}
 
-    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
-      ApiClient.request(`/api/timetable/${encodeURIComponent(id)}`, {
+    if (window.ApiClient && !window.ApiClient.isStaticDeployment()) {
+      window.ApiClient.request(`/api/timetable/${encodeURIComponent(id)}`, {
         method: 'DELETE'
       }).catch(err => console.warn('Timetable delete API notice:', err.message));
     }
@@ -1436,8 +1436,8 @@ class CampusState {
       localStorage.setItem('campusx_complaints', JSON.stringify(CAMPUS_DATA.complaints));
     } catch (e) {}
 
-    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
-      ApiClient.request('/api/complaints', {
+    if (window.ApiClient && !window.ApiClient.isStaticDeployment()) {
+      window.ApiClient.request('/api/complaints', {
         method: 'POST',
         body: JSON.stringify(complaint)
       }).catch(err => console.warn('Complaint API sync:', err.message));
@@ -1474,8 +1474,8 @@ class CampusState {
       localStorage.setItem('campusx_lost_found', JSON.stringify(CAMPUS_DATA.lostAndFound));
     } catch (e) {}
 
-    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
-      ApiClient.request('/api/lost-found', {
+    if (window.ApiClient && !window.ApiClient.isStaticDeployment()) {
+      window.ApiClient.request('/api/lost-found', {
         method: 'POST',
         body: JSON.stringify(item)
       }).catch(err => console.warn('Lost & Found API sync:', err.message));
@@ -1501,18 +1501,18 @@ class CampusState {
   }
 
   async fetchRemoteData() {
-    if (window.ApiClient && !ApiClient.isStaticDeployment()) {
+    if (window.ApiClient && !window.ApiClient.isStaticDeployment()) {
       try {
         const token = localStorage.getItem('campusx_auth_token') || (this.currentUser && this.currentUser.token);
         const promises = [
-          ApiClient.request('/api/notices'),
-          ApiClient.request('/api/timetable')
+          window.ApiClient.request('/api/notices'),
+          window.ApiClient.request('/api/timetable')
         ];
         if (token) {
           promises.push(
-            ApiClient.request('/api/complaints'),
-            ApiClient.request('/api/lost-found'),
-            ApiClient.request('/api/attendance')
+            window.ApiClient.request('/api/complaints'),
+            window.ApiClient.request('/api/lost-found'),
+            window.ApiClient.request('/api/attendance')
           );
         }
 
@@ -1663,7 +1663,7 @@ if (typeof window !== 'undefined') {
 }
 
 
-/* --- File: navigation.js (js\navigation.js) --- */
+/* --- File: navigation.js --- */
 /* ==========================================================
    Campus X AI - Navigation & State Management
    Step 2: Component & Layout Handlers
@@ -1779,7 +1779,7 @@ class NavigationController {
 }
 
 
-/* --- File: motion.js (js\motion.js) --- */
+/* --- File: motion.js --- */
 /* ==========================================================
    Campus X AI - Premium Motion System
    Linear / Raycast / Arc / Vercel Motion Standard
@@ -1987,7 +1987,7 @@ window.CampusMotion = {
 };
 
 
-/* --- File: auth-view.js (js\views\auth-view.js) --- */
+/* --- File: auth-view.js --- */
 /* ==========================================================
    Campus X AI - Pre-Login & Authentication View
    Security Hardened: Generic Errors, Client Validation UX,
@@ -3015,7 +3015,7 @@ class AuthView {
 }
 
 
-/* --- File: student-view.js (js\views\student-view.js) --- */
+/* --- File: student-view.js --- */
 /* ==========================================================
    Campus X AI - Student Workspace View
    Dedicated Student Sidebar & Student Dashboard
@@ -3449,7 +3449,7 @@ class StudentView {
 
 
 
-/* --- File: faculty-view.js (js\views\faculty-view.js) --- */
+/* --- File: faculty-view.js --- */
 /* ==========================================================
    Campus X AI - Faculty Workspace View
    Dedicated Faculty Sidebar, Dashboard & Interactive Attendance
@@ -3899,7 +3899,7 @@ class FacultyView {
 
 
 
-/* --- File: admin-view.js (js\views\admin-view.js) --- */
+/* --- File: admin-view.js --- */
 /* ==========================================================
    Campus X AI - Administrator Workspace View
    Centralized Operational Dashboard & Support Dispatch
@@ -4369,7 +4369,7 @@ class AdminView {
 }
 
 
-/* --- File: stationery-view.js (js\views\stationery-view.js) --- */
+/* --- File: stationery-view.js --- */
 /* ==========================================================
    Campus X AI - Stationery Module & Operator Workspace
    Sections 16, 17, 18, 19, 20, 21, 22, 33
@@ -4926,7 +4926,7 @@ class StationeryView {
 }
 
 
-/* --- File: academics-view.js (js\views\academics-view.js) --- */
+/* --- File: academics-view.js --- */
 /* ==========================================================
    Campus X AI - Academics, Timetable & AI Risk View
    Official Tapi Diploma Engineering College 5th Sem IT Timetable
@@ -4968,7 +4968,7 @@ class AcademicsView {
     const displayTerm = current ? current.term : '15/06/2026 To 30/10/2026';
     const displayTitle = current ? current.title : 'Updated Time Table: 5th Semester';
     const displayDept = current ? current.department : 'Tapi Diploma Engineering College [647] • IT Dept [16]';
-    const canManage = appState.currentUser && (appState.currentUser.role === 'ADMIN' || appState.currentUser.role === 'FACULTY');
+    const canManage = Boolean(appState.currentUser && (appState.currentUser.role === 'ADMIN' || appState.currentUser.role === 'FACULTY'));
 
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -4989,10 +4989,12 @@ class AcademicsView {
             </div>
             
             <div class="flex items-center gap-2" style="flex-wrap: wrap;">
-              <button class="btn btn-primary" onclick="AcademicsView.openTimetableUploadModal()" style="box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                <span>Upload Timetable</span>
-              </button>
+              ${canManage ? `
+                <button class="btn btn-primary" onclick="AcademicsView.openTimetableUploadModal()" style="box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                  <span>Upload Timetable</span>
+                </button>
+              ` : ''}
               
               <button class="btn btn-secondary" onclick="window.print()">
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -5442,6 +5444,10 @@ class AcademicsView {
   // TIMETABLE UPLOAD MODAL & WORKFLOW (Section 21)
   // ==========================================================
   static openTimetableUploadModal() {
+    if (!appState.currentUser || (appState.currentUser.role !== 'ADMIN' && appState.currentUser.role !== 'FACULTY')) {
+      appState.showToast('Access restricted: Only faculty members and administrators can upload official timetables.', 'error');
+      return;
+    }
     AcademicsView.pendingUploadFile = null;
     const today = new Date().toISOString().split('T')[0];
 
@@ -5550,6 +5556,10 @@ class AcademicsView {
   }
 
   static handleFileSelection(event, isDrop = false) {
+    if (!appState.currentUser || (appState.currentUser.role !== 'ADMIN' && appState.currentUser.role !== 'FACULTY')) {
+      appState.showToast('Access restricted: Only faculty members and administrators can upload official timetables.', 'error');
+      return;
+    }
     let file = null;
     if (isDrop && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
       file = event.dataTransfer.files[0];
@@ -5604,6 +5614,10 @@ class AcademicsView {
   }
 
   static submitTimetableUpload() {
+    if (!appState.currentUser || (appState.currentUser.role !== 'ADMIN' && appState.currentUser.role !== 'FACULTY')) {
+      appState.showToast('Access restricted: Only faculty members and administrators can upload official timetables.', 'error');
+      return;
+    }
     const titleEl = document.getElementById('modalTtTitle');
     const classEl = document.getElementById('modalTtClass');
     const customClassEl = document.getElementById('modalTtCustomClass');
@@ -5713,6 +5727,10 @@ Official GTU Statutory Compliance.`;
   }
 
   static confirmDelete(id) {
+    if (!appState.currentUser || (appState.currentUser.role !== 'ADMIN' && appState.currentUser.role !== 'FACULTY')) {
+      appState.showToast('Access restricted: Only faculty members and administrators can delete timetables.', 'error');
+      return;
+    }
     if (confirm('Are you sure you want to remove this timetable?')) {
       appState.deleteTimetable(id);
       AcademicsView.selectedTimetableId = 'default';
@@ -6044,7 +6062,7 @@ Official GTU Statutory Compliance.`;
 }
 
 
-/* --- File: ai-chat-view.js (js\views\ai-chat-view.js) --- */
+/* --- File: ai-chat-view.js --- */
 /* ==========================================================
    Campus X AI - Conversational Assistant View ("Ask Campus X.")
    Real-Time Campus Intelligence grounded in live academic records,
@@ -6338,7 +6356,7 @@ class AiChatView {
 }
 
 
-/* --- File: complaints-view.js (js\views\complaints-view.js) --- */
+/* --- File: complaints-view.js --- */
 /* ==========================================================
    Campus X AI - Complaints & Grievance Module View
    Section 40: "Need something fixed?", Ticket Tracking & Admin Resolution
@@ -6517,7 +6535,7 @@ class ComplaintsView {
 }
 
 
-/* --- File: lost-found-view.js (js\views\lost-found-view.js) --- */
+/* --- File: lost-found-view.js --- */
 /* ==========================================================
    Campus X AI - Lost & Found Module View
    Sections 23, 24, 25, 26, 34
@@ -6926,7 +6944,7 @@ class LostFoundView {
 
 
 
-/* --- File: emergency-view.js (js\views\emergency-view.js) --- */
+/* --- File: emergency-view.js --- */
 /* ==========================================================
    Campus X AI - Emergency SOS & Panic Dispatch View
    Restoring full high-priority emergency console, hotlines,
@@ -7152,7 +7170,7 @@ class EmergencyView {
 window.EmergencyView = EmergencyView;
 
 
-/* --- File: app.js (js\app.js) --- */
+/* --- File: app.js --- */
 /* ==========================================================
    Campus X AI - Master Application Orchestrator
    Role Dispatcher, Modal Engine, Navigation & Responsive Router
