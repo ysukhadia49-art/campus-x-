@@ -796,18 +796,26 @@ class CampusState {
         const ntcRes = results[0];
         const ttRes = results[1];
         if (ntcRes && ntcRes.status === 'fulfilled' && ntcRes.value && Array.isArray(ntcRes.value.notices)) {
-          CAMPUS_DATA.notices = ntcRes.value.notices;
-          try {
-            localStorage.setItem('campusx_notices', JSON.stringify(ntcRes.value.notices));
-            this.notify('NOTICES_CHANGED');
-          } catch(e) {}
+          const freshNotices = JSON.stringify(ntcRes.value.notices);
+          const cachedNotices = localStorage.getItem('campusx_notices');
+          if (freshNotices !== cachedNotices) {
+            CAMPUS_DATA.notices = ntcRes.value.notices;
+            try {
+              localStorage.setItem('campusx_notices', freshNotices);
+              this.notify('NOTICES_CHANGED');
+            } catch(e) {}
+          }
         }
         if (ttRes && ttRes.status === 'fulfilled' && ttRes.value && Array.isArray(ttRes.value.timetables)) {
-          CAMPUS_DATA.uploadedTimetables = ttRes.value.timetables;
-          try {
-            localStorage.setItem('campusx_uploaded_timetables', JSON.stringify(ttRes.value.timetables));
-            this.notify('TIMETABLE_UPLOADED');
-          } catch(e) {}
+          const freshTt = JSON.stringify(ttRes.value.timetables);
+          const cachedTt = localStorage.getItem('campusx_uploaded_timetables');
+          if (freshTt !== cachedTt) {
+            CAMPUS_DATA.uploadedTimetables = ttRes.value.timetables;
+            try {
+              localStorage.setItem('campusx_uploaded_timetables', freshTt);
+              this.notify('TIMETABLE_UPLOADED');
+            } catch(e) {}
+          }
         }
 
         if (token && results.length > 2) {
@@ -821,10 +829,14 @@ class CampusState {
             CAMPUS_DATA.lostAndFound = lfRes.value.items;
           }
           if (attRes && attRes.status === 'fulfilled' && attRes.value && Array.isArray(attRes.value.attendance)) {
-            try {
-              localStorage.setItem('campusx_attendance_records', JSON.stringify(attRes.value.attendance));
-              this.notify('ATTENDANCE_SAVED');
-            } catch(e) {}
+            const freshAtt = JSON.stringify(attRes.value.attendance);
+            const cachedAtt = localStorage.getItem('campusx_attendance_records');
+            if (freshAtt !== cachedAtt) {
+              try {
+                localStorage.setItem('campusx_attendance_records', freshAtt);
+                this.notify('ATTENDANCE_SAVED');
+              } catch(e) {}
+            }
           }
         }
         this.notify('DATA_SYNCED');
@@ -873,7 +885,7 @@ class CampusState {
 
         const { data: ntcData, error: ntcErr } = await window.supabaseClient.from('notices').select('*').order('created_at', { ascending: false });
         if (!ntcErr && Array.isArray(ntcData) && ntcData.length > 0) {
-          CAMPUS_DATA.notices = ntcData.map(n => ({
+          const mapped = ntcData.map(n => ({
             id: n.id,
             title: n.title,
             category: n.category,
@@ -885,8 +897,12 @@ class CampusState {
             date: n.created_at ? new Date(n.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Today',
             time: '9:00 AM'
           }));
-          localStorage.setItem('campusx_notices', JSON.stringify(CAMPUS_DATA.notices));
-          this.notify('NOTICES_CHANGED');
+          const freshNtc = JSON.stringify(mapped);
+          if (freshNtc !== localStorage.getItem('campusx_notices')) {
+            CAMPUS_DATA.notices = mapped;
+            localStorage.setItem('campusx_notices', freshNtc);
+            this.notify('NOTICES_CHANGED');
+          }
         }
 
         this.notify('DATA_SYNCED');
@@ -930,10 +946,11 @@ if (typeof window !== 'undefined') {
     }
   });
 
-  // Background real-time sync polling every 6 seconds when user is authenticated
+  // Background real-time sync polling every 30 seconds when user is authenticated and tab is active
   setInterval(() => {
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
     if (window.appState && window.appState.currentUser) {
       window.appState.fetchRemoteData();
     }
-  }, 6000);
+  }, 30000);
 }

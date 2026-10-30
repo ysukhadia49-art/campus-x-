@@ -51,13 +51,14 @@ class AppModal {
 // Master Application Renderer
 class CampusApplication {
   constructor() {
+    this.currentUserId = null;
     this.init();
   }
 
   init() {
     // Subscribe to state changes
     appState.subscribe((type) => {
-      this.render();
+      this.handleStateChange(type);
     });
 
     // Initial render
@@ -69,12 +70,178 @@ class CampusApplication {
     }
   }
 
+  handleStateChange(type) {
+    if (type === 'USER_CHANGED') {
+      this.currentUserId = null;
+      this.render();
+      return;
+    }
+
+    if (type === 'VIEW_CHANGED') {
+      this.updateViewOnly();
+      return;
+    }
+
+    if (type === 'SOS_CHANGED') {
+      this.updateSosIndicators();
+      return;
+    }
+
+    if (type === 'RUSH_CHANGED') {
+      if (appState.activeView === 'stationery' || appState.activeView === 'dashboard' || appState.activeView === 'home') {
+        const viewContainer = document.getElementById('viewContainer');
+        if (viewContainer && appState.currentUser) {
+          this.renderViewContent(appState.activeView, appState.currentUser, viewContainer);
+        }
+      }
+      return;
+    }
+
+    if (type === 'NOTICES_CHANGED') {
+      if (appState.activeView === 'notices' || appState.activeView === 'dashboard' || appState.activeView === 'home') {
+        const viewContainer = document.getElementById('viewContainer');
+        if (viewContainer && appState.currentUser) {
+          this.renderViewContent(appState.activeView, appState.currentUser, viewContainer);
+        }
+      }
+      return;
+    }
+
+    if (type === 'TIMETABLE_UPLOADED') {
+      if (appState.activeView === 'timetable' || appState.activeView === 'dashboard' || appState.activeView === 'home') {
+        const viewContainer = document.getElementById('viewContainer');
+        if (viewContainer && appState.currentUser) {
+          this.renderViewContent(appState.activeView, appState.currentUser, viewContainer);
+        }
+      }
+      return;
+    }
+
+    if (type === 'ATTENDANCE_SAVED') {
+      if (appState.activeView === 'attendance' || appState.activeView === 'attendance-overview' || appState.activeView === 'dashboard' || appState.activeView === 'home') {
+        const viewContainer = document.getElementById('viewContainer');
+        if (viewContainer && appState.currentUser) {
+          this.renderViewContent(appState.activeView, appState.currentUser, viewContainer);
+        }
+      }
+      return;
+    }
+
+    if (type === 'DATA_SYNCED') {
+      // Background sync finished silently without tearing down DOM
+      return;
+    }
+
+    // Default fallback
+    const viewContainer = document.getElementById('viewContainer');
+    if (viewContainer && appState.currentUser) {
+      this.renderViewContent(appState.activeView, appState.currentUser, viewContainer);
+    } else {
+      this.render();
+    }
+  }
+
+  updateSosIndicators() {
+    const sosBtn = document.querySelector('.topbar-sos-btn');
+    if (sosBtn) {
+      if (appState.isSosActive) {
+        sosBtn.classList.add('sos-pulsing');
+        sosBtn.innerHTML = `
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <span>🚨 SOS ACTIVE</span>
+        `;
+        sosBtn.title = 'SOS ACTIVE - View Emergency Console';
+      } else {
+        sosBtn.classList.remove('sos-pulsing');
+        sosBtn.innerHTML = `
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <span>SOS</span>
+        `;
+        sosBtn.title = 'Emergency SOS Console';
+      }
+    }
+
+    let banner = document.querySelector('.emergency-active-top-banner');
+    const mainViewport = document.querySelector('.main-viewport');
+    if (appState.isSosActive) {
+      if (!banner && mainViewport) {
+        banner = document.createElement('div');
+        banner.className = 'emergency-active-top-banner';
+        banner.innerHTML = `
+          <div class="flex items-center gap-2" style="font-weight: 800; font-size: 0.86rem;">
+            <span class="status-dot-pulse" style="background: #ffffff; box-shadow: 0 0 10px #ffffff;"></span>
+            <span>🚨 EMERGENCY SOS ACTIVE — Security & Medical Teams Dispatched to Tapi IT Building</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="btn btn-secondary" style="padding: 0.25rem 0.65rem; font-size: 0.74rem; background: #ffffff; color: #b91c1c; font-weight: 700;" onclick="appState.setView('emergency')">
+              Open Console
+            </button>
+            <button class="btn" style="padding: 0.25rem 0.65rem; font-size: 0.74rem; background: #7f1d1d; color: #ffffff; border: 1px solid #fca5a5; font-weight: 700;" onclick="appState.cancelSos()">
+              Cancel SOS
+            </button>
+          </div>
+        `;
+        const topbar = mainViewport.querySelector('.app-topbar');
+        if (topbar && topbar.nextSibling) {
+          mainViewport.insertBefore(banner, topbar.nextSibling);
+        } else if (mainViewport) {
+          mainViewport.prepend(banner);
+        }
+      }
+    } else {
+      if (banner) banner.remove();
+    }
+  }
+
+  updateViewOnly() {
+    const user = appState.currentUser;
+    if (!user) {
+      this.render();
+      return;
+    }
+
+    const view = appState.activeView;
+    const viewContainer = document.getElementById('viewContainer');
+    const sidebarMount = document.getElementById('sidebarMount');
+
+    if (!viewContainer || !sidebarMount) {
+      this.render();
+      return;
+    }
+
+    // Update active nav links in sidebar
+    const navLinks = sidebarMount.querySelectorAll('.sidebar-nav-link, .nav-item');
+    navLinks.forEach(link => {
+      const href = link.getAttribute('onclick') || '';
+      if (href.includes(`'${view}'`)) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+
+    // Update active nav links in mobile bottom nav
+    const mobileLinks = document.querySelectorAll('.mobile-bottom-nav .mobile-nav-link');
+    mobileLinks.forEach(link => {
+      const onclickAttr = link.getAttribute('onclick') || '';
+      if (onclickAttr.includes(`'${view}'`)) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+
+    // Render active view into #viewContainer
+    this.renderViewContent(view, user, viewContainer);
+  }
+
   render() {
     const root = document.getElementById('appRoot');
     if (!root) return;
 
     // PRE-LOGIN STATE
     if (!appState.currentUser) {
+      this.currentUserId = null;
       if (appState.activeView === 'login') {
         AuthView.renderLogin(root);
       } else if (appState.activeView === 'register') {
@@ -96,6 +263,15 @@ class CampusApplication {
     // AUTHENTICATED ROLE WORKSPACE
     const user = appState.currentUser;
     const view = appState.activeView;
+
+    // If shell is already mounted for this user, avoid wiping root.innerHTML
+    const existingWrapper = root.querySelector('.app-wrapper');
+    if (existingWrapper && this.currentUserId === user.id) {
+      this.updateViewOnly();
+      return;
+    }
+
+    this.currentUserId = user.id;
 
     root.innerHTML = `
       <div class="app-wrapper">

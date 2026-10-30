@@ -1,7 +1,7 @@
 /* Campus X AI - Consolidated Application Bundle */
 
 
-/* --- File: mock-data.js --- */
+/* --- File: mock-data.js (js\mock-data.js) --- */
 /* ==========================================================
    Campus X AI - Realistic Mock Data Store
    College: Tapi Diploma Engineering College, Surat
@@ -444,7 +444,7 @@ window.CAMPUS_DATA = CAMPUS_DATA;
 
 
 
-/* --- File: security.js --- */
+/* --- File: security.js (js\security.js) --- */
 /* ==========================================================
    Campus X AI - Client-Side Security Utilities & API Client
    Tapi Diploma Engineering College, Surat
@@ -721,7 +721,7 @@ window.SecurityUtils = SecurityUtils;
 window.ApiClient = ApiClient;
 
 
-/* --- File: state.js --- */
+/* --- File: state.js (js\state.js) --- */
 /* ==========================================================
    Campus X AI - Central State & Reactive Event Manager
    Hardened RBAC, Secure Session Tracking & Audit Integration
@@ -1520,18 +1520,26 @@ class CampusState {
         const ntcRes = results[0];
         const ttRes = results[1];
         if (ntcRes && ntcRes.status === 'fulfilled' && ntcRes.value && Array.isArray(ntcRes.value.notices)) {
-          CAMPUS_DATA.notices = ntcRes.value.notices;
-          try {
-            localStorage.setItem('campusx_notices', JSON.stringify(ntcRes.value.notices));
-            this.notify('NOTICES_CHANGED');
-          } catch(e) {}
+          const freshNotices = JSON.stringify(ntcRes.value.notices);
+          const cachedNotices = localStorage.getItem('campusx_notices');
+          if (freshNotices !== cachedNotices) {
+            CAMPUS_DATA.notices = ntcRes.value.notices;
+            try {
+              localStorage.setItem('campusx_notices', freshNotices);
+              this.notify('NOTICES_CHANGED');
+            } catch(e) {}
+          }
         }
         if (ttRes && ttRes.status === 'fulfilled' && ttRes.value && Array.isArray(ttRes.value.timetables)) {
-          CAMPUS_DATA.uploadedTimetables = ttRes.value.timetables;
-          try {
-            localStorage.setItem('campusx_uploaded_timetables', JSON.stringify(ttRes.value.timetables));
-            this.notify('TIMETABLE_UPLOADED');
-          } catch(e) {}
+          const freshTt = JSON.stringify(ttRes.value.timetables);
+          const cachedTt = localStorage.getItem('campusx_uploaded_timetables');
+          if (freshTt !== cachedTt) {
+            CAMPUS_DATA.uploadedTimetables = ttRes.value.timetables;
+            try {
+              localStorage.setItem('campusx_uploaded_timetables', freshTt);
+              this.notify('TIMETABLE_UPLOADED');
+            } catch(e) {}
+          }
         }
 
         if (token && results.length > 2) {
@@ -1545,10 +1553,14 @@ class CampusState {
             CAMPUS_DATA.lostAndFound = lfRes.value.items;
           }
           if (attRes && attRes.status === 'fulfilled' && attRes.value && Array.isArray(attRes.value.attendance)) {
-            try {
-              localStorage.setItem('campusx_attendance_records', JSON.stringify(attRes.value.attendance));
-              this.notify('ATTENDANCE_SAVED');
-            } catch(e) {}
+            const freshAtt = JSON.stringify(attRes.value.attendance);
+            const cachedAtt = localStorage.getItem('campusx_attendance_records');
+            if (freshAtt !== cachedAtt) {
+              try {
+                localStorage.setItem('campusx_attendance_records', freshAtt);
+                this.notify('ATTENDANCE_SAVED');
+              } catch(e) {}
+            }
           }
         }
         this.notify('DATA_SYNCED');
@@ -1597,7 +1609,7 @@ class CampusState {
 
         const { data: ntcData, error: ntcErr } = await window.supabaseClient.from('notices').select('*').order('created_at', { ascending: false });
         if (!ntcErr && Array.isArray(ntcData) && ntcData.length > 0) {
-          CAMPUS_DATA.notices = ntcData.map(n => ({
+          const mapped = ntcData.map(n => ({
             id: n.id,
             title: n.title,
             category: n.category,
@@ -1609,8 +1621,12 @@ class CampusState {
             date: n.created_at ? new Date(n.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Today',
             time: '9:00 AM'
           }));
-          localStorage.setItem('campusx_notices', JSON.stringify(CAMPUS_DATA.notices));
-          this.notify('NOTICES_CHANGED');
+          const freshNtc = JSON.stringify(mapped);
+          if (freshNtc !== localStorage.getItem('campusx_notices')) {
+            CAMPUS_DATA.notices = mapped;
+            localStorage.setItem('campusx_notices', freshNtc);
+            this.notify('NOTICES_CHANGED');
+          }
         }
 
         this.notify('DATA_SYNCED');
@@ -1654,16 +1670,17 @@ if (typeof window !== 'undefined') {
     }
   });
 
-  // Background real-time sync polling every 6 seconds when user is authenticated
+  // Background real-time sync polling every 30 seconds when user is authenticated and tab is active
   setInterval(() => {
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
     if (window.appState && window.appState.currentUser) {
       window.appState.fetchRemoteData();
     }
-  }, 6000);
+  }, 30000);
 }
 
 
-/* --- File: navigation.js --- */
+/* --- File: navigation.js (js\navigation.js) --- */
 /* ==========================================================
    Campus X AI - Navigation & State Management
    Step 2: Component & Layout Handlers
@@ -1779,7 +1796,7 @@ class NavigationController {
 }
 
 
-/* --- File: motion.js --- */
+/* --- File: motion.js (js\motion.js) --- */
 /* ==========================================================
    Campus X AI - Premium Motion System
    Linear / Raycast / Arc / Vercel Motion Standard
@@ -1987,7 +2004,7 @@ window.CampusMotion = {
 };
 
 
-/* --- File: auth-view.js --- */
+/* --- File: auth-view.js (js\views\auth-view.js) --- */
 /* ==========================================================
    Campus X AI - Pre-Login & Authentication View
    Security Hardened: Generic Errors, Client Validation UX,
@@ -3015,7 +3032,7 @@ class AuthView {
 }
 
 
-/* --- File: student-view.js --- */
+/* --- File: student-view.js (js\views\student-view.js) --- */
 /* ==========================================================
    Campus X AI - Student Workspace View
    Dedicated Student Sidebar & Student Dashboard
@@ -3449,7 +3466,7 @@ class StudentView {
 
 
 
-/* --- File: faculty-view.js --- */
+/* --- File: faculty-view.js (js\views\faculty-view.js) --- */
 /* ==========================================================
    Campus X AI - Faculty Workspace View
    Dedicated Faculty Sidebar, Dashboard & Interactive Attendance
@@ -3899,7 +3916,7 @@ class FacultyView {
 
 
 
-/* --- File: admin-view.js --- */
+/* --- File: admin-view.js (js\views\admin-view.js) --- */
 /* ==========================================================
    Campus X AI - Administrator Workspace View
    Centralized Operational Dashboard & Support Dispatch
@@ -4369,7 +4386,7 @@ class AdminView {
 }
 
 
-/* --- File: stationery-view.js --- */
+/* --- File: stationery-view.js (js\views\stationery-view.js) --- */
 /* ==========================================================
    Campus X AI - Stationery Module & Operator Workspace
    Sections 16, 17, 18, 19, 20, 21, 22, 33
@@ -4926,7 +4943,7 @@ class StationeryView {
 }
 
 
-/* --- File: academics-view.js --- */
+/* --- File: academics-view.js (js\views\academics-view.js) --- */
 /* ==========================================================
    Campus X AI - Academics, Timetable & AI Risk View
    Official Tapi Diploma Engineering College 5th Sem IT Timetable
@@ -6062,7 +6079,7 @@ Official GTU Statutory Compliance.`;
 }
 
 
-/* --- File: ai-chat-view.js --- */
+/* --- File: ai-chat-view.js (js\views\ai-chat-view.js) --- */
 /* ==========================================================
    Campus X AI - Conversational Assistant View ("Ask Campus X.")
    Real-Time Campus Intelligence grounded in live academic records,
@@ -6356,7 +6373,7 @@ class AiChatView {
 }
 
 
-/* --- File: complaints-view.js --- */
+/* --- File: complaints-view.js (js\views\complaints-view.js) --- */
 /* ==========================================================
    Campus X AI - Complaints & Grievance Module View
    Section 40: "Need something fixed?", Ticket Tracking & Admin Resolution
@@ -6535,7 +6552,7 @@ class ComplaintsView {
 }
 
 
-/* --- File: lost-found-view.js --- */
+/* --- File: lost-found-view.js (js\views\lost-found-view.js) --- */
 /* ==========================================================
    Campus X AI - Lost & Found Module View
    Sections 23, 24, 25, 26, 34
@@ -6944,7 +6961,7 @@ class LostFoundView {
 
 
 
-/* --- File: emergency-view.js --- */
+/* --- File: emergency-view.js (js\views\emergency-view.js) --- */
 /* ==========================================================
    Campus X AI - Emergency SOS & Panic Dispatch View
    Restoring full high-priority emergency console, hotlines,
@@ -7170,7 +7187,7 @@ class EmergencyView {
 window.EmergencyView = EmergencyView;
 
 
-/* --- File: app.js --- */
+/* --- File: app.js (js\app.js) --- */
 /* ==========================================================
    Campus X AI - Master Application Orchestrator
    Role Dispatcher, Modal Engine, Navigation & Responsive Router
@@ -7224,13 +7241,14 @@ class AppModal {
 // Master Application Renderer
 class CampusApplication {
   constructor() {
+    this.currentUserId = null;
     this.init();
   }
 
   init() {
     // Subscribe to state changes
     appState.subscribe((type) => {
-      this.render();
+      this.handleStateChange(type);
     });
 
     // Initial render
@@ -7242,12 +7260,178 @@ class CampusApplication {
     }
   }
 
+  handleStateChange(type) {
+    if (type === 'USER_CHANGED') {
+      this.currentUserId = null;
+      this.render();
+      return;
+    }
+
+    if (type === 'VIEW_CHANGED') {
+      this.updateViewOnly();
+      return;
+    }
+
+    if (type === 'SOS_CHANGED') {
+      this.updateSosIndicators();
+      return;
+    }
+
+    if (type === 'RUSH_CHANGED') {
+      if (appState.activeView === 'stationery' || appState.activeView === 'dashboard' || appState.activeView === 'home') {
+        const viewContainer = document.getElementById('viewContainer');
+        if (viewContainer && appState.currentUser) {
+          this.renderViewContent(appState.activeView, appState.currentUser, viewContainer);
+        }
+      }
+      return;
+    }
+
+    if (type === 'NOTICES_CHANGED') {
+      if (appState.activeView === 'notices' || appState.activeView === 'dashboard' || appState.activeView === 'home') {
+        const viewContainer = document.getElementById('viewContainer');
+        if (viewContainer && appState.currentUser) {
+          this.renderViewContent(appState.activeView, appState.currentUser, viewContainer);
+        }
+      }
+      return;
+    }
+
+    if (type === 'TIMETABLE_UPLOADED') {
+      if (appState.activeView === 'timetable' || appState.activeView === 'dashboard' || appState.activeView === 'home') {
+        const viewContainer = document.getElementById('viewContainer');
+        if (viewContainer && appState.currentUser) {
+          this.renderViewContent(appState.activeView, appState.currentUser, viewContainer);
+        }
+      }
+      return;
+    }
+
+    if (type === 'ATTENDANCE_SAVED') {
+      if (appState.activeView === 'attendance' || appState.activeView === 'attendance-overview' || appState.activeView === 'dashboard' || appState.activeView === 'home') {
+        const viewContainer = document.getElementById('viewContainer');
+        if (viewContainer && appState.currentUser) {
+          this.renderViewContent(appState.activeView, appState.currentUser, viewContainer);
+        }
+      }
+      return;
+    }
+
+    if (type === 'DATA_SYNCED') {
+      // Background sync finished silently without tearing down DOM
+      return;
+    }
+
+    // Default fallback
+    const viewContainer = document.getElementById('viewContainer');
+    if (viewContainer && appState.currentUser) {
+      this.renderViewContent(appState.activeView, appState.currentUser, viewContainer);
+    } else {
+      this.render();
+    }
+  }
+
+  updateSosIndicators() {
+    const sosBtn = document.querySelector('.topbar-sos-btn');
+    if (sosBtn) {
+      if (appState.isSosActive) {
+        sosBtn.classList.add('sos-pulsing');
+        sosBtn.innerHTML = `
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <span>🚨 SOS ACTIVE</span>
+        `;
+        sosBtn.title = 'SOS ACTIVE - View Emergency Console';
+      } else {
+        sosBtn.classList.remove('sos-pulsing');
+        sosBtn.innerHTML = `
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <span>SOS</span>
+        `;
+        sosBtn.title = 'Emergency SOS Console';
+      }
+    }
+
+    let banner = document.querySelector('.emergency-active-top-banner');
+    const mainViewport = document.querySelector('.main-viewport');
+    if (appState.isSosActive) {
+      if (!banner && mainViewport) {
+        banner = document.createElement('div');
+        banner.className = 'emergency-active-top-banner';
+        banner.innerHTML = `
+          <div class="flex items-center gap-2" style="font-weight: 800; font-size: 0.86rem;">
+            <span class="status-dot-pulse" style="background: #ffffff; box-shadow: 0 0 10px #ffffff;"></span>
+            <span>🚨 EMERGENCY SOS ACTIVE — Security & Medical Teams Dispatched to Tapi IT Building</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="btn btn-secondary" style="padding: 0.25rem 0.65rem; font-size: 0.74rem; background: #ffffff; color: #b91c1c; font-weight: 700;" onclick="appState.setView('emergency')">
+              Open Console
+            </button>
+            <button class="btn" style="padding: 0.25rem 0.65rem; font-size: 0.74rem; background: #7f1d1d; color: #ffffff; border: 1px solid #fca5a5; font-weight: 700;" onclick="appState.cancelSos()">
+              Cancel SOS
+            </button>
+          </div>
+        `;
+        const topbar = mainViewport.querySelector('.app-topbar');
+        if (topbar && topbar.nextSibling) {
+          mainViewport.insertBefore(banner, topbar.nextSibling);
+        } else if (mainViewport) {
+          mainViewport.prepend(banner);
+        }
+      }
+    } else {
+      if (banner) banner.remove();
+    }
+  }
+
+  updateViewOnly() {
+    const user = appState.currentUser;
+    if (!user) {
+      this.render();
+      return;
+    }
+
+    const view = appState.activeView;
+    const viewContainer = document.getElementById('viewContainer');
+    const sidebarMount = document.getElementById('sidebarMount');
+
+    if (!viewContainer || !sidebarMount) {
+      this.render();
+      return;
+    }
+
+    // Update active nav links in sidebar
+    const navLinks = sidebarMount.querySelectorAll('.sidebar-nav-link, .nav-item');
+    navLinks.forEach(link => {
+      const href = link.getAttribute('onclick') || '';
+      if (href.includes(`'${view}'`)) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+
+    // Update active nav links in mobile bottom nav
+    const mobileLinks = document.querySelectorAll('.mobile-bottom-nav .mobile-nav-link');
+    mobileLinks.forEach(link => {
+      const onclickAttr = link.getAttribute('onclick') || '';
+      if (onclickAttr.includes(`'${view}'`)) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+
+    // Render active view into #viewContainer
+    this.renderViewContent(view, user, viewContainer);
+  }
+
   render() {
     const root = document.getElementById('appRoot');
     if (!root) return;
 
     // PRE-LOGIN STATE
     if (!appState.currentUser) {
+      this.currentUserId = null;
       if (appState.activeView === 'login') {
         AuthView.renderLogin(root);
       } else if (appState.activeView === 'register') {
@@ -7269,6 +7453,15 @@ class CampusApplication {
     // AUTHENTICATED ROLE WORKSPACE
     const user = appState.currentUser;
     const view = appState.activeView;
+
+    // If shell is already mounted for this user, avoid wiping root.innerHTML
+    const existingWrapper = root.querySelector('.app-wrapper');
+    if (existingWrapper && this.currentUserId === user.id) {
+      this.updateViewOnly();
+      return;
+    }
+
+    this.currentUserId = user.id;
 
     root.innerHTML = `
       <div class="app-wrapper">
